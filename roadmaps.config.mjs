@@ -24,6 +24,17 @@ export const roadmaps = [
     order: 1,
     status: 'live',                       // "live" | "teaser"
     star: true
+  },
+  {
+    slug: 'applied-cryptography',
+    repo: 'proofstone/applied-cryptography-roadmap',
+    branch: 'main',
+    title: 'Applied Cryptography Roadmap',
+    tagline: 'For engineers who ship cryptography and cannot afford to get it wrong: break it in Cryptopals and CryptoHack, then ship it right.',
+    milestones: 18,
+    order: 3,
+    status: 'live',
+    star: true
   }
   // Future directions stay OUT of v1 (decision C): the homepage says "a growing
   // series" in one line, no per-direction teaser cards. When #2 is close, add it
