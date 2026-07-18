@@ -26,6 +26,17 @@ export const roadmaps = [
     star: true
   },
   {
+    slug: 'distributed-systems-engineer',   // = repo name without the "-roadmap" suffix
+    repo: 'proofstone/distributed-systems-engineer-roadmap',
+    branch: 'main',
+    title: 'Distributed Systems Engineer Roadmap',
+    tagline: 'The map for the engineer moving into distributed systems — consensus, replication, failure detection — where every node is a test that passes or fails, not a keyword you nod at.',
+    milestones: 29,   // fallback only; real count computed from the README at build
+    order: 2,
+    status: 'live',
+    star: true
+  },
+  {
     slug: 'applied-cryptography',
     repo: 'proofstone/applied-cryptography-roadmap',
     branch: 'main',
