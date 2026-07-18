@@ -1,0 +1,53 @@
+# Build proofstone.dev and deploy to GitHub Pages.
+# Rebuilds on: own push · a roadmap repo signalling new content (repository_dispatch)
+# · nightly safety-net (schedule) · manual (workflow_dispatch).
+# Action versions verified against GitHub Docs 2026-07-18.
+name: build-deploy
+
+on:
+  push:
+    branches: [main]
+  repository_dispatch:
+    types: [roadmap-content]        # a roadmap repo fired this after a README/assets change
+  schedule:
+    - cron: '17 4 * * *'            # 04:17 UTC nightly, in case a dispatch was missed
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  # noindex stays ON until launch. Flip by setting repo variable SITE_NOINDEX=false.
+  SITE_NOINDEX: ${{ vars.SITE_NOINDEX || 'true' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build                 # fetch roadmap content, then Eleventy build
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

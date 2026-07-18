@@ -1,0 +1,25 @@
+{
+  "name": "proofstone-site",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "proofstone.dev — umbrella site for the proofstone engineering roadmaps (render layer; roadmap repos are the source of truth).",
+  "license": "MIT",
+  "scripts": {
+    "fetch": "node scripts/fetch-content.mjs",
+    "build": "npm run fetch && eleventy",
+    "build:offline": "eleventy",
+    "dev": "npm run fetch && eleventy --serve",
+    "dev:offline": "eleventy --serve",
+    "clean": "node -e \"import('node:fs').then(fs=>fs.rmSync('_site',{recursive:true,force:true}))\""
+  },
+  "devDependencies": {
+    "@11ty/eleventy": "^3.1.6",
+    "playwright-core": "^1.61.1"
+  },
+  "dependencies": {
+    "github-slugger": "^2.0.0",
+    "markdown-it": "^14.1.0",
+    "markdown-it-anchor": "^9.2.0"
+  }
+}

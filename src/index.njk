@@ -1,0 +1,35 @@
+---
+layout: base.njk
+pageType: home
+title: proofstone — engineering roadmaps where every milestone is a proof
+description: Engineering roadmaps where every milestone is a proof — a verifiable artifact, not a keyword. Built for working engineers.
+---
+<section class="hero">
+  <h1 class="hero__title">{{ site.tagline }}</h1>
+  <p class="hero__sub">{{ site.thesisSub }}</p>
+  <p class="hero__series">{{ site.seriesLine }}</p>
+</section>
+
+<section class="roadmaps" aria-label="Roadmaps">
+  {% for r in liveRoadmaps %}
+  <a class="card" href="/{{ r.slug }}/">
+    <h2 class="card__title">{{ r.title }}</h2>
+    <p class="card__tagline">{{ r.tagline }}</p>
+    <p class="card__meta">
+      <span class="badge badge--count">{{ r.milestones }} milestones</span>
+      {% if r.star %}<span class="badge badge--star">★ on GitHub</span>{% endif %}
+      <span class="card__go" aria-hidden="true">→</span>
+    </p>
+  </a>
+  {% endfor %}
+</section>
+
+<section class="thesis">
+  <h2>Why proof, not keywords</h2>
+  <p>{{ site.thesis }}</p>
+  <p class="thesis__contribute">
+    The roadmap repositories are the source of truth — this site is the render layer.
+    Contribute by opening a pull request on a roadmap's repo; the site rebuilds itself.
+    <a href="{{ site.org }}" rel="noopener">github.com/proofstone →</a>
+  </p>
+</section>

@@ -1,0 +1,26 @@
+---
+layout: base.njk
+pagination:
+  data: liveRoadmaps
+  size: 1
+  alias: roadmap
+permalink: "/{{ roadmap.slug }}/"
+pageType: roadmap
+eleventyComputed:
+  title: "{{ roadmap.title }} — proofstone"
+  description: "{{ roadmap.tagline }}"
+---
+<div class="roadmap__bar">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="/">proofstone</a> <span aria-hidden="true">/</span> <span>{{ roadmap.title }}</span>
+  </nav>
+  <div class="roadmap__actions">
+    <a class="btn btn--primary" href="https://github.com/{{ roadmap.repo }}" rel="noopener">★ Star on GitHub</a>
+    <a class="btn" href="https://github.com/{{ roadmap.repo }}/edit/{{ roadmap.branch }}/README.md" rel="noopener">Edit</a>
+    <a class="btn" href="https://github.com/{{ roadmap.repo }}/blob/{{ roadmap.branch }}/README.md" rel="noopener">View source</a>
+  </div>
+</div>
+
+<article class="roadmap prose">
+  {{ roadmap.content | roadmapMarkdown(roadmap) | safe }}
+</article>
