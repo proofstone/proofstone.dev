@@ -1,0 +1,22 @@
+{
+  "ai-safety-engineer": {
+    "milestones": 33,
+    "stars": 3
+  },
+  "distributed-systems-engineer": {
+    "milestones": 29,
+    "stars": 5
+  },
+  "applied-cryptography": {
+    "milestones": 18,
+    "stars": 4
+  },
+  "robotics-software-engineer": {
+    "milestones": 20,
+    "stars": 3
+  },
+  "pcb-design": {
+    "milestones": 22,
+    "stars": 3
+  }
+}

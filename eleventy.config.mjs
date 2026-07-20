@@ -1,7 +1,8 @@
 import markdownIt from 'markdown-it';
 import markdownItAnchor from 'markdown-it-anchor';
 import GithubSlugger from 'github-slugger';
-import { roadmaps } from './roadmaps.config.mjs';
+import { readFileSync, existsSync } from 'node:fs';
+import { roadmaps, loadRoadmaps } from './roadmaps.config.mjs';
 
 // One slugger per rendered document (GitHub-compatible slugs + dedup). Reassigned
 // before each roadmap render so anchors match the source README exactly.
@@ -182,7 +183,33 @@ function renderRoadmap(roadmap) {
   return result;
 }
 
+// The OG cards are pre-rendered PNGs (no browser on the CI runner), so their
+// numbers are frozen at generation time. If a roadmap has gained or lost
+// milestones since, the picture is lying — say so loudly instead of shipping it.
+// Cross-checks two independent counters: this build's, and make-og.mjs's.
+function checkOgFreshness() {
+  const p = 'og-manifest.json';
+  if (!existsSync(p)) return;
+  const manifest = JSON.parse(readFileSync(p, 'utf8'));
+  for (const r of loadRoadmaps()) {
+    const baked = manifest[r.slug];
+    if (!baked) {
+      console.warn(`[og] no card for "${r.slug}" — run: node scripts/make-og.mjs`);
+      continue;
+    }
+    const stars = r.hasContent ? renderRoadmap(r).stars : r.stars || 0;
+    if (baked.milestones !== r.milestones || baked.stars !== stars) {
+      console.warn(
+        `[og] STALE card for "${r.slug}": image says ${baked.milestones} milestones / ${baked.stars} ★, ` +
+          `content says ${r.milestones} / ${stars}. Run: node scripts/make-og.mjs`
+      );
+    }
+  }
+}
+
 export default function (eleventyConfig) {
+  checkOgFreshness();
+
   // Global chrome assets.
   eleventyConfig.addPassthroughCopy({ 'src/assets': 'assets' });
 
