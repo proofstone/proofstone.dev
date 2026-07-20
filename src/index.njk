@@ -7,21 +7,62 @@ description: Engineering roadmaps where every milestone is a proof — a verifia
 <section class="hero">
   <h1 class="hero__title">{{ site.tagline }}</h1>
   <p class="hero__sub">{{ site.thesisSub }}</p>
-  <p class="hero__series">{{ site.seriesLine }}</p>
+  <p class="hero__series">
+    {{ site.seriesLine }}
+    <span class="hero__counts">{{ liveRoadmaps.length }} live · {{ reviewRoadmaps.length }} in review</span>
+  </p>
 </section>
 
 <section class="roadmaps" aria-label="Roadmaps">
-  {% for r in liveRoadmaps %}
-  <a class="card" href="/{{ r.slug }}/">
+  {%- for r in liveRoadmaps %}
+  <article class="card" data-accent="{{ r.accent }}">
+    <a class="card__main" href="/{{ r.slug }}/">
+      <h2 class="card__title">{{ r.title }}</h2>
+      <p class="card__tagline">{{ r.tagline }}</p>
+      <p class="card__meta">
+        <span class="badge badge--count">{{ r.milestones }} milestones</span>
+        <span class="badge badge--star">{{ r | roadmapStars }} ★ artifacts</span>
+        <span class="card__go" aria-hidden="true">→</span>
+      </p>
+    </a>
+    {%- if r.lab %}
+    <p class="card__lab">
+      <span class="card__lab-tag">lab</span>
+      <a href="{{ r.lab.url }}" rel="noopener"><code>{{ r.lab.name }}</code></a> — {{ r.lab.note }}.
+    </p>
+    {%- endif %}
+  </article>
+  {%- endfor %}
+
+  {%- for r in reviewRoadmaps %}
+  <article class="card card--review" data-accent="{{ r.accent }}">
     <h2 class="card__title">{{ r.title }}</h2>
     <p class="card__tagline">{{ r.tagline }}</p>
     <p class="card__meta">
-      <span class="badge badge--count">{{ r.milestones }} milestones</span>
-      {% if r.star %}<span class="badge badge--star">★ on GitHub</span>{% endif %}
-      <span class="card__go" aria-hidden="true">→</span>
+      <span class="badge badge--review">In practitioner review — private until published</span>
     </p>
-  </a>
-  {% endfor %}
+    {%- if r.labNote %}
+    <p class="card__lab"><span class="card__lab-tag">lab</span> {{ r.labNote }}.</p>
+    {%- endif %}
+  </article>
+  {%- endfor %}
+</section>
+
+<section class="sample" aria-label="What a milestone looks like">
+  <h2 class="sample__title">What a milestone looks like</h2>
+  <p class="sample__lead">Every node in every roadmap is one of these — taken here, unedited, from the AI Safety map.</p>
+  <div class="prose sample__block">
+    {%- for r in liveRoadmaps %}{% if r.slug == 'ai-safety-engineer' %}{{ r | milestoneSample('M2.1') | safe }}{% endif %}{% endfor %}
+  </div>
+</section>
+
+<section class="how">
+  <h2>How it works</h2>
+  <ol class="how__steps">
+    <li><span class="how__num">1</span><span class="how__body"><strong>You're done when …</strong> Each node states one finishing condition, in advance.</span></li>
+    <li><span class="how__num">2</span><span class="how__body"><strong>An artifact.</strong> Meeting it leaves something outside your head — a merged eval, a green test suite, a fabricated board.</span></li>
+    <li><span class="how__num">3</span><span class="how__body"><strong>Proof.</strong> The artifact is the evidence. Nothing here is finished by reading about it.</span></li>
+  </ol>
 </section>
 
 <section class="thesis">

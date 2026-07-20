@@ -135,6 +135,20 @@ export default function (eleventyConfig) {
     eleventyConfig.addPassthroughCopy({ [`.content/${r.slug}/assets`]: `${r.slug}/assets` });
   }
 
+  // One real milestone (heading + its proof block) lifted out of a rendered roadmap,
+  // so the home page can *show* the format instead of describing it. Anchors are
+  // repointed at the roadmap page so the sample stays clickable.
+  eleventyConfig.addFilter('milestoneSample', (roadmap, msId) => {
+    const { html } = renderRoadmap(roadmap);
+    const id = String(msId).replace('.', '\\.');
+    const re = new RegExp(
+      `<h3 id="[^"]*"[^>]*data-ms="${id}">[\\s\\S]*?<\\/h3>\\s*<blockquote class="ps-criterion">[\\s\\S]*?<\\/blockquote>`
+    );
+    const m = html.match(re);
+    if (!m) return '';
+    return m[0].replace(/href="#([^"]*)"/g, `href="/${roadmap.slug}/#$1"`);
+  });
+
   eleventyConfig.addFilter('roadmapMarkdown', (_content, roadmap) => renderRoadmap(roadmap).html);
   eleventyConfig.addFilter('roadmapToc', (roadmap) => renderRoadmap(roadmap).toc);
   eleventyConfig.addFilter('roadmapStars', (roadmap) => renderRoadmap(roadmap).stars);

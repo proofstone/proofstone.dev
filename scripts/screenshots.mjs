@@ -15,6 +15,8 @@ const shots = [
   { name: '01-home-light',              url: '/',                             scheme: 'light', ...DESKTOP, vh: 900 },
   { name: '02-home-dark',               url: '/',                             scheme: 'dark',  ...DESKTOP, vh: 900 },
   { name: '03-home-mobile',             url: '/',                             scheme: 'dark',  ...MOBILE },
+  { name: '03a-home-full-dark',         url: '/',                             scheme: 'dark',  ...DESKTOP, full: true },
+  { name: '03b-home-full-light',        url: '/',                             scheme: 'light', ...DESKTOP, full: true },
 
   { name: '04-aisafety-light-top',      url: '/ai-safety-engineer/',          scheme: 'light', ...DESKTOP },
   { name: '05-aisafety-dark-top',       url: '/ai-safety-engineer/',          scheme: 'dark',  ...DESKTOP },
@@ -38,7 +40,7 @@ for (const s of shots) {
   const page = await ctx.newPage();
   await page.goto(base + s.url, { waitUntil: 'networkidle' });
   await page.waitForTimeout(400);
-  await page.screenshot({ path: `${out}/${s.name}.png` });
+  await page.screenshot({ path: `${out}/${s.name}.png`, fullPage: !!s.full });
   await ctx.close();
   console.log('✓', s.name);
 }

@@ -7,7 +7,8 @@ export default {
   thesisSub: 'Measured in artifacts, not keywords.',
   thesis:
     "Every node is a milestone you can prove you passed — a merged eval, a confirmed break, a shipped guardrail — not a keyword you can nod at. When you finish a node, you have an artifact, not a feeling.",
-  seriesLine: 'proofstone is a growing series of engineering roadmaps — AI Safety is the first.',
+  // Kept factual: counts come from the registry, so this line cannot go stale silently.
+  seriesLine: 'A growing series of engineering roadmaps for people who already ship software.',
   org: 'https://github.com/proofstone',
   noindex: process.env.SITE_NOINDEX !== 'false',
   buildYear: 2026
