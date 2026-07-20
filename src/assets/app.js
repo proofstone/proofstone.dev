@@ -77,7 +77,9 @@
   if (!boxes.length) return;
 
   /* ── Progress bar + "next unchecked" ────────────────────────────────────── */
-  var slot = document.getElementById('ps-progress-slot');
+  // Must be a direct child of the tall column: position:sticky only travels while
+  // its own parent is in view, so a wrapper sized to the bar would pin nothing.
+  var column = article.parentElement;
   var wrapEl = document.createElement('div');
   wrapEl.className = 'progress';
   wrapEl.innerHTML =
@@ -85,7 +87,7 @@
     '<span class="progress__bar"><span class="progress__fill"></span></span>' +
     '<button type="button" class="progress__next">next unchecked ↓</button>' +
     '<button type="button" class="progress__reset">reset</button>';
-  if (slot) slot.appendChild(wrapEl); else article.parentNode.insertBefore(wrapEl, article);
+  column.insertBefore(wrapEl, article);
 
   var label = wrapEl.querySelector('.progress__label');
   var fill = wrapEl.querySelector('.progress__fill');
