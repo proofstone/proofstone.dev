@@ -39,6 +39,8 @@ description: Engineering roadmaps where every milestone is a proof — a verifia
     <h2 class="card__title">{{ r.title }}</h2>
     <p class="card__tagline">{{ r.tagline }}</p>
     <p class="card__meta">
+      <span class="badge badge--count">{{ r.milestones }} milestones</span>
+      <span class="badge badge--star">{{ r | roadmapStars }} ★ artifacts</span>
       <span class="badge badge--review">In practitioner review — private until published</span>
     </p>
     {%- if r.labNote %}

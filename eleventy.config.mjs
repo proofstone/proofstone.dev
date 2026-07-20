@@ -106,10 +106,65 @@ function enhanceHeadings(html) {
   return { html: out, toc, stars, articulations };
 }
 
+// ── The roadmap's own SVG map, made navigable ────────────────────────────────
+//
+// The renderers in the roadmap repos emit a flat SVG: no <g>, no ids, no links —
+// and those repos are off limits. Luckily the output is strictly regular: every
+// section is a <rect> immediately followed by a <text> holding its "§N" label.
+// That label is the join key, so hotspots are matched by section NUMBER rather
+// than by fuzzy title text. A box whose label is missing simply stays unlinked.
+const SECTION_BOX_RE =
+  /<rect\s+x="([\d.]+)"\s+y="([\d.]+)"\s+width="([\d.]+)"\s+height="([\d.]+)"[^>]*\/>\s*<text[^>]*>§(\d+)<\/text>/g;
+
+function buildInteractiveMap(svg, toc, altText) {
+  if (!svg) return '';
+  const byNum = new Map(toc.map((s) => [String(s.num), s.id]));
+
+  const hotspots = [...svg.matchAll(SECTION_BOX_RE)]
+    .map(([, x, y, w, h, num]) => {
+      const id = byNum.get(num);
+      if (!id) return '';
+      return `<a href="#${id}" aria-label="Jump to §${num}"><rect class="ps-map__hit" x="${x}" y="${y}" width="${w}" height="${h}" rx="10"/></a>`;
+    })
+    .join('');
+
+  // role="img" would hide the links from assistive tech now that it is interactive.
+  const opened = svg
+    .replace(/\s*role="img"/, '')
+    .replace('<svg ', '<svg class="ps-map__svg" ');
+
+  const withHotspots = opened.replace(/<\/svg>\s*$/, `${hotspots}</svg>`);
+  const caption = altText ? `<figcaption class="ps-map__cap">${altText}</figcaption>` : '';
+  return `<figure class="ps-map">${withHotspots}${caption}</figure>`;
+}
+
+// The README embeds the same map as a plain <img>; drop it so the page shows the
+// interactive one once, near the top, instead of a dead copy in the middle.
+function extractAndRemoveMapImg(html) {
+  let alt = '';
+  const out = html.replace(
+    /<p>\s*<img[^>]*roadmap\.svg[^>]*>\s*<\/p>\s*/,
+    (m) => {
+      const a = m.match(/alt="([^"]*)"/);
+      if (a) alt = a[1];
+      return '';
+    }
+  );
+  return { html: out, alt };
+}
+
+// Place the map right after the opening framing (title, tagline, intro) and before
+// the first section — top of the page in reading order, without preceding the H1.
+function insertBeforeFirstSection(html, block) {
+  if (!block) return html;
+  const i = html.indexOf('<h2 ');
+  return i === -1 ? html + block : html.slice(0, i) + block + html.slice(i);
+}
+
 // Render once per roadmap; both the HTML and the outline come from the same pass.
 const renderCache = new Map();
 function renderRoadmap(roadmap) {
-  const key = `${roadmap.slug}:${(roadmap.content || '').length}`;
+  const key = `${roadmap.slug}:${(roadmap.content || '').length}:${(roadmap.mapSvg || '').length}`;
   if (renderCache.has(key)) return renderCache.get(key);
 
   slugger = new GithubSlugger(); // reset dedup state per document
@@ -118,6 +173,11 @@ function renderRoadmap(roadmap) {
   html = markCriteria(html);
 
   const result = enhanceHeadings(html);
+
+  const stripped = extractAndRemoveMapImg(result.html);
+  const map = buildInteractiveMap(roadmap.mapSvg, result.toc, stripped.alt);
+  result.html = insertBeforeFirstSection(stripped.html, map);
+
   renderCache.set(key, result);
   return result;
 }
@@ -151,7 +211,9 @@ export default function (eleventyConfig) {
 
   eleventyConfig.addFilter('roadmapMarkdown', (_content, roadmap) => renderRoadmap(roadmap).html);
   eleventyConfig.addFilter('roadmapToc', (roadmap) => renderRoadmap(roadmap).toc);
-  eleventyConfig.addFilter('roadmapStars', (roadmap) => renderRoadmap(roadmap).stars);
+  // Computed from the README when the content is there; falls back to the declared
+  // value for roadmaps still private (nothing to count at build).
+  eleventyConfig.addFilter('roadmapStars', (roadmap) => renderRoadmap(roadmap).stars || roadmap.stars || 0);
 
   eleventyConfig.addWatchTarget('./src/assets/');
 

@@ -289,6 +289,38 @@ main { padding: 2.5rem 1.25rem 4rem; }
 .ps-anchor { margin-left: .4rem; color: var(--muted); opacity: 0; text-decoration: none; font-weight: 400; }
 .prose :hover > .ps-anchor, .ps-anchor:focus { opacity: 1; }
 
+/* ── Roadmap map (inlined SVG, section boxes link into the page) ──────────── */
+/* The maps are drawn as light figures with hardcoded colours. Rather than
+   repaint someone else's artwork, they sit on a light "paper" panel in both
+   themes — the way a figure sits in a printed paper. */
+.ps-map {
+  margin: 1.6rem 0 2.2rem;
+  padding: 1rem;
+  background: #fbfcfd;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow-x: auto;            /* narrow screens scroll the figure, not the page */
+  -webkit-overflow-scrolling: touch;
+}
+[data-theme="dark"] .ps-map { border-color: #2f3742; }
+.ps-map__svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+.ps-map__cap {
+  margin: .7rem .2rem 0; padding-top: .6rem; border-top: 1px solid #e7ebf0;
+  font-size: .8rem; color: #5a6472; text-align: center;
+}
+
+/* Section hotspots: invisible until pointed at, then a soft wash + outline. */
+.ps-map__hit { fill: transparent; stroke: transparent; stroke-width: 2; cursor: pointer; transition: fill .12s ease, stroke .12s ease; }
+.ps-map a:hover .ps-map__hit { fill: rgba(36, 87, 214, .12); stroke: #2457d6; }
+.ps-map a:focus-visible { outline: none; }
+.ps-map a:focus-visible .ps-map__hit { fill: rgba(36, 87, 214, .18); stroke: #2457d6; }
+
+@media (max-width: 46rem) {
+  /* Keep the map at a readable size and let the container scroll instead. */
+  .ps-map__svg { max-width: none; }
+}
+@media (prefers-reduced-motion: reduce) { .ps-map__hit { transition: none; } }
+
 /* ── The proof criterion: the one element the whole format turns on ───────── */
 .prose blockquote.ps-criterion {
   position: relative;

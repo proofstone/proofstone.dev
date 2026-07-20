@@ -66,6 +66,11 @@ export const roadmaps = [
     accent: 'amber',
     title: 'Robotics Software Engineer Roadmap',
     tagline: 'You already ship software. Robotics does not need you to start over — it needs you to port what you know and respect what is genuinely different.',
+    // Counts cannot be derived at build while the repo is private, so they are
+    // declared — but taken by counting the README itself on 2026-07-20, not copied
+    // from a summary. They become automatic the moment status flips to 'live'.
+    milestones: 20,
+    stars: 3,
     order: 4,
     status: 'review'
   },
@@ -74,6 +79,8 @@ export const roadmaps = [
     accent: 'green',
     title: 'PCB Design Roadmap',
     tagline: 'Embedded roadmaps teach you to write the firmware and say plainly that the board is not their topic. This is the map for the board.',
+    milestones: 22,   // counted from the README 2026-07-20 (see note above)
+    stars: 3,
     order: 5,
     status: 'review',
     // Its own reference board is designed but not yet fabricated — mentioned, not linked.
@@ -94,8 +101,12 @@ export function loadRoadmaps() {
       const p = join(contentRoot, r.slug, 'README.md');
       const content = existsSync(p) ? readFileSync(p, 'utf8') : '';
       const count = countMilestones(content);
-      return { ...r, content, hasContent: content.length > 0, milestones: count || r.milestones };
+      // The roadmap's own SVG map, fetched alongside the README. Inlined at build
+      // so its section boxes can link into the page (an <img> cannot do that).
+      const mapPath = join(contentRoot, r.slug, 'assets', 'roadmap.svg');
+      const mapSvg = existsSync(mapPath) ? readFileSync(mapPath, 'utf8') : '';
+      return { ...r, content, mapSvg, hasContent: content.length > 0, milestones: count || r.milestones };
     }
-    return { ...r, content: '', hasContent: false };
+    return { ...r, content: '', mapSvg: '', hasContent: false };
   });
 }
