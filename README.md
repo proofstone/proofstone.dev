@@ -1,5 +1,7 @@
 # proofstone.dev
 
+**Live at [proofstone.dev](https://proofstone.dev)** *(noindex, pre-launch)*
+
 The umbrella site for the **proofstone** engineering roadmaps — roadmaps where every
 node is a milestone you can *prove* you passed (an artifact), not a keyword.
 
@@ -57,12 +59,18 @@ crawling so the noindex tag is seen.
 ## Structure
 
 ```
-roadmaps.config.mjs      # roadmap registry (single source of truth for the site)
-eleventy.config.mjs      # markdown render (GitHub-compatible anchors + link rewrite)
-scripts/fetch-content.mjs# fetch-at-build: README + assets per live roadmap → .content/
-src/                     # templates, data, assets (css/js/favicon)
-docs/notify-site.yml.tmpl# drop-in workflow for a roadmap repo
+roadmaps.config.mjs       # roadmap registry (single source of truth for the site)
+eleventy.config.mjs       # markdown render: GitHub-compatible anchors, link rewrite,
+                          #   milestone/criterion tagging, §-section outline
+scripts/fetch-content.mjs # fetch-at-build: README + assets per live roadmap → .content/
+scripts/screenshots.mjs   # dev-only visual QA (both themes + mobile)
+scripts/make-icons.mjs    # dev-only: rasterise the SVG mark into PNG icon fallbacks
+src/                      # templates, data, assets (css/js/icons)
+docs/notify-site.yml.tmpl # drop-in workflow for a roadmap repo
 ```
+
+The two `dev-only` scripts drive the **system Chrome** through `playwright-core`
+(a devDependency; no browser download, not part of the production build).
 
 ## License
 

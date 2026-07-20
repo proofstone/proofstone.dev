@@ -21,6 +21,30 @@ eleventyComputed:
   </div>
 </div>
 
-<article class="roadmap prose">
-  {{ roadmap.content | roadmapMarkdown(roadmap) | safe }}
-</article>
+<div class="roadmap-layout">
+  <aside class="toc" aria-label="Sections">
+    <details class="toc__details" open>
+      <summary class="toc__summary">Sections</summary>
+      <ol class="toc__list">
+        {%- for s in roadmap | roadmapToc %}
+        <li class="toc__item">
+          <a class="toc__link" href="#{{ s.id }}" data-toc="{{ s.id }}">
+            <span class="toc__num">§{{ s.num }}</span>
+            <span class="toc__title">{{ s.title }}</span>
+            {%- if s.milestones.length %}
+            <span class="toc__count" data-toc-total="{{ s.milestones.length }}" data-toc-ms="{{ s.milestones | join(',') }}">{{ s.milestones.length }}</span>
+            {%- endif %}
+          </a>
+        </li>
+        {%- endfor %}
+      </ol>
+    </details>
+  </aside>
+
+  <div class="roadmap-main">
+    <div id="ps-progress-slot"></div>
+    <article class="roadmap prose">
+      {{ roadmap.content | roadmapMarkdown(roadmap) | safe }}
+    </article>
+  </div>
+</div>
