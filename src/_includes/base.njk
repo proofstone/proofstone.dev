@@ -4,25 +4,46 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ title or (site.name + " — engineering roadmaps") }}</title>
-  <meta name="description" content="{{ description or site.tagline }}">
+  {#- Search snippets clamp around 155 chars; social cards are roomier. Only the
+      SERP description is shortened, so the card keeps the full thesis line. #}
+  <meta name="description" content="{{ metaDescription or description or site.tagline }}">
+  {#- The error page is not a page: it must never claim canonical status (every
+      real 404 response is served with this body, so a self-canonical here points
+      crawlers at an indexable 200 URL) and its noindex must not depend on the
+      pre-launch flag, or launch day turns it into an indexable soft-404. #}
+  {%- set isErrorPage = page.url == "/404.html" %}
+  {%- if not isErrorPage %}
   <link rel="canonical" href="{{ site.url }}{{ page.url }}">
-  {% if site.noindex %}<meta name="robots" content="noindex, nofollow">{% endif %}
+  {%- endif %}
+  {% if site.noindex or isErrorPage %}<meta name="robots" content="noindex, nofollow">{% endif %}
 
   {%- set ogSlug = roadmap.slug if roadmap else "default" %}
   {%- set ogImage = site.url + "/assets/og/" + ogSlug + ".png" %}
-  <meta property="og:type" content="website">
+  <meta property="og:type" content="{{ "article" if roadmap else "website" }}">
   <meta property="og:site_name" content="{{ site.name }}">
   <meta property="og:title" content="{{ title or (site.name + " — engineering roadmaps") }}">
   <meta property="og:description" content="{{ description or site.tagline }}">
+  {%- if not isErrorPage %}
   <meta property="og:url" content="{{ site.url }}{{ page.url }}">
+  {%- endif %}
+  {%- if roadmap.updated %}
+  <meta property="article:modified_time" content="{{ roadmap.updated }}">
+  {%- endif %}
   <meta property="og:image" content="{{ ogImage }}">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="{{ (roadmap.title if roadmap else site.name) }} — {{ site.tagline }}">
+  {%- set ogAlt = (roadmap.title if roadmap else site.name) + " — " + site.tagline %}
+  <meta property="og:image:alt" content="{{ ogAlt }}">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="{{ title or (site.name + " — engineering roadmaps") }}">
   <meta name="twitter:description" content="{{ description or site.tagline }}">
   <meta name="twitter:image" content="{{ ogImage }}">
+  <meta name="twitter:image:alt" content="{{ ogAlt }}">
+
+  {%- set sd = { pageType: pageType, roadmap: roadmap, site: site, pageUrl: page.url } | structuredData %}
+  {%- if sd %}
+  <script type="application/ld+json">{{ sd | jsonLd | safe }}</script>
+  {%- endif %}
 
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="/assets/favicon-32.png" sizes="32x32" type="image/png">

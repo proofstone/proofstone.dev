@@ -9,6 +9,7 @@ pageType: roadmap
 eleventyComputed:
   title: "{{ roadmap.title }} — proofstone"
   description: "{{ roadmap.tagline }}"
+  metaDescription: "{{ roadmap.metaDescription or roadmap.tagline }}"
 ---
 <div class="roadmap__bar">
   <nav class="breadcrumb" aria-label="Breadcrumb">
@@ -19,6 +20,9 @@ eleventyComputed:
     <a class="btn" href="https://github.com/{{ roadmap.repo }}/edit/{{ roadmap.branch }}/README.md" rel="noopener">Edit</a>
     <a class="btn" href="https://github.com/{{ roadmap.repo }}/blob/{{ roadmap.branch }}/README.md" rel="noopener">View source</a>
   </div>
+  {%- if roadmap.updated %}
+  <p class="roadmap__updated">Source README updated <time datetime="{{ roadmap.updated }}">{{ roadmap.updated | isoDate }}</time></p>
+  {%- endif %}
 </div>
 
 <div class="roadmap-layout">
@@ -45,5 +49,27 @@ eleventyComputed:
     <article class="roadmap prose">
       {{ roadmap.content | roadmapMarkdown(roadmap) | safe }}
     </article>
+
+    {#- The series was invisible from inside any member of it: every roadmap page
+        linked only back to home, never sideways. Note the class list — app.js
+        binds the milestone machinery to the FIRST .prose on the page, so this
+        block must never carry that class. #}
+    <nav class="series" aria-labelledby="series-heading">
+      <h2 class="series__heading" id="series-heading">The rest of the series</h2>
+      <ul class="series__list">
+        {%- for r in liveRoadmaps %}{% if r.slug != roadmap.slug %}
+        <li class="series__item" data-accent="{{ r.accent }}">
+          <a class="series__link" href="/{{ r.slug }}/">{{ r.title }}</a>
+          <span class="series__meta">{{ r.milestones }} milestones · {{ r | roadmapStars }} ★ artifacts</span>
+        </li>
+        {%- endif %}{% endfor %}
+        {%- for r in reviewRoadmaps %}
+        <li class="series__item series__item--review" data-accent="{{ r.accent }}">
+          <span class="series__link series__link--plain">{{ r.title }}</span>
+          <span class="series__meta">In practitioner review — private until published</span>
+        </li>
+        {%- endfor %}
+      </ul>
+    </nav>
   </div>
 </div>

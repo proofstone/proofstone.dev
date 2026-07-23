@@ -237,6 +237,29 @@ main { padding: 2.5rem 1.25rem 4rem; }
 .btn--primary { background: var(--accent); color: #fff; border-color: var(--accent); }
 .btn--primary:hover { filter: brightness(1.06); background: var(--accent); }
 
+.roadmap__updated {
+  flex-basis: 100%; margin: .55rem 0 0;
+  font-size: .8rem; color: var(--muted);
+}
+
+/* ── The rest of the series (lateral links between roadmaps) ──────────────── */
+.series {
+  max-width: var(--measure); margin: 3.5rem auto 0;
+  padding-top: 1.5rem; border-top: 1px solid var(--border);
+}
+.series__heading { font-size: 1.15rem; letter-spacing: -.01em; margin: 0 0 .9rem; }
+.series__list { list-style: none; margin: 0; padding: 0; display: grid; gap: .55rem; }
+.series__item {
+  display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap;
+  padding: .6rem .8rem; border: 1px solid var(--border);
+  border-left: 3px solid var(--card-accent, var(--accent));
+  border-radius: 9px; background: var(--surface);
+}
+.series__item--review { background: transparent; border-style: dashed; }
+.series__link { font-weight: 600; }
+.series__link--plain { color: var(--muted); font-weight: 600; }
+.series__meta { font-family: var(--mono); font-size: .72rem; color: var(--muted); }
+
 /* ── Prose (rendered README) ──────────────────────────────────────────────── */
 .prose { max-width: var(--measure); margin: 0 auto; }
 .prose > :first-child { margin-top: 0; }

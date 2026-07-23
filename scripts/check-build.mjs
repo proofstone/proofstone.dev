@@ -129,6 +129,63 @@ console.log('\nPROOF SAMPLE — the landing page must demonstrate the format, no
   else pass('home page shows a real milestone', `${body.length} bytes incl. proof block`);
 }
 
+// ── 4a. Structured data ──────────────────────────────────────────────────────
+// Built as data and serialized with escaping, so the failure mode to guard is a
+// template regression producing invalid JSON or leaking markup that ends the
+// <script> early.
+console.log('\nJSON-LD — valid, correctly branched, and unable to close its own script tag');
+for (const file of pages) {
+  const html = readFileSync(file, 'utf8');
+  const rel = relative(site, file).replace(/\\/g, '/');
+  const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => m[1]);
+
+  if (rel === '404.html') {
+    if (blocks.length) fail('404.html carries structured data', 'the error page must not describe itself as a thing');
+    else pass('404.html', 'no structured data, as intended');
+    continue;
+  }
+  if (!blocks.length) {
+    fail(`${rel}: no structured data`, 'expected a JSON-LD block');
+    continue;
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(blocks[0]);
+  } catch (e) {
+    fail(`${rel}: JSON-LD does not parse`, e.message);
+    continue;
+  }
+  if (/<\/script/i.test(blocks[0])) {
+    fail(`${rel}: JSON-LD contains a raw </script`, 'the block can be terminated early by content');
+    continue;
+  }
+  const types = (parsed['@graph'] || [parsed]).map((n) => n['@type']);
+  const wanted = rel === 'index.html' ? ['Organization', 'WebSite'] : ['BreadcrumbList', 'LearningResource'];
+  const missing = wanted.filter((t) => !types.includes(t));
+  if (missing.length) fail(`${rel}: structured data missing types`, missing.join(', '));
+  else pass(`${rel}`, types.join(' + '));
+}
+
+// ── 4b. XML outputs are well-formed ──────────────────────────────────────────
+// A stray newline ahead of the prolog is enough to make a sitemap unparseable,
+// and templating whitespace makes that a one-character mistake away at all times.
+console.log('\nXML — sitemap must be well-formed (prolog first, tags balanced)');
+{
+  const xmlPath = join(site, 'sitemap.xml');
+  if (!existsSync(xmlPath)) fail('sitemap.xml missing', site);
+  else {
+    const xml = readFileSync(xmlPath, 'utf8');
+    if (!xml.startsWith('<?xml')) {
+      fail('sitemap.xml: content before the XML prolog', JSON.stringify(xml.slice(0, 20)));
+    } else {
+      const opens = (xml.match(/<(?!\?|!)([a-z][\w:-]*)[^>]*(?<!\/)>/gi) || []).length;
+      const closes = (xml.match(/<\/[a-z][\w:-]*>/gi) || []).length;
+      if (opens !== closes) fail('sitemap.xml: unbalanced tags', `${opens} open vs ${closes} close`);
+      else pass('sitemap.xml well-formed', `${(xml.match(/<loc>/g) || []).length} urls, ${(xml.match(/<lastmod>/g) || []).length} with lastmod`);
+    }
+  }
+}
+
 // ── 5. Private repositories must not leak ────────────────────────────────────
 console.log('\nPRIVATE REPOS — content under practitioner review must not be linked');
 {

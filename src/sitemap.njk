@@ -2,10 +2,22 @@
 permalink: /sitemap.xml
 eleventyExcludeFromCollections: true
 ---
+{%- set dates = [] -%}
+{%- for r in liveRoadmaps %}{% if r.updated %}{% set dates = (dates.push(r.updated), dates) %}{% endif %}{% endfor -%}
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>{{ site.url }}/</loc></url>
+  <url>
+    <loc>{{ site.url }}/</loc>
+    {%- if dates.length %}
+    <lastmod>{{ dates | sort | last }}</lastmod>
+    {%- endif %}
+  </url>
   {%- for r in liveRoadmaps %}
-  <url><loc>{{ site.url }}/{{ r.slug }}/</loc></url>
+  <url>
+    <loc>{{ site.url }}/{{ r.slug }}/</loc>
+    {%- if r.updated %}
+    <lastmod>{{ r.updated }}</lastmod>
+    {%- endif %}
+  </url>
   {%- endfor %}
 </urlset>

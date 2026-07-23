@@ -254,7 +254,12 @@ function checkOgFreshness() {
   const fatal = isCI ? [...problems, ...(autonomous ? [] : warnings)] : [];
   const advisory = [...problems, ...warnings].filter((m) => !fatal.includes(m));
 
-  for (const w of advisory) console.warn(`[og] ${w}`);
+  // On the autonomous path the drift is not fatal, but it must still surface on
+  // the run summary rather than dying in the log nobody opens.
+  for (const w of advisory) {
+    console.warn(`[og] ${w}`);
+    if (isCI) console.warn(`::warning file=og-manifest.json::[og] ${w}`);
+  }
   if (fatal.length) {
     for (const f of fatal) console.error(`::error file=og-manifest.json::[og] ${f}`);
     throw new Error(`[og] ${fatal.length} card problem(s) — see above.`);
@@ -326,6 +331,116 @@ export default function (eleventyConfig) {
   // Computed from the README when the content is there; falls back to the declared
   // value for roadmaps still private (nothing to count at build).
   eleventyConfig.addFilter('roadmapStars', (roadmap) => renderRoadmap(roadmap).stars || roadmap.stars || 0);
+
+  // Structured data is built as an OBJECT and serialized here — never assembled
+  // as a string in the template. Nunjucks autoescapes, so hand-written JSON with
+  // {{ }} holes emits &#39;/&amp; and silently becomes invalid JSON-LD the first
+  // time a title contains an apostrophe. Escaping <, > and & on the way out also
+  // means a "</script>" inside any interpolated prose cannot end the block early.
+  eleventyConfig.addFilter('jsonLd', (obj) =>
+    JSON.stringify(obj)
+      .replace(/</g, '\\u003c')
+      .replace(/>/g, '\\u003e')
+      .replace(/&/g, '\\u0026')
+      // U+2028/U+2029 are line terminators in JS source: written as escapes
+      // because a literal one inside a regex literal does not parse at all.
+      .replace(/[\u2028\u2029]/g, (c) => '\\u' + c.charCodeAt(0).toString(16))
+  );
+
+  // Structured data, built as data (see the jsonLd filter above for why).
+  // Deliberately NOT emitted: SearchAction/sitelinks-searchbox (Google retired it
+  // and there is no site search to point at) and Course (Google expects a real
+  // provider offering instruction — there is no instructor or enrolment here, so
+  // claiming it would be misleading markup).
+  eleventyConfig.addFilter('structuredData', (ctx) => {
+    const { pageType, roadmap, site, pageUrl } = ctx;
+    const org = `${site.url}/#org`;
+    const website = `${site.url}/#website`;
+    const canonical = `${site.url}${pageUrl}`;
+
+    if (pageType === 'home') {
+      return {
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'Organization',
+            '@id': org,
+            name: site.name,
+            url: `${site.url}/`,
+            logo: `${site.url}/assets/favicon-180.png`,
+            sameAs: [site.org]
+          },
+          {
+            '@type': 'WebSite',
+            '@id': website,
+            url: `${site.url}/`,
+            name: site.name,
+            description: site.tagline,
+            inLanguage: 'en',
+            publisher: { '@id': org }
+          }
+        ]
+      };
+    }
+
+    if (pageType === 'roadmap' && roadmap) {
+      const toc = renderRoadmap(roadmap).toc;
+      const resource = {
+        '@type': 'LearningResource',
+        '@id': `${canonical}#roadmap`,
+        name: roadmap.title,
+        url: canonical,
+        description: roadmap.tagline,
+        learningResourceType: 'Roadmap',
+        educationalLevel: 'Professional',
+        inLanguage: 'en',
+        isPartOf: { '@id': website },
+        provider: { '@id': org }
+      };
+      if (roadmap.updated) resource.dateModified = roadmap.updated;
+      if (toc.length) {
+        // One granularity only: the list is the §-sections, so numberOfItems
+        // counts sections. Annotating a section list with a milestone total
+        // would make the number disagree with the list it describes.
+        resource.hasPart = {
+          '@type': 'ItemList',
+          name: `${roadmap.title} — sections`,
+          numberOfItems: toc.length,
+          itemListElement: toc.map((s, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            name: `§${s.num} — ${s.title}`,
+            url: `${canonical}#${s.id}`
+          }))
+        };
+      }
+
+      return {
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'BreadcrumbList',
+            // Mirrors the visible breadcrumb exactly — no invented levels.
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: site.name, item: `${site.url}/` },
+              { '@type': 'ListItem', position: 2, name: roadmap.title, item: canonical }
+            ]
+          },
+          resource
+        ]
+      };
+    }
+
+    return null; // 404 and anything else: no structured data.
+  });
+
+  // ISO timestamp → "22 July 2026". Locale pinned to en-GB so the build output is
+  // identical on every machine and in CI.
+  eleventyConfig.addFilter('isoDate', (iso) =>
+    iso
+      ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+      : ''
+  );
 
   eleventyConfig.addWatchTarget('./src/assets/');
 

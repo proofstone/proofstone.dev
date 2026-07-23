@@ -43,6 +43,11 @@ export const roadmaps = [
     branch: 'main',
     title: 'Distributed Systems Engineer Roadmap',
     tagline: 'The map for the engineer moving into distributed systems — consensus, replication, failure detection — where every node is a test that passes or fails, not a keyword you nod at.',
+    // The tagline is 177 chars — fine on the home card and in a social preview,
+    // but a search snippet clamps near 155 and would cut the thesis punchline
+    // ("not a keyword you nod at") off. Shorter variant for the SERP only.
+    metaDescription:
+      'Moving into distributed systems: consensus, replication, failure detection — every node is a test that passes or fails, not a keyword you nod at.',
     milestones: 29,   // fallback only; real count computed from the README at build
     order: 2,
     status: 'live',
@@ -114,7 +119,18 @@ export function loadRoadmaps() {
       // so its section boxes can link into the page (an <img> cannot do that).
       const mapPath = join(contentRoot, r.slug, 'assets', 'roadmap.svg');
       const mapSvg = existsSync(mapPath) ? readFileSync(mapPath, 'utf8') : '';
-      return { ...r, content, mapSvg, hasContent: content.length > 0, milestones: count, declaredMilestones: r.milestones };
+      // Upstream commit date for README.md — the only honest content-age signal
+      // (see scripts/fetch-content.mjs). Absent is fine; invented is not.
+      const metaPath = join(contentRoot, r.slug, 'meta.json');
+      let updated = null;
+      if (existsSync(metaPath)) {
+        try {
+          updated = JSON.parse(readFileSync(metaPath, 'utf8')).updated || null;
+        } catch {
+          updated = null;
+        }
+      }
+      return { ...r, content, mapSvg, updated, hasContent: content.length > 0, milestones: count, declaredMilestones: r.milestones };
     }
     return { ...r, content: '', mapSvg: '', hasContent: false };
   });

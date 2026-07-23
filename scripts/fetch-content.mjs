@@ -90,6 +90,26 @@ function save(absPath, data) {
   writeFileSync(absPath, data);
 }
 
+// ── Content age ──────────────────────────────────────────────────────────────
+//
+// raw.githubusercontent sends no Last-Modified (verified), and every deploy
+// rewrites file mtimes, so the only honest age signal is the upstream commit
+// date for README.md. Never falls back to build time: a timestamp that advances
+// on every nightly rebuild is worse than none — crawlers learn to distrust it.
+async function fetchUpdatedAt(repo, path = 'README.md') {
+  const url = `https://api.github.com/repos/${repo}/commits?path=${encodeURIComponent(path)}&per_page=1`;
+  const headers = { 'user-agent': 'proofstone-build', accept: 'application/vnd.github+json' };
+  // Unauthenticated api.github.com is 60 req/hr per IP and runner IPs are shared.
+  if (process.env.GITHUB_TOKEN) headers.authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+
+  const res = await fetch(url, { headers, signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+  if (!res.ok) throw new HttpError(res.status, `${res.status} ${res.statusText}`);
+  const json = await res.json();
+  const date = Array.isArray(json) && json[0]?.commit?.committer?.date;
+  if (!date) throw new Error('no commit date in API response');
+  return date;
+}
+
 // ── Main ─────────────────────────────────────────────────────────────────────
 
 let hadError = false;
@@ -121,6 +141,18 @@ for (const r of roadmaps) {
       hadError = true;
       continue;
     }
+  }
+
+  // Content age, cached like everything else: a failed API call reuses the last
+  // known date rather than inventing one.
+  const metaPath = join(dir, 'meta.json');
+  try {
+    const updated = await fetchUpdatedAt(r.repo, 'README.md');
+    save(metaPath, JSON.stringify({ updated }, null, 2) + '\n');
+    console.log(`  ✓ meta.json (README updated ${updated})`);
+  } catch (e) {
+    if (existsSync(metaPath)) console.warn(`  ! commit date unavailable (${e.message}) — keeping cached meta.json`);
+    else console.warn(`  ! commit date unavailable (${e.message}) — lastmod will be omitted`);
   }
 
   const readmeForParse = readme ?? (existsSync(readmePath) ? readFileSync(readmePath, 'utf8') : '');

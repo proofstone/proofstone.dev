@@ -55,9 +55,24 @@ roadmap, so a content edit lands on the site with no manual steps.
 ## noindex / launch
 
 The site ships with `<meta name="robots" content="noindex, nofollow">` on every page
-while `SITE_NOINDEX` is unset or `"true"`. Launch = build with `SITE_NOINDEX=false`
-(or set the repo variable `SITE_NOINDEX` to `false`). robots.txt intentionally allows
-crawling so the noindex tag is seen.
+while `SITE_NOINDEX` is unset or `"true"`. robots.txt intentionally allows crawling
+so the noindex tag is seen. `/404.html` keeps its noindex unconditionally and
+declares no canonical, so launching never turns the error page into an indexable
+soft-404.
+
+Launching is three steps, not one — **changing the repository variable starts no
+build by itself**, so the flip only reaches visitors once a run happens:
+
+1. Set the repository variable `SITE_NOINDEX` to `false`
+   (Settings → Secrets and variables → Actions → Variables).
+2. Run the workflow: Actions → **build-deploy** → **Run workflow** on `main`.
+   Without this the change lands whenever the nightly build next runs — up to ~24h later.
+3. Confirm what actually shipped: `npm run verify:live -- --launched`.
+   It walks the sitemap and asserts noindex is gone where it should be, still
+   present on `/404.html`, robots.txt now advertises the sitemap, and every social
+   card is reachable **and** numerically matches its page.
+
+Before launch, the same script with no flag asserts the pre-launch posture.
 
 ## Structure
 

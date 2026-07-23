@@ -35,6 +35,8 @@ jobs:
 
       - name: Build (runs the deterministic site assertions)
         run: npm run build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Advisory: third-party servers rate-limit and bot-block, so a red result
       # here is information, never a gate.
