@@ -24,6 +24,7 @@ function tagsWith(html, re) {
 export function inspectRenderedPage(html, opts = {}) {
   const problems = [];
   const isRoadmap = opts.roadmap !== false && /class="roadmap prose"/.test(html);
+  const css = opts.css || '';
 
   // ── 1. No focusable element is hidden from assistive tech ──────────────────
   const hiddenFocusable = tagsWith(html, FOCUSABLE_TAG).filter(
@@ -75,6 +76,32 @@ export function inspectRenderedPage(html, opts = {}) {
   const opaque = hotspotLabels.filter((l) => /^Jump to (?:§|section )\d+\s*$/.test(l));
   if (opaque.length) {
     problems.push(`${opaque.length} map hotspot(s) named by number only ("${opaque[0]}") — the section titles are in the data`);
+  }
+
+  // ── 6. The progress bar is reserved in HTML, and its total is the truth ────
+  // Two failures in one number: a bar built by script after paint shifts the
+  // article down ~61 px, and an aria-valuemax that disagrees with the page makes
+  // the announced progress a fiction. Both are invisible without this check.
+  const milestones = (html.match(/<h3\b[^>]*\sdata-ms="/g) || []).length;
+  const declared = html.match(/<span class="progress__bar"[^>]*aria-valuemax="(\d+)"/);
+  if (milestones && !declared) {
+    problems.push(`${milestones} milestones but no reserved progress bar — a bar inserted after paint pushes the article down`);
+  } else if (declared && Number(declared[1]) !== milestones) {
+    problems.push(`progress bar says ${declared[1]} milestones, the page has ${milestones} — the label rewrites itself after paint`);
+  }
+
+  // ── 7. The section outline survives without script ────────────────────────
+  // It ships collapsed so nothing has to collapse it after paint; on desktop the
+  // stylesheet forces the content visible. If either half goes, the page either
+  // shifts again or (worse) shows no outline at all, and nothing else notices.
+  const details = html.match(/<details class="toc__details"([^>]*)>/);
+  if (details) {
+    if (/\bopen\b/.test(details[1])) {
+      problems.push('the section outline ships open — collapsing it after paint is what shifted the article ~340 px on mobile');
+    }
+    if (css && !/\.toc__details::details-content\s*{[^}]*content-visibility:\s*visible/.test(css)) {
+      problems.push('the outline ships collapsed but the stylesheet does not force ::details-content visible — desktop would show no outline');
+    }
   }
 
   return { problems };

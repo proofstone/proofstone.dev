@@ -333,7 +333,14 @@ main:focus { outline: none; }
 .prose code {
   font-family: var(--mono); font-size: .86em;
   background: var(--code-bg); padding: .12em .4em; border-radius: 5px;
+  /* A README can inline-code a URL of any length, and the roadmap repos are the
+     source of truth — so the render layer has to survive it. One 40-character
+     URL used to push the whole document 19 px sideways at 320 px. Cells are
+     excluded: their columns are already sized to content, and letting code break
+     there rewraps shipped tables for no gain. */
+  overflow-wrap: anywhere;
 }
+.prose th code, .prose td code { overflow-wrap: normal; }
 .prose pre {
   background: var(--code-bg); padding: 1rem 1.1rem; border-radius: 10px;
   overflow-x: auto; border: 1px solid var(--border);
@@ -552,8 +559,19 @@ main:focus { outline: none; }
   }
   .roadmap__bar { max-width: calc(15.5rem + 2rem + var(--measure)); }
   .toc { position: sticky; top: 4.2rem; max-height: calc(100vh - 5.5rem); overflow-y: auto; }
-  .toc__summary { display: none; }
   .toc__details { border: 0; background: none; padding: 0; }
+
+  /* Here the outline is a sidebar, not a disclosure, so its content is shown
+     whatever the `open` attribute says. This must go through ::details-content:
+     a closed <details> is hidden by the UA rule `content-visibility: hidden` on
+     that pseudo-element, which `display` on the light-DOM child cannot override
+     (measured: the list stays absent, exactly as if no rule existed).
+     Without the pseudo-element the summary has to stay clickable, otherwise a
+     browser that lacks it would show neither the list nor a way to open it. */
+  .toc__details::details-content { content-visibility: visible; block-size: auto; }
+  @supports selector(::details-content) {
+    .toc__summary { display: none; }
+  }
 }
 
 /* ── 404 ──────────────────────────────────────────────────────────────────── */
@@ -568,4 +586,76 @@ main:focus { outline: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
+}
+
+/* ── Print ────────────────────────────────────────────────────────────────── */
+/* A milestone list with a "You're done when …" criterion under every node is
+   exactly the thing people print and tick off on paper, and until now the site
+   could not produce one: the dark theme followed the reader to the printer
+   (#e6e8ec on white paper ≈ 1.2:1), the header/toolbar/buttons printed as
+   furniture, and link targets vanished.
+   Two rules here are load-bearing rather than cosmetic: browsers do not print
+   background colours by default, so anything whose text colour is the page
+   colour (the criterion stamps, the checkbox tick) turns white-on-white unless
+   it is repainted as ink. This block is last in the file on purpose — it has to
+   win over both [data-theme="dark"] and the prefers-color-scheme fallback,
+   which carry the same specificity. */
+@media print {
+  :root,
+  :root[data-theme="dark"],
+  :root[data-theme="light"] {
+    --bg: #fff; --surface: #fff; --surface-2: #fff;
+    --text: #000; --muted: #333;
+    --border: #999; --control-border: #333;
+    --accent: #000; --on-accent: #fff; --accent-weak: #fff;
+    --gold: #000; --gold-weak: #fff;
+    --ok: #000; --ok-weak: #fff;
+    --code-bg: #f2f2f2; --shadow: none;
+  }
+
+  @page { margin: 14mm; }
+  body { font-size: 11pt; }
+
+  /* Screen furniture: nothing here survives on paper. */
+  .site-header, .site-footer, .skip-link,
+  .roadmap__actions, .progress__bar, .progress__next, .progress__reset { display: none; }
+
+  /* Sticky elements must not reserve or repeat space in a paged medium. */
+  .progress, .toc { position: static; max-height: none; overflow: visible; }
+  .progress { margin: 0 0 .8rem; padding: 0; backdrop-filter: none; }
+
+  /* The outline becomes the printed table of contents (it ships collapsed). */
+  .toc__details::details-content { content-visibility: visible; block-size: auto; }
+  .toc__summary { display: none; }
+  .toc__details { border: 0; padding: 0; }
+  .toc__link { color: #000; }
+
+  main { padding: 0; }
+  .roadmap-layout { display: block; max-width: none; }
+  .prose, .roadmap__bar, .series { max-width: none; }
+
+  /* Ink, not fill: the stamps' label colour is var(--bg) on screen, which would
+     print white on unpainted paper. Same for a ticked checkbox. */
+  .prose blockquote.ps-criterion { background: none; border: 1px solid #000; border-left-width: 3px; }
+  /* All four stamp variants, or the more specific ones keep their fill and the
+     label prints black-on-black once a reader enables background graphics. */
+  .prose blockquote.ps-criterion::before,
+  .ps-ms-h.is-star + .ps-criterion::before,
+  .ps-ms-h.is-articulation + .ps-criterion::before,
+  .ps-ms.is-done .ps-criterion::before { background: none; color: #000; border: 1px solid #000; }
+  .ps-check { border-color: #000; background: none; }
+  .ps-check:checked { background: none; border-color: #000; }
+  .ps-check:checked::after { color: #000; }
+
+  /* A paper reference with no addresses is not a reference. In-page anchors are
+     excluded — "(#2--evals)" on paper is noise, not information. */
+  .prose a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: .78em; color: #333; word-break: break-all;
+  }
+
+  /* Keep a milestone and its proof criterion on one page. */
+  .ps-ms, .prose blockquote, .ps-map, figure { break-inside: avoid; }
+  .prose h1, .prose h2, .prose h3, .prose h4 { break-after: avoid; }
+  .prose img, .ps-map__svg { max-width: 100%; }
 }

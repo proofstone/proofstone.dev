@@ -192,12 +192,19 @@ console.log('\nXML — sitemap must be well-formed (prolog first, tags balanced)
 // anchors are produced by a plugin whose fix option differs by version, and the
 // map hotspots are generated from an SVG this repo does not own.
 console.log('\nACCESSIBILITY — no silent tab stops, named landmarks, reachable scroll regions');
-for (const file of pages) {
-  const html = readFileSync(file, 'utf8');
-  const rel = relative(site, file).replace(/\\/g, '/');
-  const { problems } = inspectRenderedPage(html);
-  if (problems.length) for (const p of problems) fail(`${rel}`, p);
-  else pass(`${rel}`, 'clean');
+{
+  // The stylesheet is part of the contract here: the section outline ships
+  // collapsed and is re-opened on desktop by CSS alone.
+  const cssPath = join(site, 'assets', 'styles.css');
+  const css = existsSync(cssPath) ? readFileSync(cssPath, 'utf8') : '';
+  if (!css) fail('assets/styles.css missing from _site', 'cannot verify the outline mechanism');
+  for (const file of pages) {
+    const html = readFileSync(file, 'utf8');
+    const rel = relative(site, file).replace(/\\/g, '/');
+    const { problems } = inspectRenderedPage(html, { css });
+    if (problems.length) for (const p of problems) fail(`${rel}`, p);
+    else pass(`${rel}`, 'clean');
+  }
 }
 
 // ── 5. Private repositories must not leak ────────────────────────────────────

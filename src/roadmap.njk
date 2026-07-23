@@ -30,16 +30,24 @@ eleventyComputed:
       it was announced as "Sections, complementary" and missed by the landmark
       rotor's navigation workflow — the fastest way around a 30-milestone page. #}
   <nav class="toc" aria-label="Sections">
-    <details class="toc__details" open>
+    {#- Ships CLOSED. On desktop the stylesheet forces the content visible (the
+        outline is a sidebar there, not a disclosure), so nothing has to be
+        collapsed by script after first paint — which is what used to yank the
+        article up ~340 px on mobile a couple of seconds into the read. #}
+    <details class="toc__details">
       <summary class="toc__summary">Sections</summary>
       <ol class="toc__list">
         {%- for s in roadmap | roadmapToc %}
         <li class="toc__item">
-          <a class="toc__link" href="#{{ s.id }}" data-toc="{{ s.id }}">
+          {#- The count is rendered in its FINAL shape ("0/3", not "3"): app.js
+              used to rewrite it after paint, and the wider text squeezed the
+              title and re-wrapped the row. #}
+          <a class="toc__link" href="#{{ s.id }}" data-toc="{{ s.id }}"
+             {%- if s.milestones.length %} aria-label="§{{ s.num }} {{ s.title }} — 0 of {{ s.milestones.length }} milestones done"{% endif %}>
             <span class="toc__num">§{{ s.num }}</span>
             <span class="toc__title">{{ s.title }}</span>
             {%- if s.milestones.length %}
-            <span class="toc__count" data-toc-total="{{ s.milestones.length }}" data-toc-ms="{{ s.milestones | join(',') }}">{{ s.milestones.length }}</span>
+            <span class="toc__count" data-toc-total="{{ s.milestones.length }}" data-toc-ms="{{ s.milestones | join(',') }}">0/{{ s.milestones.length }}</span>
             {%- endif %}
           </a>
         </li>
@@ -49,6 +57,26 @@ eleventyComputed:
   </nav>
 
   <div class="roadmap-main">
+    {#- The progress bar is reserved by HTML, not created by script after paint —
+        it used to insert ~61 px above the article ~1.7 s into the read. It must
+        be a direct child of this column: position:sticky only travels while its
+        own parent is in view. The total comes from the render pass, so it equals
+        what app.js counts and never rewrites itself. The buttons ship disabled
+        and app.js enables them — with JS off they are honestly inert, and
+        [disabled] only changes opacity, so the box is identical either way. #}
+    {%- set msTotal = roadmap | roadmapMilestoneCount %}
+    {%- if msTotal %}
+    <div class="progress">
+      <span class="progress__label">0 / {{ msTotal }} milestones</span>
+      <span class="progress__bar" role="progressbar" aria-label="Milestone progress"
+            aria-valuemin="0" aria-valuemax="{{ msTotal }}" aria-valuenow="0"
+            aria-valuetext="0 of {{ msTotal }} milestones done"><span class="progress__fill"></span></span>
+      <button type="button" class="progress__next" disabled>next unchecked ↓</button>
+      <button type="button" class="progress__reset" disabled>reset</button>
+      <span class="vh" role="status" aria-live="polite"></span>
+    </div>
+    {%- endif %}
+
     <article class="roadmap prose">
       {{ roadmap.content | roadmapMarkdown(roadmap) | safe }}
     </article>

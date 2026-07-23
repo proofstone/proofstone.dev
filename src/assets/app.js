@@ -32,18 +32,9 @@
   var article = document.querySelector('.prose');
   if (!slug || !article) return;
 
-  // Collapse the section outline on narrow screens (it is a sidebar on desktop).
-  // Kept in sync with the breakpoint afterwards: above 70rem the CSS hides the
-  // <summary>, so a page loaded narrow and then widened used to lose the outline
-  // for the rest of that page view with no control left to bring it back.
-  // Widening reopens it; narrowing closes it again — but a reader who opened it
-  // by hand at a narrow width is never overruled at that same width.
-  var tocDetails = document.querySelector('.toc__details');
-  var wide = matchMedia('(min-width: 70rem)');
-  if (tocDetails) {
-    if (!wide.matches) tocDetails.open = false;
-    wide.addEventListener('change', function (e) { tocDetails.open = e.matches; });
-  }
+  // NOTE: the section outline is no longer touched from here. It ships closed and
+  // the stylesheet forces it open on desktop (::details-content), so there is no
+  // post-paint collapse to shift the page and nothing to re-sync on resize.
 
   /* ── Wrap each milestone so "done" can be shown on the block itself ─────── */
   var heads = Array.prototype.slice.call(article.querySelectorAll('h3.ps-ms-h'));
@@ -81,7 +72,10 @@
 
     cb.addEventListener('click', function (e) { e.stopPropagation(); });
     cb.addEventListener('change', function () {
-      try { localStorage.setItem(key, cb.checked ? '1' : '0'); } catch (e) {}
+      try {
+        if (cb.checked) localStorage.setItem(key, '1');
+        else localStorage.removeItem(key);
+      } catch (e) {}
       wrap.classList.toggle('is-done', cb.checked);
       update();
     });
@@ -102,29 +96,22 @@
   if (!boxes.length) return;
 
   /* ── Progress bar + "next unchecked" ────────────────────────────────────── */
-  // Must be a direct child of the tall column: position:sticky only travels while
-  // its own parent is in view, so a wrapper sized to the bar would pin nothing.
-  var column = article.parentElement;
-  var wrapEl = document.createElement('div');
-  wrapEl.className = 'progress';
-  // The bar is the product's reward loop, and it was a group of unlabelled empty
-  // spans: no role, no values, no announcement when it moved. The status span is
-  // visually hidden and carries the same sentence for assistive tech.
-  wrapEl.innerHTML =
-    '<span class="progress__label"></span>' +
-    '<span class="progress__bar" role="progressbar" aria-label="Milestone progress"' +
-    ' aria-valuemin="0" aria-valuemax="' + boxes.length + '" aria-valuenow="0">' +
-    '<span class="progress__fill"></span></span>' +
-    '<button type="button" class="progress__next">next unchecked ↓</button>' +
-    '<button type="button" class="progress__reset">reset</button>' +
-    '<span class="vh" role="status" aria-live="polite"></span>';
-  column.insertBefore(wrapEl, article);
+  // The markup is rendered by roadmap.njk so the space is reserved before paint;
+  // this only wires it. Building it here used to push the article down ~61 px
+  // about 1.7 s in. If it is absent (a roadmap with no milestones), stop.
+  var wrapEl = article.parentElement.querySelector('.progress');
+  if (!wrapEl) return;
 
   var label = wrapEl.querySelector('.progress__label');
   var bar = wrapEl.querySelector('.progress__bar');
   var fill = wrapEl.querySelector('.progress__fill');
   var nextBtn = wrapEl.querySelector('.progress__next');
+  var resetBtn = wrapEl.querySelector('.progress__reset');
   var status = wrapEl.querySelector('[role="status"]');
+
+  // Shipped disabled so they are honest with JS off; they work from here on.
+  nextBtn.removeAttribute('disabled');
+  resetBtn.removeAttribute('disabled');
 
   nextBtn.addEventListener('click', function () {
     for (var i = 0; i < boxes.length; i++) {
@@ -146,10 +133,12 @@
     }
   });
 
-  wrapEl.querySelector('.progress__reset').addEventListener('click', function () {
+  resetBtn.addEventListener('click', function () {
     boxes.forEach(function (cb) {
       cb.checked = false;
-      try { localStorage.setItem(cb.getAttribute('data-key'), '0'); } catch (e) {}
+      // removeItem, not setItem('0'): reading treats '0' and absent identically,
+      // so writing zeros only left dead keys behind in the visitor's storage.
+      try { localStorage.removeItem(cb.getAttribute('data-key')); } catch (e) {}
       var b = cb.closest('.ps-ms');
       if (b) b.classList.remove('is-done');
     });

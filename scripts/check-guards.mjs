@@ -81,10 +81,14 @@ console.log('\nACCESSIBILITY — each rule refuses the exact regression it was w
 {
   // A minimal page carrying every shape the a11y guard inspects. Each case below
   // breaks exactly one of them; the healthy page must keep passing all of them.
+  const HEALTHY_CSS = '.toc__details::details-content { content-visibility: visible; block-size: auto; }';
   const HEALTHY_PAGE = [
     '<main id="main" tabindex="-1">',
     '<nav class="site-nav" aria-label="Main"><a href="/">home</a></nav>',
+    '<nav class="toc" aria-label="Sections"><details class="toc__details"><summary>Sections</summary></details></nav>',
+    '<div class="progress"><span class="progress__bar" role="progressbar" aria-valuemin="0" aria-valuemax="1" aria-valuenow="0"></span></div>',
     '<article class="roadmap prose">',
+    '<h3 id="m11" class="ps-ms-h" data-ms="M1.1">M1.1</h3>',
     '<h2 id="s1">§1 <a class="ps-anchor" href="#s1" aria-hidden="true" tabindex="-1">#</a></h2>',
     '<nav class="ps-map-nav" aria-label="Roadmap map"><figure class="ps-map" tabindex="0" data-hotspots="1" data-sections="1">',
     '<svg><a href="#s1" aria-label="Jump to section 1 — Foundations"><rect class="ps-map__hit" x="1" y="2" width="3" height="4" rx="10"/></a></svg>',
@@ -95,15 +99,15 @@ console.log('\nACCESSIBILITY — each rule refuses the exact regression it was w
     '</article></main>'
   ].join('\n');
 
-  const a11yReject = (name, page, fragment) => {
-    const { problems } = inspectRenderedPage(page);
+  const a11yReject = (name, page, fragment, css = HEALTHY_CSS) => {
+    const { problems } = inspectRenderedPage(page, { css });
     if (!problems.length) return bad(name, 'guard accepted a page it must refuse');
     if (fragment && !problems.join('; ').includes(fragment))
       return bad(name, `rejected, but for the wrong reason: ${problems.join('; ')}`);
     ok(name, problems[0].slice(0, 72) + (problems[0].length > 72 ? '…' : ''));
   };
 
-  const { problems } = inspectRenderedPage(HEALTHY_PAGE);
+  const { problems } = inspectRenderedPage(HEALTHY_PAGE, { css: HEALTHY_CSS });
   if (problems.length) bad('a healthy page passes', `false positive: ${problems.join('; ')}`);
   else ok('a healthy page passes');
 
@@ -130,6 +134,27 @@ console.log('\nACCESSIBILITY — each rule refuses the exact regression it was w
     HEALTHY_PAGE.replace('<figure class="ps-map" tabindex="0"', '<figure class="ps-map"'),
     'unreachable by keyboard'
   );
+  a11yReject(
+    'progress bar back to being built after paint',
+    HEALTHY_PAGE.replace(/<div class="progress">.*?<\/div>/, ''),
+    'no reserved progress bar'
+  );
+  a11yReject(
+    'progress total disagreeing with the page',
+    HEALTHY_PAGE.replace('aria-valuemax="1"', 'aria-valuemax="9"'),
+    'rewrites itself after paint'
+  );
+  a11yReject(
+    'outline shipping open again',
+    HEALTHY_PAGE.replace('<details class="toc__details">', '<details class="toc__details" open>'),
+    'ships open'
+  );
+  a11yReject(
+    'stylesheet losing the desktop outline rule',
+    HEALTHY_PAGE,
+    'does not force ::details-content visible',
+    '.toc__details { border: 0; }'
+  );
 }
 
 console.log('\nACCESSIBILITY — the built pages must pass exactly as they are');
@@ -142,7 +167,9 @@ if (!existsSync(siteRoot)) {
       console.warn(`  … ${rel}: not built — skipped`);
       continue;
     }
-    const { problems } = inspectRenderedPage(readFileSync(p, 'utf8'));
+    const cssPath = join(siteRoot, 'assets', 'styles.css');
+    const css = existsSync(cssPath) ? readFileSync(cssPath, 'utf8') : '';
+    const { problems } = inspectRenderedPage(readFileSync(p, 'utf8'), { css });
     if (problems.length) bad(`${rel} passes the a11y guard`, problems.join('; '));
     else ok(`${rel} passes`);
   }

@@ -80,7 +80,12 @@ await shoot(
   'default.png'
 );
 
-for (const r of roadmaps) {
+// Live roadmaps only. A roadmap under review has no page, so nothing can ever
+// reference its card — it only shipped a 42 KB image advertising a repository
+// that is not public yet. When one goes live, flipping `status` and re-running
+// this script produces its card. checkOgFreshness in eleventy.config.mjs filters
+// the same way, so the missing cards do not turn into a permanent warning.
+for (const r of roadmaps.filter((x) => x.status === 'live')) {
   const stars = r.hasContent ? countStars(r.content) : r.stars || 0;
   const milestones = r.milestones || 0;
   const meta = milestones ? `${milestones} milestones · ${stars} ★ artifacts` : '';

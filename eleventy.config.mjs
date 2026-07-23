@@ -100,6 +100,7 @@ function enhanceHeadings(html) {
   let current = null;
   let stars = 0;
   let articulations = 0;
+  let milestones = 0;
 
   const out = html.replace(/<h([23]) id="([^"]+)">([\s\S]*?)<\/h\1>/g, (full, level, id, inner) => {
     const text = decodeEntities(inner.replace(/<[^>]+>/g, '').replace(/#\s*$/, '').trim());
@@ -114,6 +115,7 @@ function enhanceHeadings(html) {
     const ms = text.match(MILESTONE_RE);
     if (!ms) return full;
 
+    milestones++;
     const isStar = STAR_RE.test(text);
     const isArticulation = ARTICULATION_RE.test(text);
     if (isStar) stars++;
@@ -130,7 +132,10 @@ function enhanceHeadings(html) {
     return `<h3 id="${id}" class="${cls.join(' ')}" data-ms="${ms[1]}">${inner}</h3>`;
   });
 
-  return { html: out, toc, stars, articulations };
+  // `milestones` counts exactly what app.js will find in the DOM (h3.ps-ms-h with
+  // data-ms), which is what lets the template reserve the progress bar with a
+  // total that will not be rewritten after paint.
+  return { html: out, toc, stars, articulations, milestones };
 }
 
 // ── The roadmap's own SVG map, made navigable ────────────────────────────────
@@ -273,7 +278,11 @@ function checkOgFreshness() {
     problems.push(`og-manifest.json is missing at ${p} — run: node scripts/make-og.mjs`);
   } else {
     const manifest = JSON.parse(readFileSync(p, 'utf8'));
-    for (const r of loadRoadmaps()) {
+    // Only live roadmaps have pages, therefore only they have cards (see the
+    // matching filter in make-og.mjs). Iterating all of them would report a
+    // missing card on every build for the ones under review — a permanent
+    // warning is how a check stops being read.
+    for (const r of loadRoadmaps().filter((r) => r.status === 'live')) {
       const baked = manifest[r.slug];
       if (!baked) {
         problems.push(`no OG card for "${r.slug}" — run: node scripts/make-og.mjs`);
@@ -319,6 +328,12 @@ export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy({ 'src/CNAME': 'CNAME' });
 
   // Per-roadmap assets fetched into .content/<slug>/assets → /<slug>/assets/…
+  //
+  // Today the only file here is roadmap.svg, which no page links (the map is
+  // inlined and the README's <img> is stripped), so this looks like dead weight
+  // — it is not. The fetcher downloads ANY assets/… path a README references and
+  // rewriteUrl() points those references at /<slug>/assets/…; drop this and the
+  // next image an upstream README adds 404s silently, unfixable from here.
   for (const r of roadmaps) {
     eleventyConfig.addPassthroughCopy({ [`.content/${r.slug}/assets`]: `${r.slug}/assets` });
   }
@@ -370,6 +385,10 @@ export default function (eleventyConfig) {
 
   eleventyConfig.addFilter('roadmapMarkdown', (_content, roadmap) => renderRoadmap(roadmap).html);
   eleventyConfig.addFilter('roadmapToc', (roadmap) => renderRoadmap(roadmap).toc);
+  // Feeds the statically reserved progress bar. NOT the registry's declared
+  // number and NOT the sum of the outline's per-section counts: it must equal
+  // what app.js counts in the DOM, or the bar rewrites itself and shifts.
+  eleventyConfig.addFilter('roadmapMilestoneCount', (roadmap) => renderRoadmap(roadmap).milestones);
   // Computed from the README when the content is there; falls back to the declared
   // value for roadmaps still private (nothing to count at build).
   eleventyConfig.addFilter('roadmapStars', (roadmap) => renderRoadmap(roadmap).stars || roadmap.stars || 0);
