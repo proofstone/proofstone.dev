@@ -11,7 +11,12 @@
   --text: #16181d;
   --muted: #5b626d;
   --border: #e0e3e8;
+  /* Hairline dividers (--border) may be quiet; the visual boundary of a CONTROL
+     may not — WCAG 1.4.11 wants 3:1 for it, and --border gives 1.26:1. Separate
+     token so making the checkbox perceivable does not repaint every card edge. */
+  --control-border: #868e9c;   /* 3.24:1 on --bg */
   --accent: #2457d6;
+  --on-accent: #ffffff;        /* text on an --accent fill */
   --accent-weak: #e7edfb;
   --gold: #9a6a00;
   --gold-weak: #f7efd8;
@@ -33,7 +38,11 @@
   --text: #e6e8ec;
   --muted: #99a1ad;
   --border: #262c36;
+  --control-border: #6d7683;   /* 4.12:1 on --bg */
   --accent: #6f9bff;
+  /* White on this accent is 2.68:1 — below the 4.5:1 for body-size text. The
+     accent is light in dark theme, so the label goes dark instead. */
+  --on-accent: #0e1116;
   --accent-weak: #16223b;
   --gold: #e0b64d;
   --gold-weak: #2a2413;
@@ -48,6 +57,7 @@
   :root:not([data-theme="light"]) {
     --bg: #0e1116; --surface: #161b22; --surface-2: #1c222b; --text: #e6e8ec;
     --muted: #99a1ad; --border: #262c36; --accent: #6f9bff; --accent-weak: #16223b;
+    --control-border: #6d7683; --on-accent: #0e1116;
     --gold: #e0b64d; --gold-weak: #2a2413; --ok: #4fb07a; --ok-weak: #13251c;
     --code-bg: #1a2028; --shadow: none;
   }
@@ -77,6 +87,12 @@ a:hover { text-decoration: underline; }
 }
 .skip-link:focus { left: .5rem; top: .5rem; }
 
+/* Visually hidden, still announced — used for the progress live region. */
+.vh {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
 /* ── Header / footer ──────────────────────────────────────────────────────── */
 .site-header {
   position: sticky; top: 0; z-index: 20;
@@ -93,7 +109,7 @@ a:hover { text-decoration: underline; }
 
 .theme-toggle {
   width: 2.1rem; height: 2.1rem; display: inline-grid; place-items: center;
-  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  background: var(--surface); border: 1px solid var(--control-border); border-radius: 8px;
   color: var(--text); cursor: pointer;
 }
 .theme-toggle:hover { background: var(--surface-2); }
@@ -103,7 +119,10 @@ a:hover { text-decoration: underline; }
   :root:not([data-theme="light"]) .theme-toggle__icon::before { content: "☀"; }
 }
 
-main { padding: 2.5rem 1.25rem 4rem; }
+main { padding: 2.5rem 1.25rem 4rem; scroll-margin-top: 6rem; }
+/* Focus lands here only from the skip link, and the viewport is already at the
+   top — a full-page ring would be alarming, not informative. */
+main:focus { outline: none; }
 
 .site-footer {
   border-top: 1px solid var(--border); color: var(--muted);
@@ -231,10 +250,10 @@ main { padding: 2.5rem 1.25rem 4rem; }
 .roadmap__actions { display: flex; gap: .5rem; flex-wrap: wrap; }
 .btn {
   font-size: .85rem; padding: .4rem .75rem; border-radius: 8px;
-  border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  border: 1px solid var(--control-border); background: var(--surface); color: var(--text);
 }
 .btn:hover { background: var(--surface-2); text-decoration: none; }
-.btn--primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn--primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
 .btn--primary:hover { filter: brightness(1.06); background: var(--accent); }
 
 .roadmap__updated {
@@ -263,6 +282,28 @@ main { padding: 2.5rem 1.25rem 4rem; }
 /* ── Prose (rendered README) ──────────────────────────────────────────────── */
 .prose { max-width: var(--measure); margin: 0 auto; }
 .prose > :first-child { margin-top: 0; }
+
+/* A link sitting inside a sentence was distinguishable from the text around it by
+   colour alone — 2.88:1 light, 2.19:1 dark, where WCAG 1.4.1 (technique F73)
+   wants 3:1 for colour-only identification, and the footer's link is 1.03:1
+   against its own muted paragraph. Resource links are the payload of a roadmap,
+   so they get a permanent underline; the hover-only one reached neither keyboard
+   nor touch. Chrome links (brand, buttons, outline, cards, series) are left
+   alone — shape and position identify those.
+   :not(.ps-anchor) matters: `.prose a` outranks `.ps-anchor` and would otherwise
+   underline every heading "#". The map's <a> elements wrap a <rect> with no text,
+   so they are unaffected. */
+.prose a:not(.ps-anchor),
+.site-footer p a,
+.thesis__contribute a {
+  text-decoration: underline;
+  text-underline-offset: .16em;
+  text-decoration-thickness: .06em;
+  text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.prose a:not(.ps-anchor):hover,
+.site-footer p a:hover,
+.thesis__contribute a:hover { text-decoration-color: currentColor; }
 .prose h1 { font-size: clamp(1.7rem, 4vw, 2.4rem); line-height: 1.15; letter-spacing: -.02em; margin: 2.5rem 0 1rem; }
 .prose h2 {
   font-size: 1.5rem; letter-spacing: -.01em; margin: 3rem 0 1rem;
@@ -299,8 +340,20 @@ main { padding: 2.5rem 1.25rem 4rem; }
 }
 .prose pre code { background: none; padding: 0; font-size: .85em; }
 
-/* Wide tables scroll inside themselves — the page never scrolls sideways. */
-.prose table { display: block; width: max-content; max-width: 100%; overflow-x: auto; border-collapse: collapse; font-size: .92rem; }
+/* Sideways-scrolling regions (see wrapScrollables in eleventy.config.mjs).
+   Focusable, because a scroll container is unreachable without a mouse otherwise.
+   The scrolling also moved off <table> onto a wrapper: `display: block` on a
+   table is the classic way to lose row/column semantics. Measured here: current
+   Chrome keeps role=table and columnheader either way, so this half is
+   insurance against the engines that do not (and against a future regression),
+   not a defect reproducible today. */
+.prose__scroll { max-width: 100%; overflow-x: auto; }
+.prose__scroll:focus-visible,
+.prose pre:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+/* A plain auto-layout table already lays out the way the old `width: max-content;
+   max-width: 100%` pair did — it wraps to fit the column and only overflows when
+   a cell genuinely cannot fit, which is when the wrapper scrolls. */
+.prose table { max-width: 100%; border-collapse: collapse; font-size: .92rem; }
 .prose th, .prose td { border: 1px solid var(--border); padding: .5rem .7rem; text-align: left; vertical-align: top; }
 .prose thead th { background: var(--surface); }
 
@@ -335,8 +388,29 @@ main { padding: 2.5rem 1.25rem 4rem; }
 /* Section hotspots: invisible until pointed at, then a soft wash + outline. */
 .ps-map__hit { fill: transparent; stroke: transparent; stroke-width: 2; cursor: pointer; transition: fill .12s ease, stroke .12s ease; }
 .ps-map a:hover .ps-map__hit { fill: rgba(36, 87, 214, .12); stroke: #2457d6; }
-.ps-map a:focus-visible { outline: none; }
-.ps-map a:focus-visible .ps-map__hit { fill: rgba(36, 87, 214, .18); stroke: #2457d6; }
+
+/* The hotspot sits exactly on top of the section box, same geometry and stroke
+   width, so focusing only repainted a 2px stroke that was already coloured:
+   1.20–2.16:1 between the focused and unfocused states, where WCAG 2.2 (2.4.13)
+   wants 3:1. Every failing pair was a hue-only shift inside blue, which
+   deuteranopia flattens to nothing, and `outline: none` left no fallback ring.
+   Near-black at 4px clears 3:1 against all eight box colours used across the
+   three maps (worst pair 3.46:1, was 1.20:1) and survives colour-blind viewing;
+   the map panel is force-light in both themes, so this colour is hardcoded like
+   the rest of the map's palette. */
+.ps-map a:focus-visible .ps-map__hit {
+  fill: rgba(36, 87, 214, .18); stroke: #101828; stroke-width: 4; paint-order: stroke;
+}
+/* The figure is the scroll container AND holds focusable children, which
+   disqualifies it from the browsers' "focusable scroll container" heuristic —
+   without tabindex (set in the build) plus this ring, the right-hand third of
+   the map could not be reached or seen by keyboard in any browser. */
+.ps-map:focus-visible { outline: 3px solid #101828; outline-offset: 2px; }
+/* Forced colours repaint fill/stroke, so the custom indicator disappears there. */
+@media (forced-colors: active) {
+  .ps-map a:focus-visible,
+  .ps-map:focus-visible { outline: 3px solid Highlight; }
+}
 
 @media (max-width: 46rem) {
   /* Keep the map at a readable size and let the container scroll instead. */
@@ -399,10 +473,14 @@ main { padding: 2.5rem 1.25rem 4rem; }
 }
 .ps-ms.is-done .ps-criterion::before { content: "PROVEN ✓"; background: var(--ok); }
 
+/* The one control the product turns on. Its fill is the page colour (1.00:1) and
+   it carries no text, so the 2px boundary is the whole affordance — on --border
+   that was 1.26:1 light / 1.35:1 dark against a 3:1 requirement (WCAG 1.4.11).
+   The hover accent never fires for touch, and focus-visible only after arrival. */
 .ps-check {
   appearance: none; -webkit-appearance: none; flex: 0 0 auto;
   width: 1.25rem; height: 1.25rem; margin: 0;
-  border: 2px solid var(--border); border-radius: 6px; background: var(--bg); cursor: pointer;
+  border: 2px solid var(--control-border); border-radius: 6px; background: var(--bg); cursor: pointer;
 }
 .ps-check:checked { background: var(--ok); border-color: var(--ok); }
 .ps-check:checked::after { content: "✓"; color: var(--bg); font-size: .85rem; font-weight: 700; display: grid; place-items: center; height: 100%; }
@@ -420,10 +498,23 @@ main { padding: 2.5rem 1.25rem 4rem; }
   background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(6px);
   padding: .45rem 0;
 }
-.progress__bar { flex: 1 1 6rem; height: 6px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
-.progress__fill { height: 100%; width: 0; background: var(--ok); transition: width .2s ease; }
+/* The empty track was 1.14:1 against the page, i.e. invisible at 0 %, which is
+   every visitor's first view. Outlining it (rather than repainting the fill)
+   keeps the filled part at 4.57:1 against the track — repainting would have
+   traded a visible track for unreadable progress. */
+.progress__bar {
+  flex: 1 1 6rem; height: 8px; background: var(--surface-2);
+  border: 1px solid var(--control-border); border-radius: 999px; overflow: hidden;
+}
+/* display:block is load-bearing, not tidiness: this is a <span> inside a bar that
+   is a flex ITEM, not a flex container, so it stayed inline — and width/height
+   do not apply to an inline box. The fill has been computing 21 % and painting
+   0×0 px on the live site since the bar shipped. Found while giving the bar its
+   progressbar role: the announced value was about to be right while the picture
+   stayed empty. */
+.progress__fill { display: block; height: 100%; width: 0; background: var(--ok); transition: width .2s ease; }
 .progress__next {
-  font-size: .78rem; padding: .22rem .55rem; border: 1px solid var(--border);
+  font-size: .78rem; padding: .22rem .55rem; border: 1px solid var(--control-border);
   border-radius: 7px; background: var(--surface); color: var(--text); cursor: pointer; white-space: nowrap;
 }
 .progress__next:hover:not([disabled]) { background: var(--surface-2); border-color: var(--accent); }
@@ -445,7 +536,9 @@ main { padding: 2.5rem 1.25rem 4rem; }
   border-left: 2px solid transparent;
 }
 .toc__link:hover { background: var(--surface-2); color: var(--text); text-decoration: none; }
-.toc__link.is-active { color: var(--text); background: var(--surface-2); border-left-color: var(--accent); font-weight: 600; }
+/* "You are here" is now expressed by aria-current alone — the styling hangs off
+   the same attribute the screen reader reads, so the two cannot drift apart. */
+.toc__link[aria-current] { color: var(--text); background: var(--surface-2); border-left-color: var(--accent); font-weight: 600; }
 .toc__num { font-family: var(--mono); font-size: .72rem; color: var(--accent); flex: 0 0 auto; }
 .toc__title { flex: 1 1 auto; }
 .toc__count { font-family: var(--mono); font-size: .68rem; color: var(--muted); flex: 0 0 auto; }

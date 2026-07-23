@@ -26,7 +26,10 @@ eleventyComputed:
 </div>
 
 <div class="roadmap-layout">
-  <aside class="toc" aria-label="Sections">
+  {#- A list of in-page section links is the definition of <nav>. As an <aside>
+      it was announced as "Sections, complementary" and missed by the landmark
+      rotor's navigation workflow — the fastest way around a 30-milestone page. #}
+  <nav class="toc" aria-label="Sections">
     <details class="toc__details" open>
       <summary class="toc__summary">Sections</summary>
       <ol class="toc__list">
@@ -43,7 +46,7 @@ eleventyComputed:
         {%- endfor %}
       </ol>
     </details>
-  </aside>
+  </nav>
 
   <div class="roadmap-main">
     <article class="roadmap prose">

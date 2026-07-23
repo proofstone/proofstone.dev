@@ -16,6 +16,7 @@ import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { roadmaps } from '../roadmaps.config.mjs';
+import { inspectRenderedPage } from './a11y-guard.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const site = join(root, '_site');
@@ -184,6 +185,19 @@ console.log('\nXML — sitemap must be well-formed (prolog first, tags balanced)
       else pass('sitemap.xml well-formed', `${(xml.match(/<loc>/g) || []).length} urls, ${(xml.match(/<lastmod>/g) || []).length} with lastmod`);
     }
   }
+}
+
+// ── 4c. Accessibility invariants ─────────────────────────────────────────────
+// These live in the delivered HTML because that is where they broke: the heading
+// anchors are produced by a plugin whose fix option differs by version, and the
+// map hotspots are generated from an SVG this repo does not own.
+console.log('\nACCESSIBILITY — no silent tab stops, named landmarks, reachable scroll regions');
+for (const file of pages) {
+  const html = readFileSync(file, 'utf8');
+  const rel = relative(site, file).replace(/\\/g, '/');
+  const { problems } = inspectRenderedPage(html);
+  if (problems.length) for (const p of problems) fail(`${rel}`, p);
+  else pass(`${rel}`, 'clean');
 }
 
 // ── 5. Private repositories must not leak ────────────────────────────────────

@@ -64,15 +64,25 @@
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header">
     <a class="brand" href="/">proof<span>stone</span></a>
-    <nav class="site-nav">
+    {#- Labelled because a roadmap page carries four other navigation landmarks
+        (breadcrumb, section outline, roadmap map, the rest of the series); an
+        unnamed one is the confusing entry in a landmark list. #}
+    <nav class="site-nav" aria-label="Main">
       <a href="{{ site.org }}" rel="noopener">GitHub</a>
-      <button type="button" class="theme-toggle" aria-label="Toggle color theme" title="Toggle theme">
+      {#- Named for the state it reports, not for the act: app.js maintains
+          aria-pressed on it, so it announces "Dark theme, pressed" / "not
+          pressed". The name must then stay static or the two contradict. #}
+      <button type="button" class="theme-toggle" aria-label="Dark theme" title="Toggle theme">
         <span class="theme-toggle__icon" aria-hidden="true"></span>
       </button>
     </nav>
   </header>
 
-  <main id="main">
+  {#- tabindex="-1" is what makes "Skip to content" actually move focus: without
+      it the browser sets the hash and leaves focus on <body>, so a screen
+      reader's cursor never travels. Chromium's tab order compensates; Safari and
+      several AT pairings do not. #}
+  <main id="main" tabindex="-1">
     {{ content | safe }}
   </main>
 

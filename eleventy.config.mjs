@@ -19,7 +19,14 @@ const md = markdownIt({ html: true, linkify: true, typographer: false }).use(
       symbol: '#',
       placement: 'after',
       class: 'ps-anchor',
-      ariaHidden: true
+      ariaHidden: true,
+      // The "#" is decorative: it is hidden from assistive tech (ariaHidden) and
+      // invisible until hover, so leaving it in the tab order put ~52 stops per
+      // page that announce nothing (a quarter of all stops on this page).
+      // renderAttrs — NOT linkAttrs: this version of markdown-it-anchor has no
+      // such option and would ignore it silently. `tabIndex: false` above governs
+      // the HEADING, not this link, so it does not cover it either.
+      renderAttrs: () => ({ tabindex: '-1' })
     })
   }
 );
@@ -50,6 +57,23 @@ function markCriteria(html) {
     /<blockquote>(?=\s*<p><strong>You're done when<\/strong>)/g,
     '<blockquote class="ps-criterion">'
   );
+}
+
+// Wide tables and code blocks scroll sideways inside themselves. A scroll
+// container that cannot be focused cannot be scrolled without a mouse, so the
+// right-hand columns were unreachable by keyboard in Safari and older Chromium.
+//   • tables get a wrapper, which also lets the table itself keep its native
+//     layout instead of the `display: block` that classically costs a table its
+//     row/column semantics. Current Chrome keeps them either way (measured), so
+//     that half is insurance against other engines, not a fix for a live bug.
+//   • <pre> is already its own scroll container, so it just becomes focusable.
+// role="group", not role="region": a landmark per table would be rotor noise on
+// a page that already has three of them.
+function wrapScrollables(html) {
+  return html
+    .replace(/<table(\s[^>]*)?>/g, (_m, attrs) => `<div class="prose__scroll" role="group" aria-label="Table" tabindex="0"><table${attrs || ''}>`)
+    .replace(/<\/table>/g, '</table></div>')
+    .replace(/<pre(\s[^>]*)?>/g, (_m, attrs) => `<pre${attrs || ''} tabindex="0">`);
 }
 
 const MILESTONE_RE = /^\s*(M\d+\.\d+)\b/;
@@ -130,19 +154,25 @@ function numAttr(attrs, name) {
 
 function buildInteractiveMap(svg, toc, altText) {
   if (!svg) return { html: '', matched: 0, expected: toc.length };
-  const byNum = new Map(toc.map((s) => [String(s.num), s.id]));
+  const byNum = new Map(toc.map((s) => [String(s.num), s]));
 
   let matched = 0;
   const hotspots = [...svg.matchAll(SECTION_BOX_RE)]
     .map(([, attrs, num]) => {
-      const id = byNum.get(num);
+      const section = byNum.get(num);
       const x = numAttr(attrs, 'x');
       const y = numAttr(attrs, 'y');
       const w = numAttr(attrs, 'width');
       const h = numAttr(attrs, 'height');
-      if (!id || x === null || y === null || w === null || h === null) return '';
+      if (!section || x === null || y === null || w === null || h === null) return '';
       matched++;
-      return `<a href="#${id}" aria-label="Jump to §${num}"><rect class="ps-map__hit" x="${x}" y="${y}" width="${w}" height="${h}" rx="10"/></a>`;
+      // The section title is right here in the outline data, so the link says
+      // where it goes. "Jump to §3" alone left 11 near-identical links, and a
+      // screen reader at default verbosity may not even read the "§".
+      // escapeHtml is load-bearing: titles are entity-decoded upstream, and §6
+      // of one roadmap is literally "Monitoring & AI control".
+      const label = md.utils.escapeHtml(`Jump to section ${num} — ${section.title}`);
+      return `<a href="#${section.id}" aria-label="${label}"><rect class="ps-map__hit" x="${x}" y="${y}" width="${w}" height="${h}" rx="10"/></a>`;
     })
     .join('');
 
@@ -153,8 +183,19 @@ function buildInteractiveMap(svg, toc, altText) {
 
   const withHotspots = opened.replace(/<\/svg>\s*$/, `${hotspots}</svg>`);
   const caption = altText ? `<figcaption class="ps-map__cap">${altText}</figcaption>` : '';
+  // Two accessibility notes on this wrapper:
+  //  • <nav> around the figure, not role="navigation" ON it — a role on <figure>
+  //    would sever the figcaption→figure name association. The label explains why
+  //    a second set of section links exists next to the outline.
+  //  • tabindex="0" on the scrolling element itself. Browsers make scroll
+  //    containers keyboard-scrollable only when they hold NO focusable children;
+  //    this one holds the hotspot links, so it is disqualified from that
+  //    heuristic and the right third of the map was unreachable without a mouse.
   return {
-    html: `<figure class="ps-map" data-hotspots="${matched}" data-sections="${toc.length}">${withHotspots}${caption}</figure>`,
+    html:
+      `<nav class="ps-map-nav" aria-label="Roadmap map">` +
+      `<figure class="ps-map" tabindex="0" data-hotspots="${matched}" data-sections="${toc.length}">${withHotspots}${caption}</figure>` +
+      `</nav>`,
     matched,
     expected: toc.length
   };
@@ -193,6 +234,7 @@ function renderRoadmap(roadmap) {
   let html = md.render(roadmap.content || '');
   html = rewriteLinks(html, roadmap);
   html = markCriteria(html);
+  html = wrapScrollables(html);
 
   const result = enhanceHeadings(html);
 

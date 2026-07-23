@@ -8,11 +8,21 @@
   /* ── Theme toggle ───────────────────────────────────────────────────────── */
   var toggle = document.querySelector('.theme-toggle');
   if (toggle) {
-    toggle.addEventListener('click', function () {
+    // The button's only state indicator was an aria-hidden CSS glyph, so its
+    // name read the same before and after pressing it. aria-pressed is set here
+    // rather than in the template: the head script runs before <body> exists,
+    // and a hardcoded value would be a lie for an OS-dark visitor with JS off.
+    var setPressed = function () {
       var cur = root.getAttribute('data-theme');
       if (!cur) cur = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      var next = cur === 'dark' ? 'light' : 'dark';
+      toggle.setAttribute('aria-pressed', String(cur === 'dark'));
+      return cur;
+    };
+    setPressed();
+    toggle.addEventListener('click', function () {
+      var next = setPressed() === 'dark' ? 'light' : 'dark';
       root.setAttribute('data-theme', next);
+      setPressed();
       try { localStorage.setItem('proofstone:theme', next); } catch (e) {}
     });
   }
@@ -23,8 +33,17 @@
   if (!slug || !article) return;
 
   // Collapse the section outline on narrow screens (it is a sidebar on desktop).
+  // Kept in sync with the breakpoint afterwards: above 70rem the CSS hides the
+  // <summary>, so a page loaded narrow and then widened used to lose the outline
+  // for the rest of that page view with no control left to bring it back.
+  // Widening reopens it; narrowing closes it again — but a reader who opened it
+  // by hand at a narrow width is never overruled at that same width.
   var tocDetails = document.querySelector('.toc__details');
-  if (tocDetails && window.innerWidth < 1120) tocDetails.open = false;
+  var wide = matchMedia('(min-width: 70rem)');
+  if (tocDetails) {
+    if (!wide.matches) tocDetails.open = false;
+    wide.addEventListener('change', function (e) { tocDetails.open = e.matches; });
+  }
 
   /* ── Wrap each milestone so "done" can be shown on the block itself ─────── */
   var heads = Array.prototype.slice.call(article.querySelectorAll('h3.ps-ms-h'));
@@ -33,6 +52,12 @@
   heads.forEach(function (h) {
     var id = h.getAttribute('data-ms');
     if (!id) return;
+
+    // Read the heading BEFORE the checkbox is inserted into it. "Mark M0.1 done"
+    // gave a screen-reader user a list of ~30 unique but opaque names, and left
+    // voice control with nothing to say: the visible words were not in the name.
+    // The trailing "#" is the decorative permalink; ⭐ stays, it means flagship.
+    var title = (h.textContent || '').replace(/#\s*$/, '').replace(/\s+/g, ' ').trim();
 
     // Collect heading + everything up to the next heading, then move into a wrapper.
     var nodes = [h];
@@ -51,7 +76,7 @@
     cb.className = 'ps-check';
     cb.setAttribute('data-key', key);
     cb.setAttribute('data-ms', id);
-    cb.setAttribute('aria-label', 'Mark ' + id + ' done');
+    cb.setAttribute('aria-label', 'Mark done: ' + (title || id));
     try { cb.checked = localStorage.getItem(key) === '1'; } catch (e) {}
 
     cb.addEventListener('click', function (e) { e.stopPropagation(); });
@@ -82,22 +107,40 @@
   var column = article.parentElement;
   var wrapEl = document.createElement('div');
   wrapEl.className = 'progress';
+  // The bar is the product's reward loop, and it was a group of unlabelled empty
+  // spans: no role, no values, no announcement when it moved. The status span is
+  // visually hidden and carries the same sentence for assistive tech.
   wrapEl.innerHTML =
     '<span class="progress__label"></span>' +
-    '<span class="progress__bar"><span class="progress__fill"></span></span>' +
+    '<span class="progress__bar" role="progressbar" aria-label="Milestone progress"' +
+    ' aria-valuemin="0" aria-valuemax="' + boxes.length + '" aria-valuenow="0">' +
+    '<span class="progress__fill"></span></span>' +
     '<button type="button" class="progress__next">next unchecked ↓</button>' +
-    '<button type="button" class="progress__reset">reset</button>';
+    '<button type="button" class="progress__reset">reset</button>' +
+    '<span class="vh" role="status" aria-live="polite"></span>';
   column.insertBefore(wrapEl, article);
 
   var label = wrapEl.querySelector('.progress__label');
+  var bar = wrapEl.querySelector('.progress__bar');
   var fill = wrapEl.querySelector('.progress__fill');
   var nextBtn = wrapEl.querySelector('.progress__next');
+  var status = wrapEl.querySelector('[role="status"]');
 
   nextBtn.addEventListener('click', function () {
     for (var i = 0; i < boxes.length; i++) {
       if (!boxes[i].checked) {
         var block = boxes[i].closest('.ps-ms') || boxes[i];
-        block.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Honour the OS motion setting: the CSS reduced-motion block only kills
+        // transitions, and an explicit behavior:'smooth' here overrides CSS
+        // anyway — on a 33-milestone page that is thousands of pixels of scroll.
+        var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        block.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+        // …and take focus with you. The bar is sticky, so focus used to stay on
+        // the button while the viewport moved: a keyboard user "jumped" and then
+        // had to tab through everything above the target to act on it.
+        // preventScroll keeps the browser from cancelling the smooth scroll and
+        // parking the bare input under the sticky header.
+        boxes[i].focus({ preventScroll: true });
         return;
       }
     }
@@ -116,14 +159,21 @@
   /* ── Per-section counts in the outline ──────────────────────────────────── */
   var counts = Array.prototype.slice.call(document.querySelectorAll('.toc__count'));
   var state = {};
+  var announced = false; // the first pass is page load, not a change
 
   function update() {
     boxes.forEach(function (cb) { state[cb.getAttribute('data-ms')] = cb.checked; });
 
     var done = boxes.filter(function (cb) { return cb.checked; }).length;
+    var sentence = done + ' of ' + boxes.length + ' milestones done';
     label.textContent = done + ' / ' + boxes.length + ' milestones';
     fill.style.width = Math.round((done / boxes.length) * 100) + '%';
     nextBtn.disabled = done === boxes.length;
+
+    bar.setAttribute('aria-valuenow', String(done));
+    bar.setAttribute('aria-valuetext', sentence);
+    if (announced) status.textContent = sentence;
+    announced = true;
 
     counts.forEach(function (el) {
       var ids = (el.getAttribute('data-toc-ms') || '').split(',').filter(Boolean);
@@ -132,7 +182,18 @@
       var n = ids.filter(function (id) { return state[id]; }).length;
       el.textContent = n + '/' + total;
       var link = el.closest('.toc__link');
-      if (link) link.classList.toggle('is-complete', n === total);
+      if (!link) return;
+      link.classList.toggle('is-complete', n === total);
+      // The visible count is a compact "3/7" inside the link, which announces as
+      // a bare pair of numbers with no unit. The link keeps its own section name.
+      var name = link.getAttribute('data-name');
+      if (!name) {
+        var num = link.querySelector('.toc__num');
+        var t = link.querySelector('.toc__title');
+        name = ((num ? num.textContent.trim() + ' ' : '') + (t ? t.textContent.trim() : '')).trim();
+        link.setAttribute('data-name', name);
+      }
+      link.setAttribute('aria-label', name + ' — ' + n + ' of ' + total + ' milestones done');
     });
   }
   update();
@@ -148,7 +209,14 @@
     for (var i = 0; i < sections.length; i++) {
       if (sections[i] && sections[i].getBoundingClientRect().top <= 130) idx = i; else break;
     }
-    links.forEach(function (a, i) { a.classList.toggle('is-active', i === idx); });
+    // aria-current, not a class: "you are here" was a colour/weight change with
+    // no programmatic equivalent. "true" rather than "location" — support for
+    // the exact token is thinner in older screen readers. The CSS hangs off this
+    // same attribute, so the visual and the announced state cannot drift.
+    links.forEach(function (a, i) {
+      if (i === idx) a.setAttribute('aria-current', 'true');
+      else a.removeAttribute('aria-current');
+    });
   }
   if (links.length) {
     addEventListener('scroll', function () {

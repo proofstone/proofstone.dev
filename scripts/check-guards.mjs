@@ -12,10 +12,12 @@ import { readFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { inspectReadme, inspectSvg, shapeOf } from './content-guard.mjs';
+import { inspectRenderedPage } from './a11y-guard.mjs';
 import { roadmaps } from '../roadmaps.config.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const contentRoot = join(root, '.content');
+const siteRoot = join(root, '_site');
 
 let failures = 0;
 const ok = (name, detail = '') => console.log(`  ✓ ${name}${detail ? ` — ${detail}` : ''}`);
@@ -73,6 +75,77 @@ console.log('\nDRIFT — a legitimate roadmap change warns, it does not fail the
   if (r.problems.length) bad('drift stays non-fatal', 'drift was treated as a failure');
   else if (!r.warnings.length) bad('drift is reported', 'no warning emitted');
   else ok('drift warns but does not fail', r.warnings[0].slice(0, 58) + '…');
+}
+
+console.log('\nACCESSIBILITY — each rule refuses the exact regression it was written for');
+{
+  // A minimal page carrying every shape the a11y guard inspects. Each case below
+  // breaks exactly one of them; the healthy page must keep passing all of them.
+  const HEALTHY_PAGE = [
+    '<main id="main" tabindex="-1">',
+    '<nav class="site-nav" aria-label="Main"><a href="/">home</a></nav>',
+    '<article class="roadmap prose">',
+    '<h2 id="s1">§1 <a class="ps-anchor" href="#s1" aria-hidden="true" tabindex="-1">#</a></h2>',
+    '<nav class="ps-map-nav" aria-label="Roadmap map"><figure class="ps-map" tabindex="0" data-hotspots="1" data-sections="1">',
+    '<svg><a href="#s1" aria-label="Jump to section 1 — Foundations"><rect class="ps-map__hit" x="1" y="2" width="3" height="4" rx="10"/></a></svg>',
+    '</figure></nav>',
+    '<div class="prose__scroll" role="group" aria-label="Table" tabindex="0"><table><tr><td>x</td></tr></table></div>',
+    '<pre tabindex="0"><code>x</code></pre>',
+    '<a class="skip-link" href="#main">Skip to content</a>',
+    '</article></main>'
+  ].join('\n');
+
+  const a11yReject = (name, page, fragment) => {
+    const { problems } = inspectRenderedPage(page);
+    if (!problems.length) return bad(name, 'guard accepted a page it must refuse');
+    if (fragment && !problems.join('; ').includes(fragment))
+      return bad(name, `rejected, but for the wrong reason: ${problems.join('; ')}`);
+    ok(name, problems[0].slice(0, 72) + (problems[0].length > 72 ? '…' : ''));
+  };
+
+  const { problems } = inspectRenderedPage(HEALTHY_PAGE);
+  if (problems.length) bad('a healthy page passes', `false positive: ${problems.join('; ')}`);
+  else ok('a healthy page passes');
+
+  a11yReject(
+    'heading anchor back in the tab order',
+    HEALTHY_PAGE.replace(' aria-hidden="true" tabindex="-1"', ' aria-hidden="true"'),
+    'aria-hidden'
+  );
+  a11yReject('unnamed <nav> landmark', HEALTHY_PAGE.replace(' aria-label="Main"', ''), 'accessible name');
+  a11yReject('skip link with nowhere to land', HEALTHY_PAGE.replace(' tabindex="-1"', ''), 'skip link');
+  a11yReject(
+    'table that only a mouse can scroll',
+    HEALTHY_PAGE.replace('<div class="prose__scroll" role="group" aria-label="Table" tabindex="0">', '<div>'),
+    'scroll wrapper'
+  );
+  a11yReject('code block off the keyboard path', HEALTHY_PAGE.replace('<pre tabindex="0">', '<pre>'), '<pre>');
+  a11yReject(
+    'map hotspots named by number only',
+    HEALTHY_PAGE.replace('aria-label="Jump to section 1 — Foundations"', 'aria-label="Jump to §1"'),
+    'number only'
+  );
+  a11yReject(
+    'map unreachable without a mouse',
+    HEALTHY_PAGE.replace('<figure class="ps-map" tabindex="0"', '<figure class="ps-map"'),
+    'unreachable by keyboard'
+  );
+}
+
+console.log('\nACCESSIBILITY — the built pages must pass exactly as they are');
+if (!existsSync(siteRoot)) {
+  console.warn('  … no _site (run: npm run build) — skipped');
+} else {
+  for (const rel of ['index.html', '404.html', ...roadmaps.filter((r) => r.status === 'live').map((r) => `${r.slug}/index.html`)]) {
+    const p = join(siteRoot, rel);
+    if (!existsSync(p)) {
+      console.warn(`  … ${rel}: not built — skipped`);
+      continue;
+    }
+    const { problems } = inspectRenderedPage(readFileSync(p, 'utf8'));
+    if (problems.length) bad(`${rel} passes the a11y guard`, problems.join('; '));
+    else ok(`${rel} passes`);
+  }
 }
 
 console.log('\nREAL CONTENT — the live READMEs must pass exactly as they are');
