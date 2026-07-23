@@ -1,7 +1,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // proofstone — roadmap registry (single source consumed by _data files AND the
 // Eleventy config for passthrough). To connect a new roadmap: add ONE entry here
-// (+ drop docs/notify-site.yml.tmpl into that roadmap's repo). See ARCHITECTURE.md §4.
+// (+ drop docs/notify-site.yml.tmpl into that roadmap's repo).
+// Full procedure: see "Connect a new roadmap" in README.md.
 // ─────────────────────────────────────────────────────────────────────────────
 import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -28,8 +29,12 @@ export const roadmaps = [
     tagline: 'The map for the engineer moving into AI safety — evals, red-teaming, guardrails, agent security — and getting hired doing it.',
     milestones: 33,   // fallback only; real count is computed from the README at build
     order: 1,
-    status: 'live',                       // "live" | "teaser"
-    star: true
+    status: 'live',                       // "live" | "teaser" | "review"
+    star: true,
+    // The milestone the home page shows as "what a milestone looks like".
+    // Declared here rather than hardcoded in the template so the flagship sample
+    // is a registry decision; if it ever stops resolving, the build says so.
+    sampleMilestone: 'M2.1'
   },
   {
     slug: 'distributed-systems-engineer',   // = repo name without the "-roadmap" suffix
@@ -100,12 +105,16 @@ export function loadRoadmaps() {
     if (r.status === 'live') {
       const p = join(contentRoot, r.slug, 'README.md');
       const content = existsSync(p) ? readFileSync(p, 'utf8') : '';
+      // No `|| r.milestones` fallback: the fetch-time shape gate guarantees a live
+      // roadmap has at least one milestone, so a zero here means something really
+      // broke — and a card silently showing the declared number instead of the
+      // truth is exactly the drift this project keeps getting bitten by.
       const count = countMilestones(content);
       // The roadmap's own SVG map, fetched alongside the README. Inlined at build
       // so its section boxes can link into the page (an <img> cannot do that).
       const mapPath = join(contentRoot, r.slug, 'assets', 'roadmap.svg');
       const mapSvg = existsSync(mapPath) ? readFileSync(mapPath, 'utf8') : '';
-      return { ...r, content, mapSvg, hasContent: content.length > 0, milestones: count || r.milestones };
+      return { ...r, content, mapSvg, hasContent: content.length > 0, milestones: count, declaredMilestones: r.milestones };
     }
     return { ...r, content: '', mapSvg: '', hasContent: false };
   });

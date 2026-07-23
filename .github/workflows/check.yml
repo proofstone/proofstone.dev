@@ -1,0 +1,43 @@
+# Quality checks that must NOT be able to block a content deploy.
+#
+# The deterministic, offline assertions (anchors, map coverage, proof sample,
+# private-repo leaks, noindex) live in `npm run build` itself, so the deploy path
+# in build-deploy.yml already enforces them — including on the autonomous
+# repository_dispatch and nightly rebuilds that no human watches.
+#
+# What runs here instead is everything that depends on third parties or on a
+# human being present: the guard proof harness and the external link check.
+name: check
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      # Proves the border guards still reject what they are supposed to reject
+      # (and still accept ordinary prose), then rebuilds and re-asserts the site.
+      - name: Guards and build assertions
+        run: npm run check:guards
+
+      - name: Build (runs the deterministic site assertions)
+        run: npm run build
+
+      # Advisory: third-party servers rate-limit and bot-block, so a red result
+      # here is information, never a gate.
+      - name: External links (advisory)
+        continue-on-error: true
+        run: npm run check:links

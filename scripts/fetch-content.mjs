@@ -1,16 +1,34 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // fetch-content.mjs — pulls each LIVE roadmap's README + referenced assets/ files
 // from its repo into .content/<slug>/ (fetch-at-build; the roadmap repo is the
-// source of truth). Offline-safe: if a fetch fails but a cached copy exists, it
-// keeps the cache and warns instead of failing the build.
+// source of truth).
+//
+// This script is the site's border control. Content arrives from repositories the
+// site does not own, on triggers no human reviews (repository_dispatch, nightly
+// cron), so everything crossing the border is checked here:
+//
+//   · shape      — a README that parses to zero milestones or zero sections would
+//                  render a plausible-looking but gutted page. Refuse it.
+//   · markup     — raw HTML in a README is rendered verbatim into the page, so
+//                  executable markup is rejected before it can reach the origin
+//                  that holds every visitor's progress.
+//   · resilience — timeouts and retries, so one blip does not red the build.
+//
+// Offline-safe: a failure of any kind falls back to the cached copy and warns;
+// only "bad content AND no cache" fails the build. CI never has a cache
+// (.content/ is gitignored), so there a bad README is a hard stop.
 // ─────────────────────────────────────────────────────────────────────────────
 import { mkdirSync, writeFileSync, existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { roadmaps } from '../roadmaps.config.mjs';
+import { inspectReadme, inspectSvg, shapeOf } from './content-guard.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const contentRoot = join(root, '.content');
+
+const FETCH_TIMEOUT_MS = 15000;
+const RETRIES = 3;
 
 function rawUrl(repo, branch, path) {
   return `https://raw.githubusercontent.com/${repo}/${branch}/${path}`;
@@ -25,22 +43,54 @@ function assetPaths(readme) {
   return [...set];
 }
 
-async function fetchText(url) {
-  const res = await fetch(url, { headers: { 'user-agent': 'proofstone-build' } });
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText} for ${url}`);
-  return res.text();
+// ── Network ──────────────────────────────────────────────────────────────────
+
+class HttpError extends Error {
+  constructor(status, message) {
+    super(message);
+    this.status = status;
+  }
 }
 
-async function fetchBinary(url) {
-  const res = await fetch(url, { headers: { 'user-agent': 'proofstone-build' } });
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText} for ${url}`);
-  return Buffer.from(await res.arrayBuffer());
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// Retries transient failures (timeout, network, 5xx). Never retries 4xx: a 404
+// means the file genuinely is not in the repo, and retrying only triples the
+// build time on a real miss.
+async function fetchWithRetry(url, as) {
+  let lastErr;
+  for (let attempt = 1; attempt <= RETRIES; attempt++) {
+    try {
+      const res = await fetch(url, {
+        headers: { 'user-agent': 'proofstone-build' },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS)
+      });
+      if (!res.ok) {
+        const err = new HttpError(res.status, `${res.status} ${res.statusText} for ${url}`);
+        if (res.status >= 400 && res.status < 500) throw err;
+        lastErr = err;
+      } else {
+        return as === 'text' ? await res.text() : Buffer.from(await res.arrayBuffer());
+      }
+    } catch (e) {
+      if (e instanceof HttpError && e.status >= 400 && e.status < 500) throw e;
+      lastErr = e;
+    }
+    if (attempt < RETRIES) {
+      const backoff = 500 * attempt;
+      console.warn(`  … retry ${attempt}/${RETRIES - 1} in ${backoff}ms (${lastErr.message})`);
+      await sleep(backoff);
+    }
+  }
+  throw lastErr;
 }
 
 function save(absPath, data) {
   mkdirSync(dirname(absPath), { recursive: true });
   writeFileSync(absPath, data);
 }
+
+// ── Main ─────────────────────────────────────────────────────────────────────
 
 let hadError = false;
 
@@ -52,14 +102,22 @@ for (const r of roadmaps) {
 
   let readme = null;
   try {
-    readme = await fetchText(rawUrl(r.repo, r.branch, 'README.md'));
-    save(readmePath, readme);
-    console.log(`  ✓ README.md (${readme.length} bytes)`);
+    const fetched = await fetchWithRetry(rawUrl(r.repo, r.branch, 'README.md'), 'text');
+
+    // Inspect BEFORE writing: a bad payload must not overwrite a good cache.
+    const { problems, warnings } = inspectReadme(fetched, r);
+    for (const w of warnings) console.warn(`  ! ${w}`);
+    if (problems.length) throw new Error(problems.join('; '));
+
+    save(readmePath, fetched);
+    readme = fetched;
+    const { milestones, sections } = shapeOf(fetched);
+    console.log(`  ✓ README.md (${fetched.length} bytes · ${milestones} milestones · ${sections} sections)`);
   } catch (e) {
     if (existsSync(readmePath)) {
-      console.warn(`  ! README fetch failed (${e.message}) — keeping cached copy`);
+      console.warn(`  ! README rejected (${e.message}) — keeping cached copy`);
     } else {
-      console.error(`  ✗ README fetch failed and no cache: ${e.message}`);
+      console.error(`  ✗ README rejected and no cache: ${e.message}`);
       hadError = true;
       continue;
     }
@@ -70,12 +128,21 @@ for (const r of roadmaps) {
   for (const p of paths) {
     const dest = join(dir, p);
     try {
-      save(dest, await fetchBinary(rawUrl(r.repo, r.branch, p)));
+      const bytes = await fetchWithRetry(rawUrl(r.repo, r.branch, p), 'binary');
+
+      // The map SVG is inlined raw into the page, so it needs the same border
+      // check as the README — an SVG can carry <script> and event handlers.
+      if (/\.svg$/i.test(p)) {
+        const bad = inspectSvg(bytes.toString('utf8'));
+        if (bad.length) throw new Error(bad.join('; '));
+      }
+
+      save(dest, bytes);
       console.log(`  ✓ ${p}`);
     } catch (e) {
-      if (existsSync(dest)) console.warn(`  ! ${p} fetch failed (${e.message}) — keeping cache`);
+      if (existsSync(dest)) console.warn(`  ! ${p} rejected (${e.message}) — keeping cache`);
       else {
-        console.error(`  ✗ ${p} fetch failed and no cache: ${e.message}`);
+        console.error(`  ✗ ${p} rejected and no cache: ${e.message}`);
         hadError = true;
       }
     }
@@ -83,7 +150,7 @@ for (const r of roadmaps) {
 }
 
 if (hadError) {
-  console.error('\nfetch-content: finished with errors (missing content + no cache).');
+  console.error('\nfetch-content: finished with errors (bad or missing content + no cache).');
   process.exit(1);
 }
 console.log('\nfetch-content: done.');

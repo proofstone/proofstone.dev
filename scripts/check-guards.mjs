@@ -1,0 +1,104 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// check-guards.mjs — proves the build's safety gates actually fire.
+//
+// A gate nobody has seen reject anything is a decoration. Each case below feeds
+// a deliberately poisoned payload to the REAL guard code (no reimplementation)
+// and asserts it is refused; the healthy cases assert real content still passes,
+// which is what stops the gates from being tightened into false positives.
+//
+//   node scripts/check-guards.mjs
+// ─────────────────────────────────────────────────────────────────────────────
+import { readFileSync, existsSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { inspectReadme, inspectSvg, shapeOf } from './content-guard.mjs';
+import { roadmaps } from '../roadmaps.config.mjs';
+
+const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+const contentRoot = join(root, '.content');
+
+let failures = 0;
+const ok = (name, detail = '') => console.log(`  ✓ ${name}${detail ? ` — ${detail}` : ''}`);
+const bad = (name, detail) => {
+  console.error(`  ✗ ${name} — ${detail}`);
+  failures++;
+};
+
+function mustReject(name, text, expectFragment) {
+  const { problems } = inspectReadme(text, {});
+  if (!problems.length) return bad(name, 'guard accepted a payload it must refuse');
+  if (expectFragment && !problems.join('; ').includes(expectFragment))
+    return bad(name, `rejected, but for the wrong reason: ${problems.join('; ')}`);
+  ok(name, problems[0]);
+}
+
+function mustAccept(name, text) {
+  const { problems } = inspectReadme(text, {});
+  if (problems.length) return bad(name, `false positive: ${problems.join('; ')}`);
+  ok(name);
+}
+
+// A minimal well-formed roadmap body — the baseline every poisoned case mutates.
+const HEALTHY = ['## §1 — Foundations', '', '### M1.1 — Do the thing', '', "> **You're done when** it runs.", ''].join('\n');
+
+console.log('\nSHAPE — a README that parses to nothing must not publish');
+mustAccept('healthy body passes', HEALTHY);
+mustReject('no milestone headings', HEALTHY.replace('### M1.1', '#### M1.1'), '0 milestone headings');
+mustReject('no section headings', HEALTHY.replace('## §1', '## 1.'), '0 section headings');
+mustReject('empty document', '', '0 milestone headings');
+
+console.log('\nMARKUP — executable markup from a repo we do not own must not reach the origin');
+mustReject('<script> tag', HEALTHY + '\n<script>alert(1)</script>', '<script>');
+mustReject('<iframe> tag', HEALTHY + '\n<iframe src="//evil.test"></iframe>', '<iframe>');
+mustReject('inline event handler', HEALTHY + '\n<img src=x onerror=alert(1)>', 'event handler');
+mustReject('javascript: URL', HEALTHY + '\n<a href="javascript:alert(1)">x</a>', 'javascript:');
+
+console.log('\nMARKUP — prose must NOT trip the guard (false positives break the build)');
+mustAccept('book title "JavaScript: The Good Parts"', HEALTHY + '\nRead JavaScript: The Good Parts.');
+mustAccept('prose containing " once ="', HEALTHY + '\nSet it once = done, then move on.');
+mustAccept('allowed <sub> tag actually used by the roadmaps', HEALTHY + '\n<sub>a footnote</sub>');
+mustAccept('code fence mentioning onerror', HEALTHY + '\n```\nimg.onerror = handler\n```');
+
+console.log('\nSVG — the map is inlined raw, so it gets the same border check');
+const svgOk = '<svg xmlns="http://www.w3.org/2000/svg"><rect x="1" y="2" width="3" height="4"/></svg>';
+if (inspectSvg(svgOk).length) bad('clean SVG passes', 'false positive'); else ok('clean SVG passes');
+if (!inspectSvg(svgOk.replace('<rect', '<script>fetch("//evil")</script><rect')).length)
+  bad('SVG with <script>', 'guard accepted it'); else ok('SVG with <script> rejected');
+if (!inspectSvg('<svg onload="alert(1)"></svg>').length)
+  bad('SVG with onload=', 'guard accepted it'); else ok('SVG with onload= rejected');
+
+console.log('\nDRIFT — a legitimate roadmap change warns, it does not fail the build');
+{
+  const r = inspectReadme(HEALTHY, { milestones: 99 });
+  if (r.problems.length) bad('drift stays non-fatal', 'drift was treated as a failure');
+  else if (!r.warnings.length) bad('drift is reported', 'no warning emitted');
+  else ok('drift warns but does not fail', r.warnings[0].slice(0, 58) + '…');
+}
+
+console.log('\nREAL CONTENT — the live READMEs must pass exactly as they are');
+for (const r of roadmaps) {
+  if (r.status !== 'live') continue;
+  const p = join(contentRoot, r.slug, 'README.md');
+  if (!existsSync(p)) {
+    console.warn(`  … ${r.slug}: no cached README (run: node scripts/fetch-content.mjs) — skipped`);
+    continue;
+  }
+  const text = readFileSync(p, 'utf8');
+  const { problems, shape } = inspectReadme(text, r);
+  if (problems.length) bad(`${r.slug} passes the guard`, problems.join('; '));
+  else ok(`${r.slug} passes`, `${shape.milestones} milestones · ${shape.sections} sections`);
+
+  const svg = join(contentRoot, r.slug, 'assets', 'roadmap.svg');
+  if (existsSync(svg)) {
+    const bads = inspectSvg(readFileSync(svg, 'utf8'));
+    if (bads.length) bad(`${r.slug} map SVG passes`, bads.join('; '));
+    else ok(`${r.slug} map SVG passes`);
+  }
+}
+
+console.log('');
+if (failures) {
+  console.error(`check-guards: ${failures} assertion(s) failed.`);
+  process.exit(1);
+}
+console.log('check-guards: all guards behave as specified.');

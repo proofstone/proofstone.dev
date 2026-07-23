@@ -2,6 +2,8 @@ import markdownIt from 'markdown-it';
 import markdownItAnchor from 'markdown-it-anchor';
 import GithubSlugger from 'github-slugger';
 import { readFileSync, existsSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { roadmaps, loadRoadmaps } from './roadmaps.config.mjs';
 
 // One slugger per rendered document (GitHub-compatible slugs + dedup). Reassigned
@@ -114,17 +116,32 @@ function enhanceHeadings(html) {
 // section is a <rect> immediately followed by a <text> holding its "§N" label.
 // That label is the join key, so hotspots are matched by section NUMBER rather
 // than by fuzzy title text. A box whose label is missing simply stays unlinked.
+// Attribute-order-independent on purpose: the renderer lives in a repo we do not
+// control, so a cosmetic change there (reordering attributes, adding a class,
+// closing with </rect>, wrapping the label in <tspan>) must not silently turn the
+// interactive map back into a picture. Coverage is asserted after the build.
 const SECTION_BOX_RE =
-  /<rect\s+x="([\d.]+)"\s+y="([\d.]+)"\s+width="([\d.]+)"\s+height="([\d.]+)"[^>]*\/>\s*<text[^>]*>§(\d+)<\/text>/g;
+  /<rect\b([^>]*?)(?:\/>|>\s*<\/rect>)\s*(?:<(?:title|desc)\b[^>]*>[\s\S]*?<\/(?:title|desc)>\s*)?<text\b[^>]*>\s*(?:<tspan\b[^>]*>\s*)?§(\d+)/gi;
+
+function numAttr(attrs, name) {
+  const m = attrs.match(new RegExp(`\\b${name}\\s*=\\s*["']([\\d.]+)["']`, 'i'));
+  return m ? m[1] : null;
+}
 
 function buildInteractiveMap(svg, toc, altText) {
-  if (!svg) return '';
+  if (!svg) return { html: '', matched: 0, expected: toc.length };
   const byNum = new Map(toc.map((s) => [String(s.num), s.id]));
 
+  let matched = 0;
   const hotspots = [...svg.matchAll(SECTION_BOX_RE)]
-    .map(([, x, y, w, h, num]) => {
+    .map(([, attrs, num]) => {
       const id = byNum.get(num);
-      if (!id) return '';
+      const x = numAttr(attrs, 'x');
+      const y = numAttr(attrs, 'y');
+      const w = numAttr(attrs, 'width');
+      const h = numAttr(attrs, 'height');
+      if (!id || x === null || y === null || w === null || h === null) return '';
+      matched++;
       return `<a href="#${id}" aria-label="Jump to §${num}"><rect class="ps-map__hit" x="${x}" y="${y}" width="${w}" height="${h}" rx="10"/></a>`;
     })
     .join('');
@@ -136,7 +153,11 @@ function buildInteractiveMap(svg, toc, altText) {
 
   const withHotspots = opened.replace(/<\/svg>\s*$/, `${hotspots}</svg>`);
   const caption = altText ? `<figcaption class="ps-map__cap">${altText}</figcaption>` : '';
-  return `<figure class="ps-map">${withHotspots}${caption}</figure>`;
+  return {
+    html: `<figure class="ps-map" data-hotspots="${matched}" data-sections="${toc.length}">${withHotspots}${caption}</figure>`,
+    matched,
+    expected: toc.length
+  };
 }
 
 // The README embeds the same map as a plain <img>; drop it so the page shows the
@@ -177,7 +198,9 @@ function renderRoadmap(roadmap) {
 
   const stripped = extractAndRemoveMapImg(result.html);
   const map = buildInteractiveMap(roadmap.mapSvg, result.toc, stripped.alt);
-  result.html = insertBeforeFirstSection(stripped.html, map);
+  result.html = insertBeforeFirstSection(stripped.html, map.html);
+  result.mapHotspots = map.matched;
+  result.mapExpected = map.expected;
 
   renderCache.set(key, result);
   return result;
@@ -187,23 +210,54 @@ function renderRoadmap(roadmap) {
 // numbers are frozen at generation time. If a roadmap has gained or lost
 // milestones since, the picture is lying — say so loudly instead of shipping it.
 // Cross-checks two independent counters: this build's, and make-og.mjs's.
+// Resolved against this file, never the working directory: the gate must not be
+// skippable by invoking the build from somewhere else.
+const REPO_ROOT = dirname(fileURLToPath(import.meta.url));
+
+// A missing card is always the maintainer's own doing (a registry edit in this
+// repo), so it is a hard stop. A STALE card can also be caused by someone editing
+// a roadmap README in another repo, which rebuilds this site autonomously via
+// repository_dispatch/schedule — failing there would wedge content updates behind
+// a human with a Chrome-equipped machine. On those triggers we warn instead, and
+// the drift is caught the moment a human next builds.
+const AUTONOMOUS_TRIGGERS = new Set(['repository_dispatch', 'schedule']);
+
 function checkOgFreshness() {
-  const p = 'og-manifest.json';
-  if (!existsSync(p)) return;
-  const manifest = JSON.parse(readFileSync(p, 'utf8'));
-  for (const r of loadRoadmaps()) {
-    const baked = manifest[r.slug];
-    if (!baked) {
-      console.warn(`[og] no card for "${r.slug}" — run: node scripts/make-og.mjs`);
-      continue;
+  const problems = [];
+  const warnings = [];
+  const p = join(REPO_ROOT, 'og-manifest.json');
+
+  if (!existsSync(p)) {
+    problems.push(`og-manifest.json is missing at ${p} — run: node scripts/make-og.mjs`);
+  } else {
+    const manifest = JSON.parse(readFileSync(p, 'utf8'));
+    for (const r of loadRoadmaps()) {
+      const baked = manifest[r.slug];
+      if (!baked) {
+        problems.push(`no OG card for "${r.slug}" — run: node scripts/make-og.mjs`);
+        continue;
+      }
+      const stars = r.hasContent ? renderRoadmap(r).stars : r.stars || 0;
+      if (baked.milestones !== r.milestones || baked.stars !== stars) {
+        warnings.push(
+          `STALE card for "${r.slug}": image says ${baked.milestones} milestones / ${baked.stars} ★, ` +
+            `content says ${r.milestones} / ${stars}. Run: node scripts/make-og.mjs`
+        );
+      }
     }
-    const stars = r.hasContent ? renderRoadmap(r).stars : r.stars || 0;
-    if (baked.milestones !== r.milestones || baked.stars !== stars) {
-      console.warn(
-        `[og] STALE card for "${r.slug}": image says ${baked.milestones} milestones / ${baked.stars} ★, ` +
-          `content says ${r.milestones} / ${stars}. Run: node scripts/make-og.mjs`
-      );
-    }
+  }
+
+  // Locally everything stays advisory so `--serve` keeps working; CI is where the
+  // gate has teeth.
+  const isCI = process.env.CI === 'true';
+  const autonomous = AUTONOMOUS_TRIGGERS.has(process.env.GITHUB_EVENT_NAME || '');
+  const fatal = isCI ? [...problems, ...(autonomous ? [] : warnings)] : [];
+  const advisory = [...problems, ...warnings].filter((m) => !fatal.includes(m));
+
+  for (const w of advisory) console.warn(`[og] ${w}`);
+  if (fatal.length) {
+    for (const f of fatal) console.error(`::error file=og-manifest.json::[og] ${f}`);
+    throw new Error(`[og] ${fatal.length} card problem(s) — see above.`);
   }
 }
 
@@ -227,13 +281,44 @@ export default function (eleventyConfig) {
   // repointed at the roadmap page so the sample stays clickable.
   eleventyConfig.addFilter('milestoneSample', (roadmap, msId) => {
     const { html } = renderRoadmap(roadmap);
-    const id = String(msId).replace('.', '\\.');
-    const re = new RegExp(
-      `<h3 id="[^"]*"[^>]*data-ms="${id}">[\\s\\S]*?<\\/h3>\\s*<blockquote class="ps-criterion">[\\s\\S]*?<\\/blockquote>`
-    );
-    const m = html.match(re);
-    if (!m) return '';
-    return m[0].replace(/href="#([^"]*)"/g, `href="/${roadmap.slug}/#$1"`);
+
+    const blockFor = (id) => {
+      const esc = String(id).replace(/\./g, '\\.');
+      const m = html.match(
+        new RegExp(
+          `<h3 id="[^"]*"[^>]*data-ms="${esc}">[\\s\\S]*?<\\/h3>\\s*<blockquote class="ps-criterion">[\\s\\S]*?<\\/blockquote>`
+        )
+      );
+      return m ? m[0] : null;
+    };
+
+    let block = msId ? blockFor(msId) : null;
+
+    // The configured milestone can vanish for reasons outside this repo (a
+    // renumbering upstream, a reworded criterion). Degrading to the first usable
+    // milestone keeps the landing page's central proof intact; going silent — the
+    // old behaviour — left a heading promising a sample above an empty div.
+    if (!block) {
+      const first = html.match(
+        /<h3 id="[^"]*"[^>]*data-ms="(M\d+\.\d+)">[\s\S]*?<\/h3>\s*<blockquote class="ps-criterion">[\s\S]*?<\/blockquote>/
+      );
+      if (first) {
+        console.warn(
+          `[sample] "${msId}" not found in ${roadmap.slug} — falling back to ${first[1]}. ` +
+            `Update sampleMilestone in roadmaps.config.mjs.`
+        );
+        block = first[0];
+      }
+    }
+
+    if (!block) {
+      // Nothing at all could be resolved: the home page would ship its flagship
+      // demonstration empty. That is worth failing the build over.
+      throw new Error(
+        `[sample] no milestone with a proof block found in "${roadmap.slug}" — the home page cannot show what a milestone looks like.`
+      );
+    }
+    return block.replace(/href="#([^"]*)"/g, `href="/${roadmap.slug}/#$1"`);
   });
 
   eleventyConfig.addFilter('roadmapMarkdown', (_content, roadmap) => renderRoadmap(roadmap).html);

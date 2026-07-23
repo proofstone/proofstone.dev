@@ -54,7 +54,7 @@ description: Engineering roadmaps where every milestone is a proof — a verifia
   <h2 class="sample__title">What a milestone looks like</h2>
   <p class="sample__lead">Every node in every roadmap is one of these — taken here, unedited, from the AI Safety map.</p>
   <div class="prose sample__block">
-    {%- for r in liveRoadmaps %}{% if r.slug == 'ai-safety-engineer' %}{{ r | milestoneSample('M2.1') | safe }}{% endif %}{% endfor %}
+    {%- for r in liveRoadmaps %}{% if r.sampleMilestone %}{{ r | milestoneSample(r.sampleMilestone) | safe }}{% endif %}{% endfor %}
   </div>
 </section>
 
