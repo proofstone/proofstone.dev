@@ -2,15 +2,26 @@
 # Connect-a-roadmap step 3 — see "Connect a new roadmap" in the
 # proofstone/proofstone.dev README.
 # Copy this into a ROADMAP repo as: .github/workflows/notify-site.yml
-# It pings the proofstone site to rebuild whenever this roadmap's README or
-# assets change — so a content edit lands on the site with no manual steps.
 #
-# One-time setup: add a secret PROOFSTONE_DISPATCH_TOKEN to this repo (or the org)
-# = a fine-grained PAT scoped to the SITE repo with "Contents: read & write"
-# (the scope GitHub requires to POST repository_dispatch). Nothing else needed.
+# It tells the site to rebuild when this roadmap's README or assets change, so an
+# edit lands on proofstone.dev in seconds instead of waiting for the site's
+# nightly rebuild.
 #
-# Set OWNER/SITE_REPO below to the site repo created in Ф3 (recommended:
-# proofstone/proofstone.dev).
+# One-time setup, once per ORG rather than per repo: add an organization secret
+# PROOFSTONE_DISPATCH_TOKEN = a fine-grained PAT scoped to proofstone/proofstone.dev
+# with "Contents: read & write" (the scope GitHub requires to POST
+# repository_dispatch). An org secret means the next roadmap repo needs nothing.
+# Caveat on the Free plan: org secrets reach public repos only, so a repo that is
+# still private until its practitioner review needs its own repo-level secret.
+#
+# This job FAILS LOUDLY when the token is missing, expired or refused, and that is
+# worth being explicit about, because the opposite was tried first: a "skip
+# quietly if the secret is unset" guard is how this sync stayed dead in three
+# repositories with green checkmarks. Failing costs nothing here — the notifier
+# gates no content (the site rebuilds nightly regardless, so an edit is at worst
+# 24h late), and the workflow runs only on push to main, so no outside
+# contributor ever sees the red mark. Only the maintainer does, which is exactly
+# who can fix it.
 # ─────────────────────────────────────────────────────────────────────────────
 name: notify-site
 
@@ -26,9 +37,45 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Tell the proofstone site to rebuild
+        env:
+          TOKEN: ${{ secrets.PROOFSTONE_DISPATCH_TOKEN }}
         run: |
-          curl -sf -X POST \
+          set -u
+          if [ -z "$TOKEN" ]; then
+            echo "::error::PROOFSTONE_DISPATCH_TOKEN is set on neither this repository nor the organization."
+            echo "Nothing is lost: proofstone.dev rebuilds on its nightly schedule, so this edit still ships — up to 24h late."
+            exit 1
+          fi
+
+          # -f is deliberately NOT used: it hides the response behind a bare
+          # "exit 22", which is what made the last outage take three attempts to
+          # diagnose. Ask curl for the status instead and decide here.
+          code=$(curl -sS -o response.txt -D headers.txt -w '%{http_code}' -X POST \
             -H "Accept: application/vnd.github+json" \
-            -H "Authorization: Bearer ${{ secrets.PROOFSTONE_DISPATCH_TOKEN }}" \
+            -H "Authorization: Bearer $TOKEN" \
             "https://api.github.com/repos/proofstone/proofstone.dev/dispatches" \
-            -d '{"event_type":"roadmap-content"}'
+            -d '{"event_type":"roadmap-content"}')
+          echo "HTTP $code"
+
+          # A fine-grained PAT reports its own expiry on every response it
+          # authenticates. This is the one place the token can announce itself
+          # before it dies — without it, expiry is silent and the sync just stops.
+          expires=$(grep -i '^github-authentication-token-expiration:' headers.txt | cut -d: -f2- | sed 's/^ *//; s/\r$//')
+          if [ -n "$expires" ]; then
+            exp_s=$(date -d "$expires" +%s 2>/dev/null || true)
+            if [ -n "$exp_s" ]; then
+              left=$(( (exp_s - $(date +%s)) / 86400 ))
+              echo "token expires $expires — $left day(s) left"
+              if [ "$left" -lt 21 ]; then
+                echo "::warning::PROOFSTONE_DISPATCH_TOKEN expires in $left day(s) ($expires). Renew it before the site sync goes quiet."
+              fi
+            fi
+          fi
+
+          if [ "$code" != "204" ]; then
+            echo "::error::repository_dispatch refused with HTTP $code — $(tr -d '\n' < response.txt)"
+            echo "401 or 403 usually means the token expired, or lost 'Contents: read & write' on proofstone/proofstone.dev."
+            echo "Nothing is lost: the site rebuilds nightly, so this edit still ships — up to 24h late."
+            exit 1
+          fi
+          echo "site notified — proofstone.dev rebuilds within seconds"

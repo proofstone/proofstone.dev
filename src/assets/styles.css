@@ -323,10 +323,17 @@ main:focus { outline: none; }
    alone — shape and position identify those.
    :not(.ps-anchor) matters: `.prose a` outranks `.ps-anchor` and would otherwise
    underline every heading "#". The map's <a> elements wrap a <rect> with no text,
-   so they are unaffected. */
+   so they are unaffected.
+   `.card__lab a` joined the list later: the lab line under a roadmap card reads as
+   a sentence, not as chrome, and its link measured 1.00:1 against the muted text
+   around it in light theme and 1.03:1 in dark — the same colour-only case as the
+   footer, missed because that line is neither .prose nor .site-footer. The <code>
+   chip around it is a background, not a text-level cue, and it disappears the
+   moment a lab is mentioned without one. */
 .prose a:not(.ps-anchor),
 .site-footer p a,
-.thesis__contribute a {
+.thesis__contribute a,
+.card__lab a {
   text-decoration: underline;
   text-underline-offset: .16em;
   text-decoration-thickness: .06em;
@@ -334,7 +341,8 @@ main:focus { outline: none; }
 }
 .prose a:not(.ps-anchor):hover,
 .site-footer p a:hover,
-.thesis__contribute a:hover { text-decoration-color: currentColor; }
+.thesis__contribute a:hover,
+.card__lab a:hover { text-decoration-color: currentColor; }
 .prose h1 { font-size: clamp(1.7rem, 4vw, 2.4rem); line-height: 1.15; letter-spacing: -.02em; margin: 2.5rem 0 1rem; }
 .prose h2 {
   font-size: 1.5rem; letter-spacing: -.01em; margin: 3rem 0 1rem;

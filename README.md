@@ -40,6 +40,10 @@ npm run build        # SITE_NOINDEX defaults to "true" (pre-launch)
 2. Nothing else to write — the fetch step is generic.
 3. In the roadmap's repo, add [`docs/notify-site.yml.tmpl`](docs/notify-site.yml.tmpl)
    as `.github/workflows/notify-site.yml` so content edits trigger a site rebuild.
+   The token it needs lives as an **organization** secret (see *How content stays in
+   sync* below), so a public roadmap repo needs nothing else. A repo still private
+   for its practitioner review needs its own copy of the secret — on the Free plan
+   org secrets reach public repositories only.
 4. Generate its social card: `npm run og`, then commit the new PNG **and**
    `og-manifest.json`. Skipping this ships a page whose `og:image` 404s, and the
    build refuses to pass without a card for every registered roadmap.
@@ -51,6 +55,26 @@ The build (`.github/workflows/build-deploy.yml`) runs on: a push here · a
 `repository_dispatch` fired by a roadmap repo when its README/assets change · a
 nightly schedule (safety net) · manual dispatch. Each run re-fetches every live
 roadmap, so a content edit lands on the site with no manual steps.
+
+The dispatch needs a credential GitHub does not hand out to a workflow: a job's
+built-in `GITHUB_TOKEN` is scoped to its own repository and cannot fire an event
+in another one. So the roadmap repos authenticate with a fine-grained PAT scoped
+to **this** repo with `Contents: read & write`, stored as the organization secret
+`PROOFSTONE_DISPATCH_TOKEN`. Org-level rather than per-repo on purpose: the same
+token was once present in exactly one of four repositories, and the other three
+had a dead sync nobody could see.
+
+**The two ways this quietly breaks, and what now says so out loud:**
+
+- *The secret is missing* — the notifier fails the run with a named error instead
+  of skipping. A silent skip was tried first and is precisely how three repos ran
+  green with no sync at all.
+- *The PAT expires* — every authenticated response carries a
+  `github-authentication-token-expiration` header, so the notifier prints the
+  remaining days and raises a workflow warning under three weeks.
+
+Neither failure loses content: the nightly schedule still re-fetches everything,
+so the worst case is an edit landing up to 24h late rather than in seconds.
 
 ## noindex / launch
 
