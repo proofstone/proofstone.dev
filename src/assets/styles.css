@@ -218,6 +218,37 @@ main:focus { outline: none; }
 
 .hero__counts { display: block; margin-top: .3rem; font-family: var(--mono); font-size: .74rem; color: var(--muted); }
 
+/* ── Companion projects ───────────────────────────────────────────────────── */
+/* Deliberately quieter than a roadmap card: reading-column width instead of the
+   wider card grid, a dashed edge, no accent bar, no hover lift. Dashed is
+   already this site's "not a live map" language (review cards, the series pill),
+   so the block reads as a footnote to the showcase rather than a sixth entry in
+   it. The name link is left without an underline for the same reason the brand,
+   the cards and the series links are: it is the whole line, not a link buried in
+   a sentence, so position identifies it. */
+.companions { max-width: var(--measure); margin: 3.5rem auto 0; }
+.companions__heading { font-size: 1.3rem; letter-spacing: -.01em; margin: 0 0 .3rem; }
+.companions__lead { color: var(--muted); margin: 0 0 1.2rem; font-size: .95rem; }
+.companion { border: 1px dashed var(--border); border-radius: 10px; padding: 1rem 1.2rem; }
+.companion + .companion { margin-top: .75rem; }
+.companion__name {
+  display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
+  margin: 0 0 .5rem; font-size: 1rem; font-weight: 600; letter-spacing: 0;
+}
+/* owner/repo is 37 mono characters — it cannot fit one line at 390 px, let alone
+   320. Without box-decoration-break the second line inherits a chip with one
+   squared-off end and no left padding, which reads as a rendering fault rather
+   than a wrap. */
+.companion__name code {
+  background: var(--code-bg); padding: .08em .35em; border-radius: 4px; font-size: .95em;
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+}
+.companion__tag {
+  font-family: var(--mono); font-size: .62rem; text-transform: uppercase; letter-spacing: .08em;
+  color: var(--muted); border: 1px solid var(--border); border-radius: 4px; padding: .1rem .35rem;
+}
+.companion__note { margin: 0; color: var(--muted); font-size: .95rem; }
+
 .thesis { max-width: var(--measure); margin: 3rem auto 0; }
 .thesis h2 { font-size: 1.3rem; letter-spacing: -.01em; }
 .thesis p { color: var(--text); }
@@ -583,6 +614,10 @@ main:focus { outline: none; }
   body { font-size: 16.5px; }
   main { padding: 1.75rem 1rem 3rem; }
   .roadmap__bar { align-items: flex-start; }
+  /* The owner/repo chip needs 320 px and the default 1.2rem padding leaves 318
+     at a 390 px viewport — two pixels short of one line. Below ~380 px it wraps
+     regardless, and box-decoration-break makes that wrap look deliberate. */
+  .companion { padding: 1rem; }
 }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }

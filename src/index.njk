@@ -67,6 +67,39 @@ description: Engineering roadmaps where every milestone is a proof — a verifia
   </ol>
 </section>
 
+{#- Related work sits here for the same reason it sits near the end of every
+    roadmap README: it is a footnote to the argument, not part of it. The reader
+    has just been told what a milestone is, which is what makes "this one has no
+    milestones" mean something. #}
+<section class="companions" aria-labelledby="companions-heading">
+  <h2 class="companions__heading" id="companions-heading">Companion projects</h2>
+  <p class="companions__lead">
+    Standalone repositories alongside the series. Not roadmaps themselves — no milestones,
+    no finishing conditions — but the maps link into them from the inside.
+  </p>
+
+  {#- A block-paragraph, not a grid: there is one companion, and a one-cell
+      catalogue reads as a row that failed to load. A second one appends another
+      .companion here and nothing else changes.
+      The owner is spelled out in the link text on purpose — this repository
+      lives in a personal account, not in the proofstone org, and the page must
+      not imply otherwise. #}
+  <div class="companion">
+    <h3 class="companion__name">
+      <span class="companion__tag">index</span>
+      <a href="https://github.com/TheSeydiCharyyev/build-your-own-agent" rel="noopener"><code>TheSeydiCharyyev/build-your-own-agent</code></a>
+    </h3>
+    <p class="companion__note">
+      An index, not a map. For each of the ten components of the agent stack it points at the
+      best from-scratch tutorials that exist elsewhere; for the three where none did — MCP
+      server and client, coding agent, token accounting — it ships a runnable reference
+      implementation of its own, zero dependencies and no API key. The AI Safety map links
+      into it twice and states the relation there: that roadmap proves an agent is safe,
+      this repository is the half where you make one work.
+    </p>
+  </div>
+</section>
+
 <section class="thesis">
   <h2>Why proof, not keywords</h2>
   <p>{{ site.thesis }}</p>
