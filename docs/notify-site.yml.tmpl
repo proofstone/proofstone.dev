@@ -31,6 +31,12 @@ on:
     paths:
       - 'README.md'
       - 'assets/**'
+  # Manual trigger so the notifier can be fired without inventing a content edit.
+  # Without it the only way to prove the credential still works is to push a
+  # change to a README this repo may not want changed — which is why nobody ever
+  # checked, and why the sync could sit dead. Rotating the token ends with one
+  # deliberate run here.
+  workflow_dispatch:
 
 jobs:
   dispatch:
