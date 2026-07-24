@@ -102,8 +102,11 @@ a:hover { text-decoration: underline; }
   backdrop-filter: saturate(1.4) blur(8px);
   border-bottom: 1px solid var(--border);
 }
-.brand { font-weight: 700; letter-spacing: -.01em; font-size: 1.05rem; color: var(--text); }
-.brand span { color: var(--accent); }
+.brand { display: inline-flex; align-items: center; gap: .5rem; font-weight: 700; letter-spacing: -.01em; font-size: 1.05rem; color: var(--text); }
+.brand__mark { width: 1.55rem; height: 1.55rem; display: block; flex: 0 0 auto; }
+/* Scoped to the wordmark's inner span, not `.brand span`: the mark is an inline
+   SVG whose own <rect>/<path> would otherwise be caught by a bare `.brand span`. */
+.brand__word span { color: var(--accent); }
 .brand:hover { text-decoration: none; }
 .site-nav { display: flex; align-items: center; gap: 1rem; }
 

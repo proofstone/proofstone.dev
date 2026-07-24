@@ -31,6 +31,14 @@ const countStars = (md) => (md.match(/^###\s+M\d+\.\d+.*[⭐★].*$/gm) || []).l
 const FONT =
   '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
 
+// The proofstone mark (chiseled P), identical to favicon.svg and the header
+// lockup. The badge navy stays fixed across cards; only the wordmark/stripe pick
+// up the per-roadmap accent, so the mark reads as the constant series identity.
+const MARK =
+  '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">' +
+  '<rect width="32" height="32" rx="7" fill="#16223b"/>' +
+  '<path fill="#6f9bff" fill-rule="evenodd" d="M8.5 9.3L10.3 7.5L21.7 7.5L23.5 9.3L23.5 15.7L21.7 17.5L13.5 17.5L13.5 22.8L11.7 24.5L10.3 24.5L8.5 22.8Z M13.5 10.6L20 10.6L21.3 11.9L21.3 13.1L20 14.4L13.5 14.4Z"/></svg>';
+
 function card({ accent, title, meta }) {
   return `<!doctype html><html><head><meta charset="utf-8"><style>
     *{margin:0;padding:0;box-sizing:border-box}
@@ -38,8 +46,10 @@ function card({ accent, title, meta }) {
          display:flex;overflow:hidden}
     .stripe{width:18px;background:${accent};flex:0 0 auto}
     .body{flex:1;padding:74px 82px;display:flex;flex-direction:column;justify-content:space-between}
-    .brand{font-size:34px;font-weight:800;letter-spacing:-.01em}
-    .brand span{color:${accent}}
+    .brand{display:flex;align-items:center;gap:16px;font-size:34px;font-weight:800;letter-spacing:-.01em}
+    .brand .mark{width:46px;height:46px;display:block;flex:0 0 auto}
+    .brand .mark svg{width:100%;height:100%;display:block}
+    .brand .word span{color:${accent}}
     h1{font-size:${title.length > 34 ? 68 : 78}px;line-height:1.06;letter-spacing:-.025em;font-weight:800}
     .meta{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
           font-size:26px;color:${accent};letter-spacing:.02em}
@@ -47,7 +57,7 @@ function card({ accent, title, meta }) {
   </style></head><body>
     <div class="stripe"></div>
     <div class="body">
-      <div class="brand">proof<span>stone</span></div>
+      <div class="brand"><span class="mark">${MARK}</span><span class="word">proof<span>stone</span></span></div>
       <h1>${title}</h1>
       <div>
         ${meta ? `<div class="meta">${meta}</div>` : ''}

@@ -63,7 +63,17 @@
 <body data-page="{{ pageType or 'page' }}"{% if roadmap %} data-roadmap="{{ roadmap.slug }}"{% endif %}>
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header">
-    <a class="brand" href="/">proof<span>stone</span></a>
+    {#- Mark + wordmark lockup. The SVG is inlined (≈300 bytes, saves a request)
+        and carries the same chiseled-P as the favicon/OG/avatar so the identity
+        is one object everywhere. aria-hidden + the link's aria-label keep it a
+        single named landmark, not a second focus target announcing nothing. #}
+    <a class="brand" href="/" aria-label="proofstone — home">
+      <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+        <rect width="32" height="32" rx="7" fill="#16223b"/>
+        <path fill="#6f9bff" fill-rule="evenodd" d="M8.5 9.3L10.3 7.5L21.7 7.5L23.5 9.3L23.5 15.7L21.7 17.5L13.5 17.5L13.5 22.8L11.7 24.5L10.3 24.5L8.5 22.8Z M13.5 10.6L20 10.6L21.3 11.9L21.3 13.1L20 14.4L13.5 14.4Z"/>
+      </svg>
+      <span class="brand__word">proof<span>stone</span></span>
+    </a>
     {#- Labelled because a roadmap page carries four other navigation landmarks
         (breadcrumb, section outline, roadmap map, the rest of the series); an
         unnamed one is the confusing entry in a landmark list. #}
