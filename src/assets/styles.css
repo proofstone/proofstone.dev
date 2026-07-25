@@ -645,9 +645,21 @@ main:focus { outline: none; }
    colour (the criterion stamps, the checkbox tick) turns white-on-white unless
    it is repainted as ink. This block is last in the file on purpose — it has to
    win over both [data-theme="dark"] and the prefers-color-scheme fallback,
-   which carry the same specificity. */
+   which carry the same specificity.
+
+   `:root:not([data-theme="light"])` has to be in the list, and being last in the
+   file is not enough on its own. A reader who never touched the toggle has no
+   data-theme attribute at all, so the only print selector that matches them is
+   the bare `:root` — specificity (0,1,0) — while the OS-dark fallback matches
+   through `:root:not([data-theme="light"])` at (0,2,0) and wins. Measured on the
+   built site with print emulation: no attribute + OS dark resolved --bg to
+   #0e1116, i.e. #e6e8ec text on unpainted paper, the exact 1.2:1 regression this
+   block exists to prevent. The two cases where the attribute IS set were already
+   covered, which is why it stayed invisible. Repeating the fallback's own
+   selector ties the specificity and lets source order decide. */
 @media print {
   :root,
+  :root:not([data-theme="light"]),
   :root[data-theme="dark"],
   :root[data-theme="light"] {
     --bg: #fff; --surface: #fff; --surface-2: #fff;
