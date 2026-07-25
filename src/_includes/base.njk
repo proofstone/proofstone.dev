@@ -48,6 +48,22 @@
   <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="/assets/favicon-32.png" sizes="32x32" type="image/png">
   <link rel="apple-touch-icon" href="/assets/favicon-180.png">
+  {#- Fonts are preloaded, not merely declared. Without this the browser only
+      discovers them after it has parsed the stylesheet and matched a rule, which
+      under load is late enough that the swap lands after first paint and reflows
+      the text: measured 0.0513 CLS on a roadmap page, one paragraph losing a
+      line 3.6s in. Preload starts the fetch while the HTML is still parsing, so
+      the real face is usually there before anything is painted.
+      `crossorigin` is required even same-origin — fonts are fetched in CORS
+      anonymous mode, and a preload without it is a second, unused download.
+      All five faces are above the fold on a roadmap page: body text, both
+      display weights (h1 and h2/h3), mono for milestone ids and for the stamps,
+      which are mono 700 and therefore resolve to the 600 face. #}
+  <link rel="preload" href="/assets/fonts/plex-sans-var.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/zilla-slab-700.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/zilla-slab-600.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/plex-mono-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/plex-mono-600.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/assets/styles.css">
   <script>
     // Set theme before paint to avoid a flash. Honors saved choice, else OS.
