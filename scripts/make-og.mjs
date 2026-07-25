@@ -8,7 +8,7 @@
 // The manifest records the numbers baked into each image; the Eleventy build
 // compares it against the live counts and shouts if an image has gone stale.
 import { chromium } from 'playwright-core';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadRoadmaps } from '../roadmaps.config.mjs';
@@ -17,43 +17,63 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const outDir = join(root, 'src/assets/og');
 mkdirSync(outDir, { recursive: true });
 
-const ACCENT = {
-  blue: '#6f9bff',
-  teal: '#2dd4bf',
-  violet: '#a78bfa',
-  amber: '#e0b64d',
-  green: '#4ade80'
-};
+// Dark-theme tokens, copied as literals: this HTML is rendered standalone by a
+// headless browser, so it cannot read the stylesheet's custom properties. If a
+// token changes in styles.css it has to change here too — which is why there is
+// exactly ONE accent to keep in sync now instead of five per-direction ones.
+const BG = '#14110d';
+const TEXT = '#ece5d6';
+const ACCENT = '#e08b62';
+const MUTED = '#a89d8a';
 
-// Same rule the site uses: a milestone heading carrying a star marker.
+// Same rule the site uses: a milestone heading carrying a star marker. This
+// keeps reading ⭐ from the README — the star is data, and only its DISPLAY
+// moved to a stamp.
 const countStars = (md) => (md.match(/^###\s+M\d+\.\d+.*[⭐★].*$/gm) || []).length;
 
-const FONT =
-  '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
+// The real faces, inlined as data URIs. A file:// or http reference would make
+// the render depend on load timing and could silently fall back to a system
+// font, producing a card in the wrong typeface with a green run.
+const fontFile = (name) =>
+  readFileSync(join(root, 'src/assets/fonts', name)).toString('base64');
+const FACE = (family, weight, file) =>
+  `@font-face{font-family:'${family}';font-weight:${weight};font-display:block;` +
+  `src:url(data:font/woff2;base64,${fontFile(file)}) format('woff2')}`;
+const FONTS =
+  FACE('Zilla Slab', 700, 'zilla-slab-700.woff2') +
+  FACE('IBM Plex Sans', 400, 'plex-sans-var.woff2') +
+  FACE('IBM Plex Mono', 400, 'plex-mono-400.woff2');
+
+const DISPLAY = "'Zilla Slab',Georgia,serif";
+const FONT = "'IBM Plex Sans',-apple-system,'Segoe UI',Arial,sans-serif";
+const MONO = "'IBM Plex Mono',ui-monospace,Consolas,monospace";
 
 // The proofstone mark (chiseled P), identical to favicon.svg and the header
-// lockup. The badge navy stays fixed across cards; only the wordmark/stripe pick
-// up the per-roadmap accent, so the mark reads as the constant series identity.
+// lockup: a sealing-wax badge with a paper-coloured P. It is the same on every
+// card — the series identity is the mark, and there is now one accent behind
+// every direction rather than one hue each.
 const MARK =
   '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">' +
-  '<rect width="32" height="32" rx="7" fill="#16223b"/>' +
-  '<path fill="#6f9bff" fill-rule="evenodd" d="M8.5 9.3L10.3 7.5L21.7 7.5L23.5 9.3L23.5 15.7L21.7 17.5L13.5 17.5L13.5 22.8L11.7 24.5L10.3 24.5L8.5 22.8Z M13.5 10.6L20 10.6L21.3 11.9L21.3 13.1L20 14.4L13.5 14.4Z"/></svg>';
+  '<rect width="32" height="32" rx="7" fill="#9d3b1f"/>' +
+  '<path fill="#f7f3ea" fill-rule="evenodd" d="M8.5 9.3L10.3 7.5L21.7 7.5L23.5 9.3L23.5 15.7L21.7 17.5L13.5 17.5L13.5 22.8L11.7 24.5L10.3 24.5L8.5 22.8Z M13.5 10.6L20 10.6L21.3 11.9L21.3 13.1L20 14.4L13.5 14.4Z"/></svg>';
 
-function card({ accent, title, meta }) {
+function card({ title, meta }) {
   return `<!doctype html><html><head><meta charset="utf-8"><style>
+    ${FONTS}
     *{margin:0;padding:0;box-sizing:border-box}
-    body{width:1200px;height:630px;background:#0e1116;color:#e6e8ec;font-family:${FONT};
+    body{width:1200px;height:630px;background:${BG};color:${TEXT};font-family:${FONT};
          display:flex;overflow:hidden}
-    .stripe{width:18px;background:${accent};flex:0 0 auto}
+    .stripe{width:18px;background:${ACCENT};flex:0 0 auto}
     .body{flex:1;padding:74px 82px;display:flex;flex-direction:column;justify-content:space-between}
-    .brand{display:flex;align-items:center;gap:16px;font-size:34px;font-weight:800;letter-spacing:-.01em}
+    .brand{display:flex;align-items:center;gap:16px;font-family:${DISPLAY};
+           font-size:34px;font-weight:700;letter-spacing:-.01em}
     .brand .mark{width:46px;height:46px;display:block;flex:0 0 auto}
     .brand .mark svg{width:100%;height:100%;display:block}
-    .brand .word span{color:${accent}}
-    h1{font-size:${title.length > 34 ? 68 : 78}px;line-height:1.06;letter-spacing:-.025em;font-weight:800}
-    .meta{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-          font-size:26px;color:${accent};letter-spacing:.02em}
-    .foot{font-size:27px;color:#99a1ad}
+    .brand .word span{color:${ACCENT}}
+    h1{font-family:${DISPLAY};font-weight:700;
+       font-size:${title.length > 34 ? 66 : 76}px;line-height:1.08;letter-spacing:-.02em}
+    .meta{font-family:${MONO};font-size:26px;color:${ACCENT};letter-spacing:.02em}
+    .foot{font-size:27px;color:${MUTED}}
   </style></head><body>
     <div class="stripe"></div>
     <div class="body">
@@ -83,7 +103,6 @@ async function shoot(html, file) {
 // Home / fallback card.
 await shoot(
   card({
-    accent: ACCENT.blue,
     title: 'Engineering roadmaps where every milestone is a proof.',
     meta: `${roadmaps.filter((r) => r.status === 'live').length} live · ${roadmaps.filter((r) => r.status === 'review').length} in review`
   }),
@@ -99,7 +118,7 @@ for (const r of roadmaps.filter((x) => x.status === 'live')) {
   const stars = r.hasContent ? countStars(r.content) : r.stars || 0;
   const milestones = r.milestones || 0;
   const meta = milestones ? `${milestones} milestones · ${stars} ★ artifacts` : '';
-  await shoot(card({ accent: ACCENT[r.accent] || ACCENT.blue, title: r.title, meta }), `${r.slug}.png`);
+  await shoot(card({ title: r.title, meta }), `${r.slug}.png`);
   manifest[r.slug] = { milestones, stars };
 }
 

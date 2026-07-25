@@ -19,7 +19,6 @@ export const roadmaps = [
   //                    hand visitors a 404. Nothing to link, nothing to leak.
   {
     slug: 'ai-safety-engineer',          // = repo name without the "-roadmap" suffix
-    accent: 'blue',
     // Org path — valid after the Ф3 transfer of ai-safety-engineer-roadmap into the
     // proofstone org (transfer is step 1 of deploy). Local pre-transfer builds keep
     // working from the cached .content/. Old personal-account links stay redirected.
@@ -38,7 +37,6 @@ export const roadmaps = [
   },
   {
     slug: 'distributed-systems-engineer',   // = repo name without the "-roadmap" suffix
-    accent: 'teal',
     repo: 'proofstone/distributed-systems-engineer-roadmap',
     branch: 'main',
     title: 'Distributed Systems Engineer Roadmap',
@@ -61,7 +59,6 @@ export const roadmaps = [
   },
   {
     slug: 'applied-cryptography',
-    accent: 'violet',
     repo: 'proofstone/applied-cryptography-roadmap',
     branch: 'main',
     title: 'Applied Cryptography Roadmap',
@@ -73,7 +70,6 @@ export const roadmaps = [
   },
   {
     slug: 'robotics-software-engineer',
-    accent: 'amber',
     title: 'Robotics Software Engineer Roadmap',
     tagline: 'You already ship software. Robotics does not need you to start over — it needs you to port what you know and respect what is genuinely different.',
     // Counts cannot be derived at build while the repo is private, so they are
@@ -86,7 +82,6 @@ export const roadmaps = [
   },
   {
     slug: 'pcb-design',
-    accent: 'green',
     title: 'PCB Design Roadmap',
     tagline: 'Embedded roadmaps teach you to write the firmware and say plainly that the board is not their topic. This is the map for the board.',
     milestones: 22,   // counted from the README 2026-07-20 (see note above)

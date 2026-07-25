@@ -263,36 +263,16 @@ main:focus { outline: none; }
   border: 1px dashed var(--border); border-radius: 999px; padding: .35rem .85rem;
 }
 
-/* Per-direction identity. One restrained accent each — enough to tell the
-   directions apart at a glance without turning the page into a landing page. */
-[data-accent="blue"]   { --card-accent: #2457d6; }
-[data-accent="teal"]   { --card-accent: #0f766e; }
-[data-accent="violet"] { --card-accent: #6d28d9; }
-[data-accent="amber"]  { --card-accent: #a16207; }
-[data-accent="green"]  { --card-accent: #15803d; }
-[data-theme="dark"] [data-accent="blue"]   { --card-accent: #6f9bff; }
-[data-theme="dark"] [data-accent="teal"]   { --card-accent: #2dd4bf; }
-[data-theme="dark"] [data-accent="violet"] { --card-accent: #a78bfa; }
-[data-theme="dark"] [data-accent="amber"]  { --card-accent: #e0b64d; }
-[data-theme="dark"] [data-accent="green"]  { --card-accent: #4ade80; }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) [data-accent="blue"]   { --card-accent: #6f9bff; }
-  :root:not([data-theme="light"]) [data-accent="teal"]   { --card-accent: #2dd4bf; }
-  :root:not([data-theme="light"]) [data-accent="violet"] { --card-accent: #a78bfa; }
-  :root:not([data-theme="light"]) [data-accent="amber"]  { --card-accent: #e0b64d; }
-  :root:not([data-theme="light"]) [data-accent="green"]  { --card-accent: #4ade80; }
-}
-
 .roadmaps { max-width: var(--page); margin: 0 auto; display: grid; gap: 1rem; }
 .card {
   position: relative; overflow: hidden;
   background: var(--surface); border: 1px solid var(--border);
-  border-left: 4px solid var(--card-accent, var(--accent));
+  border-left: 4px solid var(--accent);
   border-radius: var(--r-md); box-shadow: var(--shadow);
   transition: transform .12s ease, border-color .12s ease;
 }
 .card:hover { transform: translateY(-2px); }
-.card:hover { border-color: var(--card-accent, var(--accent)); }
+.card:hover { border-color: var(--accent); }
 .card__main { display: block; padding: 1.4rem 1.5rem; color: inherit; }
 .card__main:hover { text-decoration: none; }
 .card--review { padding: 1.4rem 1.5rem; background: transparent; border-style: dashed; }
@@ -300,7 +280,7 @@ main:focus { outline: none; }
 .card__title { margin: 0 0 .35rem; font-size: 1.4rem; letter-spacing: -.01em; color: var(--text); }
 .card__tagline { margin: 0 0 1rem; color: var(--muted); }
 .card__meta { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin: 0; }
-.card__go { margin-left: auto; color: var(--card-accent, var(--accent)); font-size: 1.3rem; }
+.card__go { margin-left: auto; color: var(--accent); font-size: 1.3rem; }
 .badge--review {
   color: var(--muted); background: transparent; border-style: dashed; white-space: normal;
 }
@@ -311,7 +291,7 @@ main:focus { outline: none; }
 .card--review .card__lab { padding: .75rem 0 0; }
 .card__lab-tag {
   font-family: var(--mono); font-size: .62rem; text-transform: uppercase; letter-spacing: .08em;
-  color: var(--card-accent, var(--accent)); border: 1px solid color-mix(in srgb, var(--card-accent, var(--accent)) 40%, var(--border));
+  color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
   border-radius: var(--r-sm); padding: .1rem .35rem; margin-right: .45rem;
 }
 .card__lab code { background: var(--code-bg); padding: .08em .35em; border-radius: var(--r-sm); font-size: .95em; }
@@ -385,8 +365,8 @@ main:focus { outline: none; }
 .badge--count { color: var(--muted); }
 /* Falls back to the site accent; on a direction card it inherits that card's accent. */
 .badge--star {
-  color: var(--card-accent, var(--accent));
-  border-color: color-mix(in srgb, var(--card-accent, var(--accent)) 40%, var(--border));
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
   background: transparent;
 }
 .badge--flag { color: var(--gold); border-color: color-mix(in srgb, var(--gold) 45%, var(--border)); background: var(--gold-weak); }
@@ -423,7 +403,7 @@ main:focus { outline: none; }
 .series__item {
   display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap;
   padding: .6rem .8rem; border: 1px solid var(--border);
-  border-left: 3px solid var(--card-accent, var(--accent));
+  border-left: 3px solid var(--accent);
   border-radius: var(--r-md); background: var(--surface);
 }
 .series__item--review { background: transparent; border-style: dashed; }
