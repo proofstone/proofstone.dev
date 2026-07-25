@@ -14,6 +14,21 @@
 //   · robots.txt advertises the sitemap only after launch
 //   · each roadmap's OG card is reachable AND its numbers match the live page
 //     — a launch is exactly when a stale social card gets copied everywhere.
+//   · the redesign actually reached production: every map is second-generation,
+//     the map file nothing links is gone, the self-hosted faces are served, and
+//     the warm palette is in the stylesheet the browser receives.
+//
+// That last group exists because of a gap this project kept walking into. The
+// build gates assert things about _site on the machine that built it; they
+// cannot assert that the artifact reached the origin, that a passthrough
+// change actually removed a file from the deploy, or that a font 404s behind a
+// CDN. Twice now a green build and a green verify:live were both true while a
+// redesign-specific fact on production was not checked at all, and the check
+// lived in a scratch script that no one would inherit.
+//
+// Nothing here duplicates check-build. Hotspot coverage, structural soundness,
+// stamp counts and print tokens are asserted at build time and are not re-run
+// against HTML — only the facts that are properties of the DEPLOY.
 // ─────────────────────────────────────────────────────────────────────────────
 import { readFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -150,6 +165,87 @@ console.log('\nSOCIAL CARDS');
     } catch (e) {
       fail(url, `card check failed: ${e.message}`);
     }
+  }
+}
+
+// ── The redesign, as the origin actually serves it ───────────────────────────
+console.log('\nDEPLOYED REDESIGN');
+{
+  // Derived from each URL's PATH, not by string-replacing BASE out of it. The
+  // sitemap always carries canonical absolute URLs, so when SITE_URL points
+  // somewhere else — a staging origin, or the poisoned copy this check is
+  // tested against — the replace matched nothing and every slug came out as
+  // garbage. The map checks then passed on paths that do not exist: a false
+  // green, which is worse than the failure it was hiding.
+  const slugs = urls
+    .map((u) => { try { return new URL(u).pathname.replace(/^\/|\/$/g, ''); } catch { return ''; } })
+    .filter(Boolean);
+
+  // Every map must be second-generation. A first-generation map would render as
+  // light artwork on a dark page: the force-light panel that carried those was
+  // deleted once the migration finished.
+  for (const slug of slugs) {
+    try {
+      const { status, body } = await get(`${BASE}/${slug}/`);
+      if (status !== 200) { fail(`${slug}`, `HTTP ${status}`); continue; }
+      const gen = (body.match(/data-map-theme="([a-z]+)"/) || [])[1];
+      if (gen !== 'tokens') fail(`${slug}: map generation "${gen || 'none'}"`, 'expected "tokens" — the panel for fixed-colour maps no longer exists');
+      else pass(`${slug}`, 'map paints from theme tokens');
+    } catch (e) {
+      fail(slug, `map check failed: ${e.message}`);
+    }
+  }
+
+  // The map is inlined into the page, so the copied file is referenced by
+  // nothing and is excluded from the deploy. Proven here against the origin,
+  // because "the passthrough no longer copies it" is a build-time fact and
+  // "the origin no longer serves it" is not the same statement.
+  for (const slug of slugs) {
+    try {
+      const res = await fetch(`${BASE}/${slug}/assets/roadmap.svg`, { method: 'HEAD', signal: AbortSignal.timeout(20000) });
+      if (res.status === 404) pass(`${slug}/assets/roadmap.svg`, 'gone, as intended — the map ships inline');
+      else fail(`${slug}/assets/roadmap.svg`, `HTTP ${res.status} — nothing links this file, so shipping it is dead weight`);
+    } catch (e) {
+      fail(`${slug}/assets/roadmap.svg`, `check failed: ${e.message}`);
+    }
+  }
+
+  // Self-hosted faces. A missing one does not break the page — the metric-matched
+  // fallback takes over silently — which is exactly why it needs asserting.
+  const FACES = [
+    'plex-sans-var.woff2', 'plex-mono-400.woff2', 'plex-mono-600.woff2',
+    'zilla-slab-600.woff2', 'zilla-slab-700.woff2'
+  ];
+  let facesOk = 0;
+  for (const f of FACES) {
+    try {
+      const res = await fetch(`${BASE}/assets/fonts/${f}`, { method: 'HEAD', signal: AbortSignal.timeout(20000) });
+      if (res.ok) facesOk++;
+      else fail(`fonts/${f}`, `HTTP ${res.status} — the page would fall back silently`);
+    } catch (e) {
+      fail(`fonts/${f}`, `check failed: ${e.message}`);
+    }
+  }
+  if (facesOk === FACES.length) pass('self-hosted faces', `${facesOk}/${FACES.length} served`);
+
+  // The stylesheet the browser receives, not the one on disk.
+  try {
+    const { status, body } = await get(`${BASE}/assets/styles.css`);
+    if (status !== 200) {
+      fail('styles.css', `HTTP ${status}`);
+    } else {
+      const need = [
+        ['--bg: #f7f3ea', 'warm paper'],
+        ['--accent: #9d3b1f', 'sealing wax'],
+        ['--map-ink', 'map tokens'],
+        ["font-family: 'Zilla Slab'", 'display face declared']
+      ];
+      const missing = need.filter(([t]) => !body.includes(t));
+      if (missing.length) fail('styles.css', `${missing.map(([, n]) => n).join(', ')} not in the served stylesheet`);
+      else pass('styles.css', `${need.length} palette/type markers present, ${body.length} bytes`);
+    }
+  } catch (e) {
+    fail('styles.css', `check failed: ${e.message}`);
   }
 }
 
