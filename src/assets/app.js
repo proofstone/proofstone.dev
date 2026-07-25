@@ -104,7 +104,7 @@
 
   var label = wrapEl.querySelector('.progress__label');
   var bar = wrapEl.querySelector('.progress__bar');
-  var fill = wrapEl.querySelector('.progress__fill');
+  var stones = Array.prototype.slice.call(wrapEl.querySelectorAll('.stone'));
   var nextBtn = wrapEl.querySelector('.progress__next');
   var resetBtn = wrapEl.querySelector('.progress__reset');
   var status = wrapEl.querySelector('[role="status"]');
@@ -156,7 +156,8 @@
     var done = boxes.filter(function (cb) { return cb.checked; }).length;
     var sentence = done + ' of ' + boxes.length + ' milestones done';
     label.textContent = done + ' / ' + boxes.length + ' milestones';
-    fill.style.width = Math.round((done / boxes.length) * 100) + '%';
+    // Only a colour changes: laying a stone must not be a layout event.
+    stones.forEach(function (st, i) { st.classList.toggle('is-laid', i < done); });
     nextBtn.disabled = done === boxes.length;
 
     bar.setAttribute('aria-valuenow', String(done));

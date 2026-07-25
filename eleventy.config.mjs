@@ -126,10 +126,23 @@ function enhanceHeadings(html) {
     if (isStar) cls.push('is-star');
     if (isArticulation) cls.push('is-articulation');
 
-    // No badge on the heading: the README already carries its own marker (⭐ or the
-    // italic "(articulation …)"), and the stamp on the proof block below states the
-    // kind outright. A third copy would just be noise.
-    return `<h3 id="${id}" class="${cls.join(' ')}" data-ms="${ms[1]}">${inner}</h3>`;
+    // The star is DATA and stays data: `stars` above is still counted from it,
+    // and make-og.mjs still reads it out of the README. Only its rendering
+    // changes — the emoji comes out of the visible heading and the FLAGSHIP
+    // stamp on the criterion below says the same thing in the site's own
+    // language. An emoji rasterises differently on every platform and was the
+    // last place the page borrowed someone else's glyph.
+    //
+    // Three properties this must keep, in order:
+    //  • it runs AFTER isStar/stars, so removing the glyph cannot change what
+    //    the page knows about the milestone;
+    //  • it touches milestone headings only, never prose — a global replace
+    //    would edit a README's sentences, which this repo may not do;
+    //  • it is asserted afterwards by check-build (STAR DISPLAY), which fails
+    //    the build if the number of is-star headings ever stops matching the
+    //    number of starred milestone headings in the source markdown.
+    const shown = isStar ? inner.replace(/[⭐★]\s*/g, '') : inner;
+    return `<h3 id="${id}" class="${cls.join(' ')}" data-ms="${ms[1]}">${shown}</h3>`;
   });
 
   // `milestones` counts exactly what app.js will find in the DOM (h3.ps-ms-h with

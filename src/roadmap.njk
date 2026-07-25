@@ -16,7 +16,7 @@ eleventyComputed:
     <a href="/">proofstone</a> <span aria-hidden="true">/</span> <span>{{ roadmap.title }}</span>
   </nav>
   <div class="roadmap__actions">
-    <a class="btn btn--primary" href="https://github.com/{{ roadmap.repo }}" rel="noopener">★ Star on GitHub</a>
+    <a class="btn btn--primary" href="https://github.com/{{ roadmap.repo }}" rel="noopener">Star on GitHub</a>
     <a class="btn" href="https://github.com/{{ roadmap.repo }}/edit/{{ roadmap.branch }}/README.md" rel="noopener">Edit</a>
     <a class="btn" href="https://github.com/{{ roadmap.repo }}/blob/{{ roadmap.branch }}/README.md" rel="noopener">View source</a>
   </div>
@@ -68,9 +68,16 @@ eleventyComputed:
     {%- if msTotal %}
     <div class="progress">
       <span class="progress__label">0 / {{ msTotal }} milestones</span>
+      {#- A course of masonry, not a bar: one stone per milestone, laid when it is
+          proven. The stones are rendered here rather than by app.js for the same
+          reason the bar was — anything built after first paint moves the page.
+          The progressbar role and its values stay on this element, so what a
+          screen reader hears is unchanged; only what the eye sees is new. #}
       <span class="progress__bar" role="progressbar" aria-label="Milestone progress"
             aria-valuemin="0" aria-valuemax="{{ msTotal }}" aria-valuenow="0"
-            aria-valuetext="0 of {{ msTotal }} milestones done"><span class="progress__fill"></span></span>
+            aria-valuetext="0 of {{ msTotal }} milestones done">
+        {%- for i in range(0, msTotal) %}<span class="stone"></span>{% endfor %}
+      </span>
       <button type="button" class="progress__next" disabled>next unchecked ↓</button>
       <button type="button" class="progress__reset" disabled>reset</button>
       <span class="vh" role="status" aria-live="polite"></span>
@@ -91,7 +98,7 @@ eleventyComputed:
         {%- for r in liveRoadmaps %}{% if r.slug != roadmap.slug %}
         <li class="series__item">
           <a class="series__link" href="/{{ r.slug }}/">{{ r.title }}</a>
-          <span class="series__meta">{{ r.milestones }} milestones · {{ r | roadmapStars }} ★ artifacts</span>
+          <span class="series__meta">{{ r.milestones }} milestones · {{ r | roadmapStars }} flagship</span>
         </li>
         {%- endif %}{% endfor %}
         {%- for r in reviewRoadmaps %}

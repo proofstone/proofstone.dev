@@ -117,7 +117,7 @@ await shoot(
 for (const r of roadmaps.filter((x) => x.status === 'live')) {
   const stars = r.hasContent ? countStars(r.content) : r.stars || 0;
   const milestones = r.milestones || 0;
-  const meta = milestones ? `${milestones} milestones · ${stars} ★ artifacts` : '';
+  const meta = milestones ? `${milestones} milestones · ${stars} flagship` : '';
   await shoot(card({ title: r.title, meta }), `${r.slug}.png`);
   manifest[r.slug] = { milestones, stars };
 }

@@ -113,8 +113,12 @@
   --accent: #9d3b1f;           /*  6.16:1 on --bg */
   --on-accent: #f7f3ea;        /*  6.16:1 on --accent */
   --accent-weak: #f0e3d8;
-  --gold: #8a6410;             /*  4.85:1 on --bg — FLAGSHIP */
-  --on-gold: #f7f3ea;          /*  4.85:1 on --gold */
+  /* Measured against BOTH surfaces it appears on, not just the page: the
+     flagship badge and the FLAGSHIP PROOF stamp sit on --gold-weak, where
+     the previous #8a6410 was 4.44:1 — under the bar, and invisible to a
+     check that only looked at --bg. */
+  --gold: #7a5809;             /*  5.88:1 on --bg, 5.38:1 on --gold-weak */
+  --on-gold: #f7f3ea;          /*  5.88:1 on --gold */
   --gold-weak: #f2e9d3;
   --ok: #1f6b45;               /*  5.84:1 on --bg — PROVEN */
   --on-ok: #f7f3ea;            /*  5.84:1 on --ok */
@@ -234,10 +238,14 @@ a:hover { text-decoration: underline; }
   color: var(--text); cursor: pointer;
 }
 .theme-toggle:hover { background: var(--surface-2); }
-.theme-toggle__icon::before { content: "☾"; font-size: 1rem; }
-[data-theme="dark"] .theme-toggle__icon::before { content: "☀"; }
+/* The icon shows the theme you would switch TO, matching the button's label. */
+.theme-toggle svg { width: 1rem; height: 1rem; display: block; }
+.theme-toggle .i-sun { display: none; }
+[data-theme="dark"] .theme-toggle .i-sun { display: block; }
+[data-theme="dark"] .theme-toggle .i-moon { display: none; }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .theme-toggle__icon::before { content: "☀"; }
+  :root:not([data-theme="light"]) .theme-toggle .i-sun { display: block; }
+  :root:not([data-theme="light"]) .theme-toggle .i-moon { display: none; }
 }
 
 main { padding: 2.5rem 1.25rem 4rem; scroll-margin-top: 6rem; }
@@ -252,40 +260,70 @@ main:focus { outline: none; }
 .site-footer p { margin: .25rem 0; }
 
 /* ── Home ─────────────────────────────────────────────────────────────────── */
-.hero { max-width: var(--page); margin: 1rem auto 2.5rem; text-align: center; }
-.hero__title {
-  font-size: clamp(1.9rem, 4.5vw, 3rem); line-height: 1.12; letter-spacing: -.02em;
-  margin: 0 0 .5rem; font-weight: 800;
+.hero { max-width: var(--page); margin: 1rem auto 3rem; }
+.hero__kicker {
+  font-family: var(--mono); font-size: .72rem; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--muted); margin: 0 0 .9rem;
 }
-.hero__sub { font-size: 1.15rem; color: var(--muted); margin: 0 0 1.25rem; }
+.hero__title {
+  font-size: clamp(2.1rem, 5vw, 3.4rem); line-height: 1.06; letter-spacing: -.02em;
+  margin: 0 0 .7rem; font-weight: 700; max-width: 22ch;
+}
+.hero__sub { font-size: 1.15rem; color: var(--muted); margin: 0 0 1.5rem; max-width: 46ch; }
+/* Was a dashed pill. Dashed means "not live" on this site, which is the wrong
+   thing to say about the series line; a rule under it says the same "this is an
+   aside" without borrowing a word that already means something else. */
 .hero__series {
-  display: inline-block; font-size: .9rem; color: var(--muted);
-  border: 1px dashed var(--border); border-radius: 999px; padding: .35rem .85rem;
+  font-size: .92rem; color: var(--muted); margin: 0;
+  padding-top: .9rem; border-top: 1px solid var(--border);
+  max-width: var(--measure);
 }
 
 .roadmaps { max-width: var(--page); margin: 0 auto; display: grid; gap: 1rem; }
+/* A card is a document in an archive, not a tile: a shelf mark, a status stamp
+   and a rule under it. The coloured left bar is gone with the five accents it
+   used to carry, and so is the -2px hover lift — every card on the internet
+   does that, which is precisely why it read as generated. Hover moves the ink,
+   not the box. */
 .card {
-  position: relative; overflow: hidden;
-  background: var(--surface); border: 1px solid var(--border);
-  border-left: 4px solid var(--accent);
-  border-radius: var(--r-md); box-shadow: var(--shadow);
-  transition: transform .12s ease, border-color .12s ease;
+  position: relative;
+  background: transparent; border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0; box-shadow: var(--shadow);
+  transition: background-color .12s ease;
 }
-.card:hover { transform: translateY(-2px); }
-.card:hover { border-color: var(--accent); }
-.card__main { display: block; padding: 1.4rem 1.5rem; color: inherit; }
+.card:last-child { border-bottom: 1px solid var(--border); }
+.card:hover { background: var(--surface); }
+.card__head {
+  display: flex; align-items: center; gap: .7rem;
+  margin: 0 0 .5rem;
+}
+.card__num {
+  font-family: var(--mono); font-size: .72rem; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--muted);
+}
+.card__main { display: block; padding: 1.4rem 1.5rem 1.4rem 0; color: inherit; }
 .card__main:hover { text-decoration: none; }
-.card--review { padding: 1.4rem 1.5rem; background: transparent; border-style: dashed; }
-.card--review:hover { transform: none; border-color: var(--border); }
+/* Dashed already means "not a live map" on this site (the review cards, the
+   series pill), so the language is inherited rather than reinvented. */
+.card--review { padding: 1.4rem 1.5rem 1.4rem 0; border-top-style: dashed; }
+.card--review:hover { background: transparent; }
 .card__title { margin: 0 0 .35rem; font-size: 1.4rem; letter-spacing: -.01em; color: var(--text); }
 .card__tagline { margin: 0 0 1rem; color: var(--muted); }
 .card__meta { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin: 0; }
-.card__go { margin-left: auto; color: var(--accent); font-size: 1.3rem; }
+/* A drawn arrow, not "→". The character is a font glyph: it changes shape with
+   the typeface, sits on the text baseline rather than the optical centre, and
+   in the mono fallback it is a different width again. This one is 20x10 and
+   inherits currentColor. */
+.card__go { margin-left: auto; color: var(--accent); display: inline-flex; align-items: center; }
+.arrow { width: 1.25rem; height: .62rem; display: inline-block; flex: 0 0 auto; vertical-align: -.05em; }
+.arrow path { stroke: currentColor; stroke-width: 1.4; fill: none; stroke-linecap: square; }
+.thesis__contribute .arrow { margin-left: .15rem; }
 .badge--review {
   color: var(--muted); background: transparent; border-style: dashed; white-space: normal;
 }
 .card__lab {
-  margin: 0; padding: .75rem 1.5rem 1.1rem; font-size: .87rem; color: var(--muted);
+  margin: 0; padding: .75rem 1.5rem 1.1rem 0; font-size: .87rem; color: var(--muted);
   border-top: 1px dashed var(--border);
 }
 .card--review .card__lab { padding: .75rem 0 0; }
@@ -317,7 +355,6 @@ main:focus { outline: none; }
   border: 1px solid var(--border); border-radius: var(--r-sm); text-align: center; padding: .1rem 0;
 }
 
-.hero__counts { display: block; margin-top: .3rem; font-family: var(--mono); font-size: .74rem; color: var(--muted); }
 
 /* ── Companion projects ───────────────────────────────────────────────────── */
 /* Deliberately quieter than a roadmap card: reading-column width instead of the
@@ -355,6 +392,27 @@ main:focus { outline: none; }
 .thesis p { color: var(--text); }
 .thesis__contribute { color: var(--muted); font-size: .95rem; margin-top: 1.25rem; }
 
+/* ── Status stamps ───────────────────────────────────────────────────────── */
+/* The same object as the PROOF / FLAGSHIP / PROVEN stamps on a milestone, in
+   the same mono, at the same tilt. Physical rather than pill-shaped: a stamp is
+   pressed, so it sits slightly off-square. The tilt is a constant, not random —
+   a seal that lands differently on every reload is an animation, not a seal. */
+.stamp {
+  display: inline-flex; align-items: center;
+  font-family: var(--mono); font-size: .6rem; font-weight: 600;
+  letter-spacing: .14em; text-transform: uppercase;
+  padding: .16rem .45rem; border-radius: var(--r-sm);
+  background: var(--accent); color: var(--on-accent);
+  transform: rotate(-2.5deg);
+}
+.stamp--live { background: var(--ok); color: var(--on-ok); }
+/* "In review" is a state, not an achievement: outline only, and dashed, which
+   is this site's existing word for "not live". */
+.stamp--open {
+  background: transparent; color: var(--muted);
+  border: 1px dashed var(--control-border); padding: .11rem .4rem;
+}
+
 /* ── Badges ───────────────────────────────────────────────────────────────── */
 .badge {
   display: inline-flex; align-items: center; gap: .3rem;
@@ -363,11 +421,15 @@ main:focus { outline: none; }
   color: var(--muted); background: var(--bg);
 }
 .badge--count { color: var(--muted); }
-/* Falls back to the site accent; on a direction card it inherits that card's accent. */
-.badge--star {
-  color: var(--accent);
-  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
-  background: transparent;
+/* Flagship count. Gold, because that is what FLAGSHIP PROOF is stamped in on
+   the milestone itself — the badge and the stamp are the same fact seen twice,
+   so they are the same colour. Replaces "N ★ artifacts": the star was borrowed
+   punctuation, and the site already has a word for this. */
+.badge--flagship {
+  color: var(--gold);
+  border-color: color-mix(in srgb, var(--gold) 45%, var(--border));
+  background: var(--gold-weak);
+  text-transform: uppercase; letter-spacing: .1em; font-size: .66rem;
 }
 .badge--flag { color: var(--gold); border-color: color-mix(in srgb, var(--gold) 45%, var(--border)); background: var(--gold-weak); }
 
@@ -645,21 +707,25 @@ main:focus { outline: none; }
   background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(6px);
   padding: .45rem 0;
 }
-/* The empty track was 1.14:1 against the page, i.e. invisible at 0 %, which is
-   every visitor's first view. Outlining it (rather than repainting the fill)
-   keeps the filled part at 4.57:1 against the track — repainting would have
-   traded a visible track for unreadable progress. */
+/* A course of masonry. Each stone is one milestone; a proven milestone lays it.
+   The empty course still has to be visible at zero, which is every visitor's
+   first view, so an unlaid stone is an outline at --control-border (3.56:1
+   light / 3.88:1 dark) rather than a fill nobody can see.
+   Heights alternate by index so the row reads as coursed stonework instead of
+   a loading indicator — deterministic, driven by nth-child, not by chance. */
 .progress__bar {
-  flex: 1 1 6rem; height: 8px; background: var(--surface-2);
-  border: 1px solid var(--control-border); border-radius: 999px; overflow: hidden;
+  flex: 1 1 8rem; display: flex; align-items: flex-end; gap: 2px;
+  min-width: 6rem; border: 0; background: none; overflow: visible;
 }
-/* display:block is load-bearing, not tidiness: this is a <span> inside a bar that
-   is a flex ITEM, not a flex container, so it stayed inline — and width/height
-   do not apply to an inline box. The fill has been computing 21 % and painting
-   0×0 px on the live site since the bar shipped. Found while giving the bar its
-   progressbar role: the announced value was about to be right while the picture
-   stayed empty. */
-.progress__fill { display: block; height: 100%; width: 0; background: var(--ok); transition: width .2s ease; }
+.stone {
+  flex: 1 1 auto; min-width: 2px; height: 11px;
+  border: 1px solid var(--control-border); border-radius: 1px;
+  background: transparent;
+}
+.stone:nth-child(2n) { height: 14px; }
+.stone:nth-child(3n) { height: 9px; }
+.stone.is-laid { background: var(--ok); border-color: var(--ok); }
+
 .progress__next {
   font-size: .78rem; padding: .22rem .55rem; border: 1px solid var(--control-border);
   border-radius: var(--r-md); background: var(--surface); color: var(--text); cursor: pointer; white-space: nowrap;
@@ -774,7 +840,7 @@ main:focus { outline: none; }
 
   /* Screen furniture: nothing here survives on paper. */
   .site-header, .site-footer, .skip-link,
-  .roadmap__actions, .progress__bar, .progress__next, .progress__reset { display: none; }
+  .roadmap__actions, .progress__next, .progress__reset { display: none; }
 
   /* Sticky elements must not reserve or repeat space in a paged medium. */
   .progress, .toc { position: static; max-height: none; overflow: visible; }
@@ -802,6 +868,8 @@ main:focus { outline: none; }
   .ps-check { border-color: #000; background: none; }
   .ps-check:checked { background: none; border-color: #000; }
   .ps-check:checked::after { color: #000; }
+  .stone { border-color: #000; height: 9px; }
+  .stone.is-laid { background: #000; }
 
   /* A paper reference with no addresses is not a reference. In-page anchors are
      excluded — "(#2--evals)" on paper is noise, not information. */

@@ -4,25 +4,35 @@ pageType: home
 title: proofstone — engineering roadmaps where every milestone is a proof
 description: Engineering roadmaps where every milestone is a proof — a verifiable artifact, not a keyword. Built for working engineers.
 ---
+{#- Left-aligned, no pill. A centred clamp() headline over a rounded badge is
+    the skeleton of every generated landing page; a document starts at the left
+    margin and states what it is on the line above. The counts stay computed —
+    they are the one number on this page and hardcoding them is how this project
+    burned twice. #}
 <section class="hero">
+  <p class="hero__kicker">Engineering roadmaps &#183; {{ liveRoadmaps.length }} live &#183; {{ reviewRoadmaps.length }} in review</p>
   <h1 class="hero__title">{{ site.tagline }}</h1>
   <p class="hero__sub">{{ site.thesisSub }}</p>
-  <p class="hero__series">
-    {{ site.seriesLine }}
-    <span class="hero__counts">{{ liveRoadmaps.length }} live · {{ reviewRoadmaps.length }} in review</span>
-  </p>
+  <p class="hero__series">{{ site.seriesLine }}</p>
 </section>
 
 <section class="roadmaps" aria-label="Roadmaps">
   {%- for r in liveRoadmaps %}
   <article class="card">
     <a class="card__main" href="/{{ r.slug }}/">
+      {#- The archive number and the status stamp are what tell one direction
+          from another now. `order` is the registry's own field, printed with a
+          leading zero — it is a shelf mark, not a ranking. #}
+      <p class="card__head">
+        <span class="card__num">No. {% if r.order < 10 %}0{% endif %}{{ r.order }}</span>
+        <span class="stamp stamp--live">Live</span>
+      </p>
       <h2 class="card__title">{{ r.title }}</h2>
       <p class="card__tagline">{{ r.tagline }}</p>
       <p class="card__meta">
         <span class="badge badge--count">{{ r.milestones }} milestones</span>
-        <span class="badge badge--star">{{ r | roadmapStars }} ★ artifacts</span>
-        <span class="card__go" aria-hidden="true">→</span>
+        <span class="badge badge--flagship">{{ r | roadmapStars }} flagship</span>
+        <span class="card__go"><svg class="arrow" viewBox="0 0 20 10" aria-hidden="true" focusable="false"><path d="M0 5h17M13 1l4 4-4 4"/></svg></span>
       </p>
     </a>
     {%- if r.lab %}
@@ -36,12 +46,16 @@ description: Engineering roadmaps where every milestone is a proof — a verifia
 
   {%- for r in reviewRoadmaps %}
   <article class="card card--review">
+    <p class="card__head">
+      <span class="card__num">No. {% if r.order < 10 %}0{% endif %}{{ r.order }}</span>
+      <span class="stamp stamp--open">In review</span>
+    </p>
     <h2 class="card__title">{{ r.title }}</h2>
     <p class="card__tagline">{{ r.tagline }}</p>
     <p class="card__meta">
       <span class="badge badge--count">{{ r.milestones }} milestones</span>
-      <span class="badge badge--star">{{ r | roadmapStars }} ★ artifacts</span>
-      <span class="badge badge--review">In practitioner review — private until published</span>
+      <span class="badge badge--flagship">{{ r | roadmapStars }} flagship</span>
+      <span class="badge badge--review">private until published</span>
     </p>
     {%- if r.labNote %}
     <p class="card__lab"><span class="card__lab-tag">lab</span> {{ r.labNote }}.</p>
@@ -106,6 +120,6 @@ description: Engineering roadmaps where every milestone is a proof — a verifia
   <p class="thesis__contribute">
     The roadmap repositories are the source of truth — this site is the render layer.
     Contribute by opening a pull request on a roadmap's repo; the site rebuilds itself.
-    <a href="{{ site.org }}" rel="noopener">github.com/proofstone →</a>
+    <a href="{{ site.org }}" rel="noopener">github.com/proofstone <svg class="arrow" viewBox="0 0 20 10" aria-hidden="true" focusable="false"><path d="M0 5h17M13 1l4 4-4 4"/></svg></a>
   </p>
 </section>
