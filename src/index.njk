@@ -14,9 +14,73 @@ description: Engineering roadmaps where every milestone is a proof — a verifia
   <h1 class="hero__title">{{ site.tagline }}</h1>
   <p class="hero__sub">{{ site.thesisSub }}</p>
   <p class="hero__series">{{ site.seriesLine }}</p>
+  {#- Inline, not pinned to the viewport. The reference this borrows its bar
+      from floats it, but a floating control has to be dismissed, hidden after
+      the scenes, and kept out of the tab order's way. Here it sits where the
+      sceptic already is — the line after the thesis — reaches the cards in one
+      key, and needs neither script nor a scroll timeline to know when to go. #}
+  <a class="skip-visuals" href="#roadmaps">Skip visuals
+    <svg class="arrow arrow--down" viewBox="0 0 10 20" aria-hidden="true" focusable="false"><path d="M5 0v17M1 13l4 4 4-4"/></svg>
+  </a>
 </section>
 
-<section class="roadmaps" aria-label="Roadmaps">
+{#- The road. Scenes hang off it and each lays a stone as it is read: the same
+    masonry the roadmap pages use for milestones, doing the same job here for
+    the argument. Decorative, so it is hidden from assistive tech — the scenes
+    themselves carry the meaning in text. #}
+<div class="road">
+
+<section class="scene scene--keywords" aria-labelledby="scene-keywords">
+  <span class="road__stone" aria-hidden="true"></span>
+  <div class="scene__text">
+    <p class="scene__label">The keyword way</p>
+    <h2 class="scene__title" id="scene-keywords">A list you can nod at.</h2>
+    <p class="scene__body">
+      This is the AI Safety map with its milestones taken out — just the section
+      names. Every one is real, every one is something you can say you know, and
+      not one of them can be finished.
+    </p>
+  </div>
+  <div class="scene__stage">
+    {#- The chips are the roadmap's own §-section titles, read from the rendered
+        README. Inventing a plausible-looking skills list would have been the
+        exact thing this scene argues against. #}
+    <ul class="keywords">
+      {%- for r in liveRoadmaps %}{% if r.sampleMilestone %}{% for s in r | roadmapToc %}
+      <li class="keyword">{{ s.title }}</li>
+      {%- endfor %}{% endif %}{% endfor %}
+    </ul>
+    <p class="keywords__verdict">Not one of them says when you are done.</p>
+  </div>
+</section>
+
+<section class="scene scene--proof" aria-labelledby="scene-proof">
+  <span class="road__stone" aria-hidden="true"></span>
+  <div class="scene__text">
+    <p class="scene__label">The proof way</p>
+    <h2 class="scene__title" id="scene-proof">The same field, one milestone at a time.</h2>
+    <p class="scene__body">
+      Same map, one section deep. A milestone states its finishing condition in
+      advance, and meeting it leaves something outside your head.
+    </p>
+  </div>
+  <div class="scene__stage">
+    <div class="prose sample__block">
+      {%- for r in liveRoadmaps %}{% if r.sampleMilestone %}{{ r | milestoneSample(r.sampleMilestone) | safe }}{% endif %}{% endfor %}
+    </div>
+    {#- The artifact strip uses the criterion's own nouns — dataset, solver,
+        scorer, log — rather than a mocked-up terminal. A fabricated log line
+        would be a fake artifact in a scene about not faking artifacts. #}
+    <p class="artifact" aria-hidden="true">
+      <span class="artifact__line">dataset &#8594; solver &#8594; scorer &#8594; log</span>
+      <span class="artifact__line artifact__line--done">read the log, say why each sample scored</span>
+    </p>
+    <p class="scene__verdict"><span class="stamp stamp--ok">Proven</span> That is the whole format.</p>
+  </div>
+</section>
+
+<section class="roadmaps scene--series" id="roadmaps" aria-label="Roadmaps">
+  <span class="road__stone" aria-hidden="true"></span>
   {%- for r in liveRoadmaps %}
   <article class="card">
     <a class="card__main" href="/{{ r.slug }}/">
@@ -64,13 +128,7 @@ description: Engineering roadmaps where every milestone is a proof — a verifia
   {%- endfor %}
 </section>
 
-<section class="sample" aria-label="What a milestone looks like">
-  <h2 class="sample__title">What a milestone looks like</h2>
-  <p class="sample__lead">Every node in every roadmap is one of these — taken here, unedited, from the AI Safety map.</p>
-  <div class="prose sample__block">
-    {%- for r in liveRoadmaps %}{% if r.sampleMilestone %}{{ r | milestoneSample(r.sampleMilestone) | safe }}{% endif %}{% endfor %}
-  </div>
-</section>
+</div>
 
 <section class="how">
   <h2>How it works</h2>

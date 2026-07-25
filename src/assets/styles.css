@@ -354,6 +354,146 @@ main:focus { outline: none; }
 }
 .card__lab code { background: var(--code-bg); padding: .08em .35em; border-radius: var(--r-sm); font-size: .95em; }
 
+/* -- The road, and the scenes that hang off it ----------------------------- */
+/* THE RULE THIS SECTION IS BUILT ON: the default state of every animated thing
+   here is its FINAL state. Nothing is hidden, offset or scaled until a browser
+   has said it can animate it back. So a reader with no JavaScript, an engine
+   without scroll-driven animations, or a reduced-motion preference gets the
+   finished frame -- complete text, stamp already pressed -- rather than an
+   empty box waiting for a script that is never coming.
+   That ordering also keeps CLS at zero: the page is laid out once, in its final
+   geometry, and the animations only ever touch opacity, colour and transform.
+
+   No IntersectionObserver. A CSS view() timeline is tied to scroll POSITION,
+   not to a one-way "has entered" event, so a scene skipped past and scrolled
+   back to plays again for free -- which is a requirement here -- while the
+   observer version needs state removed on exit and flickers doing it. Where
+   view() is unsupported the scene is simply already finished. */
+
+.road { position: relative; max-width: var(--page); margin: 0 auto; }
+/* The rule the stones sit on. Decorative: it says nothing the scenes do not
+   already say in words, so it is drawn, not announced. */
+.road::before {
+  content: ""; position: absolute; left: -1.6rem; top: 2rem; bottom: 2rem;
+  width: 1px; background: var(--border);
+}
+.road__stone {
+  position: absolute; left: -2.1rem; top: 3.2rem;
+  width: 1rem; height: .75rem; border-radius: 1px;
+  border: 1px solid var(--control-border); background: var(--bg);
+}
+
+.scene { position: relative; padding: 3.5rem 0; }
+.scene + .scene { border-top: 1px solid var(--border); }
+.scene__label {
+  font-family: var(--mono); font-size: .7rem; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--accent); margin: 0 0 .7rem;
+}
+.scene__title { font-size: clamp(1.6rem, 3.2vw, 2.2rem); line-height: 1.12; margin: 0 0 .7rem; }
+.scene__body { color: var(--muted); margin: 0 0 1.6rem; max-width: 54ch; }
+.scene__stage { position: relative; }
+/* .prose centres itself in the reading column, which is right inside an article
+   and wrong inside a scene: here it has to start at the same left margin as the
+   sentence that introduces it. */
+.scene__stage .prose { margin-left: 0; margin-right: 0; }
+.scene__verdict {
+  display: flex; align-items: center; gap: .6rem; flex-wrap: wrap;
+  margin: 1.1rem 0 0; font-size: .95rem; color: var(--muted);
+}
+
+/* Scene 1 -- the keyword cloud */
+.keywords { display: flex; flex-wrap: wrap; gap: .5rem; list-style: none; margin: 0; padding: 0; max-width: 46rem; }
+.keyword {
+  font-family: var(--mono); font-size: .8rem;
+  padding: .3rem .6rem; border-radius: var(--r-md);
+  border: 1px dashed var(--control-border); color: var(--muted); background: var(--surface);
+  --ps-dx: 0px; --ps-dy: 0px; --ps-r: 0deg;
+}
+.keyword:nth-child(3n)   { --ps-dx: 13px;  --ps-dy: -8px; --ps-r: -4deg; }
+.keyword:nth-child(3n+1) { --ps-dx: -10px; --ps-dy: 7px;  --ps-r: 3deg; }
+.keyword:nth-child(3n+2) { --ps-dx: 6px;   --ps-dy: 11px; --ps-r: -2deg; }
+.keywords__verdict {
+  margin: 1.4rem 0 0; font-family: var(--mono); font-size: .85rem; color: var(--text);
+}
+
+/* Scene 2 -- the artifact strip. Fixed minimum height so the reveal cannot move
+   the page: one line growing inside a box that was always this tall. */
+.artifact {
+  margin: 1.2rem 0 0; padding: .8rem 1rem;
+  background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--r-sm);
+  font-family: var(--mono); font-size: .78rem; color: var(--muted);
+  min-height: 4.1rem;
+}
+.artifact__line { display: block; white-space: nowrap; overflow: hidden; line-height: 1.7; }
+.artifact__line--done { color: var(--ok); }
+
+/* -- Skip visuals ---------------------------------------------------------- */
+.skip-visuals {
+  display: inline-flex; align-items: center; gap: .45rem; margin-top: 1.5rem;
+  font-family: var(--mono); font-size: .76rem; letter-spacing: .06em;
+  padding: .4rem .8rem; border-radius: var(--r-sm);
+  border: 1px solid var(--control-border); color: var(--text);
+}
+.skip-visuals:hover { background: var(--surface); text-decoration: none; border-color: var(--text); }
+.arrow--down { width: .5rem; height: 1rem; }
+
+/* -- The animated layer ---------------------------------------------------- */
+/* Everything above is the finished frame. Everything below runs it backwards
+   and plays it, and only where both conditions hold. */
+@supports (animation-timeline: view()) {
+  @media not (prefers-reduced-motion: reduce) {
+    /* A stone is laid as its scene is read. */
+    .road__stone {
+      animation: ps-stone linear both;
+      animation-timeline: view();
+      animation-range: entry 70% cover 25%;
+    }
+    @keyframes ps-stone {
+      from { background: var(--bg); border-color: var(--control-border); }
+      to   { background: var(--ok); border-color: var(--ok); }
+    }
+
+    /* Scene 1: the chips fade and drift apart as the argument lands. The
+       offsets are per-position, not random -- a cloud that scatters differently
+       on every reload is an animation pretending to be one. */
+    .keyword {
+      animation: ps-scatter linear both;
+      animation-timeline: view();
+      animation-range: cover 35% cover 75%;
+    }
+    @keyframes ps-scatter {
+      from { opacity: 1; transform: none; filter: none; }
+      to   { opacity: .2; filter: blur(1.4px);
+             transform: translate(var(--ps-dx), var(--ps-dy)) rotate(var(--ps-r)); }
+    }
+    .keywords__verdict {
+      animation: ps-fade-in linear both;
+      animation-timeline: view();
+      animation-range: cover 45% cover 70%;
+    }
+    @keyframes ps-fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+    /* Scene 2: the line is revealed, not written by a script. steps() on width
+       inside an overflow-hidden line, in a box that already reserved its
+       height, so nothing on the page moves. */
+    .artifact__line {
+      animation: ps-type steps(34) both;
+      animation-timeline: view();
+      animation-range: cover 30% cover 55%;
+    }
+    .artifact__line--done { animation-range: cover 50% cover 72%; }
+    @keyframes ps-type { from { width: 0; } to { width: 100%; } }
+
+    /* The stamp is pressed: it arrives oversized and off-angle, and settles. */
+    .scene--proof .stamp--ok {
+      animation: ps-press cubic-bezier(.2,.8,.3,1) both;
+      animation-timeline: view();
+      animation-range: cover 68% cover 76%;
+    }
+
+  }
+}
+
 /* ── Live milestone sample ────────────────────────────────────────────────── */
 .sample { max-width: var(--measure); margin: 3.5rem auto 0; }
 .sample__title { font-size: 1.3rem; letter-spacing: -.01em; margin: 0 0 .3rem; }
@@ -425,7 +565,8 @@ main:focus { outline: none; }
   background: var(--accent); color: var(--on-accent);
   transform: rotate(-2.5deg);
 }
-.stamp--live { background: var(--ok); color: var(--on-ok); }
+.stamp--live,
+.stamp--ok { background: var(--ok); color: var(--on-ok); }
 /* "In review" is a state, not an achievement: outline only, and dashed, which
    is this site's existing word for "not live". */
 .stamp--open {
@@ -594,6 +735,14 @@ main:focus { outline: none; }
 .ps-anchor { margin-left: .4rem; color: var(--muted); opacity: 0; text-decoration: none; font-weight: 400; }
 .prose :hover > .ps-anchor, .ps-anchor:focus { opacity: 1; }
 
+/* One press, used twice: by the scene on the home page and by a milestone the
+   moment a reader ticks it. Declared outside the scroll-timeline block, because
+   the milestone stamp is not a scroll animation and must exist regardless. */
+@keyframes ps-press {
+  from { opacity: 0; transform: rotate(-14deg) scale(1.9); }
+  to   { opacity: 1; transform: rotate(-2.5deg) scale(1); }
+}
+
 /* ── Roadmap map (inlined SVG, section boxes link into the page) ──────────── */
 /* All three maps now paint themselves from --map-* tokens, so there is no
    panel: the figure IS the page, and the only thing left is the frame that
@@ -701,6 +850,13 @@ main:focus { outline: none; }
   border-style: solid;
 }
 .ps-ms.is-done .ps-criterion::before { content: "PROVEN ✓"; background: var(--ok); color: var(--on-ok); }
+/* The stamp is pressed rather than swapped: it arrives oversized and off-angle
+   and settles, in the 120-180 ms a real press takes. Only on a fresh tick —
+   app.js adds .just-proven on change and never on the restore pass — and never
+   at all when motion is reduced, where the stamp is simply already there. */
+@media not (prefers-reduced-motion: reduce) {
+  .ps-ms.just-proven .ps-criterion::before { animation: ps-press 150ms cubic-bezier(.2, .8, .3, 1); }
+}
 
 /* The one control the product turns on. Its fill is the page colour (1.00:1) and
    it carries no text, so the 2px boundary is the whole affordance — on --border
@@ -813,6 +969,10 @@ main:focus { outline: none; }
      at a 390 px viewport — two pixels short of one line. Below ~380 px it wraps
      regardless, and box-decoration-break makes that wrap look deliberate. */
   .companion { padding: 1rem; }
+  /* No room for a margin rule at this width, and a road nobody can see is not
+     a metaphor, it is one pixel of noise. */
+  .road::before, .road__stone { display: none; }
+  .scene { padding: 2.25rem 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
@@ -866,6 +1026,7 @@ main:focus { outline: none; }
   body { font-size: 11pt; }
 
   /* Screen furniture: nothing here survives on paper. */
+  .road::before, .road__stone, .skip-visuals,
   .site-header, .site-footer, .skip-link,
   .roadmap__actions, .progress__next, .progress__reset { display: none; }
 

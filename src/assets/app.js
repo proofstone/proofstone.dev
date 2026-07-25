@@ -77,6 +77,18 @@
         else localStorage.removeItem(key);
       } catch (e) {}
       wrap.classList.toggle('is-done', cb.checked);
+      // The stamp presses only when a person ticks the box, never on the
+      // restore pass at load — twenty stamps landing at once on a page you have
+      // already worked through is noise, not feedback. The class is transient;
+      // CSS removes it at the end of the animation and reduced-motion never
+      // starts one.
+      if (cb.checked) {
+        wrap.classList.remove('just-proven');
+        void wrap.offsetWidth;          // restart the animation on a re-tick
+        wrap.classList.add('just-proven');
+      } else {
+        wrap.classList.remove('just-proven');
+      }
       update();
     });
 
