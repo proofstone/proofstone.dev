@@ -879,6 +879,13 @@ main:focus { outline: none; }
     --gold: #000; --on-gold: #fff; --gold-weak: #fff;
     --ok: #000; --on-ok: #fff; --ok-weak: #fff;
     --code-bg: #f2f2f2; --shadow: none;
+    /* The map paints itself from these, so a printed page follows whatever
+       they say. Left out, a second-generation map printed its dark-theme
+       values — a black rectangle on white paper, which is worse than the
+       force-light panel it replaced. Caught by measuring the printed page,
+       not by looking at it in light theme. */
+    --map-paper: #fff; --map-node: #fff; --map-node-spine: #fff;
+    --map-ink: #000; --map-line: #333; --map-ring: #000;
   }
 
   @page { margin: 14mm; }

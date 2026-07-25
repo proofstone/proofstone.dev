@@ -119,6 +119,33 @@ for (const r of roadmaps.filter((x) => x.status === 'live')) {
   else pass(`${r.slug}`, `${m[1]}/${m[2]} sections clickable`);
 }
 
+// ── 3d. Print covers the map tokens ──────────────────────────────────────────
+// A second-generation map paints itself entirely from --map-* custom
+// properties, which means a printed page follows whatever those resolve to.
+// Miss one in the print block and the map prints its dark-theme value: a black
+// rectangle on white paper, worse than the force-light panel it replaced.
+//
+// This failure is invisible in the browser and invisible in light theme — it
+// only appears when someone in dark theme hits print. It already happened once
+// here: the edit that was meant to add these tokens did not match, nothing
+// complained, and the maps printed black. So the rule is checked rather than
+// remembered: every --map-* token the light theme defines must be redefined
+// inside @media print.
+console.log('\nPRINT TOKENS — a map paints from tokens, so print must define them all');
+{
+  const css = readFileSync(join(site, 'assets', 'styles.css'), 'utf8');
+  const printAt = css.indexOf('@media print');
+  const declared = [...new Set([...css.slice(0, printAt > 0 ? printAt : css.length)
+    .matchAll(/(--map-[a-z-]+)\s*:/g)].map((m) => m[1]))];
+  const printBlock = printAt > 0 ? css.slice(printAt) : '';
+  const missing = declared.filter((t) => !new RegExp(`${t}\\s*:`).test(printBlock));
+
+  if (printAt < 0) fail('no print block', 'the stylesheet has no @media print at all');
+  else if (!declared.length) fail('no map tokens found', 'expected --map-* custom properties before the print block');
+  else if (missing.length) fail('print does not repaint the map', `${missing.join(', ')} keep their screen value on paper`);
+  else pass('print repaints every map token', `${declared.length} token(s): ${declared.join(', ')}`);
+}
+
 // ── 3c. Dead map copies ──────────────────────────────────────────────────────
 // The build consumes roadmap.svg by inlining it and stripping the README's own
 // <img>, so the copied file at /<slug>/assets/roadmap.svg is referenced by
