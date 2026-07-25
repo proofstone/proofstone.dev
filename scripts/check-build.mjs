@@ -119,6 +119,44 @@ for (const r of roadmaps.filter((x) => x.status === 'live')) {
   else pass(`${r.slug}`, `${m[1]}/${m[2]} sections clickable`);
 }
 
+// ── 3b. Map generation ───────────────────────────────────────────────────────
+// The series migrates its maps one repository at a time, and each one triggers
+// an autonomous rebuild the moment it is pushed. So a mixed state — one new map,
+// two old — is a normal operating condition, not a deployment window, and it has
+// to be provably valid rather than assumed to be.
+//
+// The panel breaks both ways: a fixed-colour map on a themed panel is light
+// artwork on a dark page, and a themed map on the force-light panel is a dark
+// map on a white one. What is asserted here is that each figure declares which
+// it is, and that the declaration matches the file it was made from.
+console.log('\nMAP GENERATION — each map declares how it paints, and the page agrees');
+for (const r of roadmaps.filter((x) => x.status === 'live')) {
+  const file = join(site, r.slug, 'index.html');
+  const svgFile = join(root, '.content', r.slug, 'assets', 'roadmap.svg');
+  if (!existsSync(file) || !existsSync(svgFile)) {
+    fail(`${r.slug}: cannot check map generation`, 'page or map SVG missing');
+    continue;
+  }
+  const html = readFileSync(file, 'utf8');
+  const svg = readFileSync(svgFile, 'utf8');
+
+  const declared = (html.match(/data-map-theme="([a-z]+)"/) || [])[1];
+  const actual = /var\(--map-/.test(svg) ? 'tokens' : 'fixed';
+
+  if (!declared) {
+    fail(`${r.slug}: map declares no generation`, 'the figure carries no data-map-theme, so CSS cannot pick a panel');
+  } else if (declared !== actual) {
+    fail(`${r.slug}: map generation disagrees with the file`, `page says "${declared}", the SVG is "${actual}"`);
+  } else if (declared === 'tokens' && /(?:fill|stroke)="#(?:f|e|d)[0-9a-f]{5}"/i.test(svg)) {
+    // A themed map that still carries pale literals would stay light in dark
+    // theme while claiming to follow the page — the failure that looks fine in
+    // the theme you happen to be developing in.
+    fail(`${r.slug}: themed map still has fixed light colours`, 'a var(--map-*) map must not paint anything with a pale literal');
+  } else {
+    pass(`${r.slug}`, `map generation "${declared}", panel matches`);
+  }
+}
+
 // ── 3a. Flagship display ─────────────────────────────────────────────────────
 // The render layer strips ⭐ out of milestone headings and lets the FLAGSHIP
 // stamp carry the meaning. That is an edit to text this repo does not own, so

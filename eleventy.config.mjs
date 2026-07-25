@@ -201,6 +201,23 @@ function buildInteractiveMap(svg, toc, altText) {
 
   const withHotspots = opened.replace(/<\/svg>\s*$/, `${hotspots}</svg>`);
   const caption = altText ? `<figcaption class="ps-map__cap">${altText}</figcaption>` : '';
+
+  // Which generation of map is this? A themed map paints itself with
+  // var(--map-*, #fallback), so inlined here it inherits the page's tokens and
+  // follows the theme; standalone on GitHub it falls back to the light literal.
+  // An older map carries fixed light colours and has to keep sitting on the
+  // force-light panel.
+  //
+  // This matters because the panel breaks BOTH ways, which is what makes a
+  // global CSS switch impossible during a staged migration: an old map on a
+  // themed panel is light artwork on a dark page, and a themed map on the
+  // force-light panel resolves --map-paper against the page and puts a dark map
+  // on a white panel. So the panel is chosen per map, here.
+  //
+  // Detected from the file rather than declared in the registry: a flag is a
+  // thing to forget, and the drift would be silent. The SVG is what actually
+  // decides how it paints, so the SVG is what gets asked.
+  const mapTheme = /var\(--map-/.test(svg) ? 'tokens' : 'fixed';
   // Two accessibility notes on this wrapper:
   //  • <nav> around the figure, not role="navigation" ON it — a role on <figure>
   //    would sever the figcaption→figure name association. The label explains why
@@ -212,7 +229,7 @@ function buildInteractiveMap(svg, toc, altText) {
   return {
     html:
       `<nav class="ps-map-nav" aria-label="Roadmap map">` +
-      `<figure class="ps-map" tabindex="0" data-hotspots="${matched}" data-sections="${toc.length}">${withHotspots}${caption}</figure>` +
+      `<figure class="ps-map" tabindex="0" data-map-theme="${mapTheme}" data-hotspots="${matched}" data-sections="${toc.length}">${withHotspots}${caption}</figure>` +
       `</nav>`,
     matched,
     expected: toc.length

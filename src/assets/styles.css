@@ -129,6 +129,17 @@
      still reference it. */
   --shadow: none;
 
+  /* Map tokens. The same SVG has to live on this site (where it inherits these)
+     and standalone on GitHub (where var() does not resolve and the literal
+     baked into the attribute wins), so one file serves both themes and both
+     places. Only the second-generation maps use them. */
+  --map-paper: #f7f3ea;
+  --map-node: #efe8d9;
+  --map-node-spine: #e7ded0;
+  --map-ink: #3a3128;          /* 10.43:1 on --map-node */
+  --map-line: #6b6152;         /*  5.49:1 on --map-paper */
+  --map-ring: #1c1914;         /* focus ring: >=13:1 on every node fill */
+
   /* Two radii for the whole system. Four-to-twelve-pixels-everywhere is what
      made the old components read as a UI kit. */
   --r-sm: 2px;
@@ -162,6 +173,13 @@
   --ok-weak: #16251d;
   --code-bg: #241f18;
   --shadow: none;
+
+  --map-paper: #14110d;
+  --map-node: #241f18;
+  --map-node-spine: #2c261e;
+  --map-ink: #ded5c3;          /* 11.22:1 on --map-node */
+  --map-line: #a89d8a;         /*  7.04:1 on --map-paper */
+  --map-ring: #ece5d6;
 }
 
 /* No-JS fallback: honor OS dark unless the user explicitly picked light. */
@@ -173,6 +191,8 @@
     --gold: #e0b64d; --on-gold: #14110d; --gold-weak: #2b2413;
     --ok: #63b98a; --on-ok: #14110d; --ok-weak: #16251d;
     --code-bg: #241f18; --shadow: none;
+    --map-paper: #14110d; --map-node: #241f18; --map-node-spine: #2c261e;
+    --map-ink: #ded5c3; --map-line: #a89d8a; --map-ring: #ece5d6;
   }
 }
 
@@ -575,23 +595,53 @@ main:focus { outline: none; }
 .prose :hover > .ps-anchor, .ps-anchor:focus { opacity: 1; }
 
 /* ── Roadmap map (inlined SVG, section boxes link into the page) ──────────── */
-/* The maps are drawn as light figures with hardcoded colours. Rather than
-   repaint someone else's artwork, they sit on a light "paper" panel in both
-   themes — the way a figure sits in a printed paper. */
+/* Two generations of map exist while the series migrates, and the panel breaks
+   BOTH ways — which is why this branches per map instead of being switched once.
+   A map drawn with fixed light colours needs the force-light panel; a map drawn
+   with var(--map-*) tokens inherits the page and needs the panel out of its way.
+   Put the wrong one under either and the dark theme shows a light rectangle on
+   a dark page, or a dark map on a white panel.
+   The build tags each figure from the SVG's own content (data-map-theme), so
+   nothing here depends on a flag anyone has to remember to flip. */
 .ps-map {
   margin: 1.6rem 0 2.2rem;
-  padding: 1rem;
-  background: #fbfcfd;
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   overflow-x: auto;            /* narrow screens scroll the figure, not the page */
   -webkit-overflow-scrolling: touch;
 }
-[data-theme="dark"] .ps-map { border-color: #2f3742; }
 .ps-map__svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+
+/* ── Generation 1: someone else's artwork, hardcoded light ─────────────────── */
+/* Rather than repaint a figure this repo does not own, it sits on a light
+   "paper" panel in both themes, the way a figure sits in a printed paper. */
+.ps-map[data-map-theme="fixed"] { padding: 1rem; background: #fbfcfd; }
+[data-theme="dark"] .ps-map[data-map-theme="fixed"] { border-color: #2f3742; }
+.ps-map[data-map-theme="fixed"] .ps-map__cap {
+  border-top-color: #e7ebf0; color: #5a6472;
+}
+/* Near-black at 4px clears 3:1 against all eight box colours used across the
+   three old maps (worst pair 3.46:1, was 1.20:1) and survives colour-blind
+   viewing. Hardcoded because the panel it sits on is force-light. */
+.ps-map[data-map-theme="fixed"] a:focus-visible .ps-map__hit { stroke: #101828; }
+.ps-map[data-map-theme="fixed"]:focus-visible { outline-color: #101828; }
+
+/* ── Generation 2: the map paints itself from the page's tokens ────────────── */
+/* No panel colour at all: the figure IS the page in this generation, and the
+   only thing left is the frame that marks it as a figure. The focus ring
+   becomes a token too, measured at >=13:1 against every node fill in both
+   themes, which the old hardcoded near-black could not be in dark. */
+.ps-map[data-map-theme="tokens"] { background: transparent; }
+.ps-map[data-map-theme="tokens"] .ps-map__cap {
+  border-top-color: var(--border); color: var(--muted);
+}
+.ps-map[data-map-theme="tokens"] a:focus-visible .ps-map__hit { stroke: var(--map-ring); }
+.ps-map[data-map-theme="tokens"]:focus-visible { outline-color: var(--map-ring); }
+
 .ps-map__cap {
-  margin: .7rem .2rem 0; padding-top: .6rem; border-top: 1px solid #e7ebf0;
-  font-size: .8rem; color: #5a6472; text-align: center;
+  margin: .7rem .2rem 0; padding: 0 1rem .8rem; padding-top: .6rem;
+  border-top: 1px solid var(--border);
+  font-family: var(--mono); font-size: .74rem; color: var(--muted); text-align: center;
 }
 
 /* Section hotspots: invisible until pointed at, then a soft wash + outline. */
@@ -601,20 +651,16 @@ main:focus { outline: none; }
 /* The hotspot sits exactly on top of the section box, same geometry and stroke
    width, so focusing only repainted a 2px stroke that was already coloured:
    1.20–2.16:1 between the focused and unfocused states, where WCAG 2.2 (2.4.13)
-   wants 3:1. Every failing pair was a hue-only shift inside blue, which
-   deuteranopia flattens to nothing, and `outline: none` left no fallback ring.
-   Near-black at 4px clears 3:1 against all eight box colours used across the
-   three maps (worst pair 3.46:1, was 1.20:1) and survives colour-blind viewing;
-   the map panel is force-light in both themes, so this colour is hardcoded like
-   the rest of the map's palette. */
+   wants 3:1. Every failing pair was a hue-only shift inside one colour, which
+   deuteranopia flattens to nothing, and `outline: none` left no fallback ring. */
 .ps-map a:focus-visible .ps-map__hit {
-  fill: rgba(157, 59, 31, .18); stroke: #101828; stroke-width: 4; paint-order: stroke;
+  fill: rgba(157, 59, 31, .18); stroke-width: 4; paint-order: stroke;
 }
 /* The figure is the scroll container AND holds focusable children, which
    disqualifies it from the browsers' "focusable scroll container" heuristic —
    without tabindex (set in the build) plus this ring, the right-hand third of
    the map could not be reached or seen by keyboard in any browser. */
-.ps-map:focus-visible { outline: 3px solid #101828; outline-offset: 2px; }
+.ps-map:focus-visible { outline: 3px solid; outline-offset: 2px; }
 /* Forced colours repaint fill/stroke, so the custom indicator disappears there. */
 @media (forced-colors: active) {
   .ps-map a:focus-visible,
