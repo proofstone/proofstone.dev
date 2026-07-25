@@ -206,10 +206,17 @@ for (const r of roadmaps.filter((x) => x.status === 'live')) {
   const actual = /var\(--map-/.test(svg) ? 'tokens' : 'fixed';
 
   if (!declared) {
-    fail(`${r.slug}: map declares no generation`, 'the figure carries no data-map-theme, so CSS cannot pick a panel');
+    fail(`${r.slug}: map declares no generation`, 'the figure carries no data-map-theme');
   } else if (declared !== actual) {
     fail(`${r.slug}: map generation disagrees with the file`, `page says "${declared}", the SVG is "${actual}"`);
-  } else if (declared === 'tokens' && /(?:fill|stroke)="#(?:f|e|d)[0-9a-f]{5}"/i.test(svg)) {
+  } else if (declared !== 'tokens') {
+    // The migration is finished and the force-light panel that carried the
+    // first-generation maps is deleted. A map that goes back to fixed colours
+    // would now render as light artwork on a dark page, so it stops the build
+    // rather than shipping. Reinstating support means reinstating the panel,
+    // deliberately, not by accident.
+    fail(`${r.slug}: first-generation map`, 'its colours are hardcoded, and the force-light panel that made those readable no longer exists — regenerate it with scripts/render_map.py');
+  } else if (/(?:fill|stroke)="#(?:f|e|d)[0-9a-f]{5}"/i.test(svg)) {
     // A themed map that still carries pale literals would stay light in dark
     // theme while claiming to follow the page — the failure that looks fine in
     // the theme you happen to be developing in.

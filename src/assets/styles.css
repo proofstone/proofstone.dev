@@ -595,14 +595,14 @@ main:focus { outline: none; }
 .prose :hover > .ps-anchor, .ps-anchor:focus { opacity: 1; }
 
 /* ── Roadmap map (inlined SVG, section boxes link into the page) ──────────── */
-/* Two generations of map exist while the series migrates, and the panel breaks
-   BOTH ways — which is why this branches per map instead of being switched once.
-   A map drawn with fixed light colours needs the force-light panel; a map drawn
-   with var(--map-*) tokens inherits the page and needs the panel out of its way.
-   Put the wrong one under either and the dark theme shows a light rectangle on
-   a dark page, or a dark map on a white panel.
-   The build tags each figure from the SVG's own content (data-map-theme), so
-   nothing here depends on a flag anyone has to remember to flip. */
+/* All three maps now paint themselves from --map-* tokens, so there is no
+   panel: the figure IS the page, and the only thing left is the frame that
+   marks it as a figure. The force-light branch that carried the older maps
+   through the migration is gone — and its absence is enforced rather than
+   assumed, because a reverted map would otherwise land as light artwork on a
+   dark page. check-build fails on any map that is not second-generation.
+   The build still tags each figure with data-map-theme, read from the SVG's
+   own content; nothing here depends on a flag anyone has to remember. */
 .ps-map {
   margin: 1.6rem 0 2.2rem;
   border: 1px solid var(--border);
@@ -611,32 +611,6 @@ main:focus { outline: none; }
   -webkit-overflow-scrolling: touch;
 }
 .ps-map__svg { display: block; max-width: 100%; height: auto; margin: 0 auto; }
-
-/* ── Generation 1: someone else's artwork, hardcoded light ─────────────────── */
-/* Rather than repaint a figure this repo does not own, it sits on a light
-   "paper" panel in both themes, the way a figure sits in a printed paper. */
-.ps-map[data-map-theme="fixed"] { padding: 1rem; background: #fbfcfd; }
-[data-theme="dark"] .ps-map[data-map-theme="fixed"] { border-color: #2f3742; }
-.ps-map[data-map-theme="fixed"] .ps-map__cap {
-  border-top-color: #e7ebf0; color: #5a6472;
-}
-/* Near-black at 4px clears 3:1 against all eight box colours used across the
-   three old maps (worst pair 3.46:1, was 1.20:1) and survives colour-blind
-   viewing. Hardcoded because the panel it sits on is force-light. */
-.ps-map[data-map-theme="fixed"] a:focus-visible .ps-map__hit { stroke: #101828; }
-.ps-map[data-map-theme="fixed"]:focus-visible { outline-color: #101828; }
-
-/* ── Generation 2: the map paints itself from the page's tokens ────────────── */
-/* No panel colour at all: the figure IS the page in this generation, and the
-   only thing left is the frame that marks it as a figure. The focus ring
-   becomes a token too, measured at >=13:1 against every node fill in both
-   themes, which the old hardcoded near-black could not be in dark. */
-.ps-map[data-map-theme="tokens"] { background: transparent; }
-.ps-map[data-map-theme="tokens"] .ps-map__cap {
-  border-top-color: var(--border); color: var(--muted);
-}
-.ps-map[data-map-theme="tokens"] a:focus-visible .ps-map__hit { stroke: var(--map-ring); }
-.ps-map[data-map-theme="tokens"]:focus-visible { outline-color: var(--map-ring); }
 
 .ps-map__cap {
   margin: .7rem .2rem 0; padding: 0 1rem .8rem; padding-top: .6rem;
