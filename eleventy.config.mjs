@@ -1,7 +1,7 @@
 import markdownIt from 'markdown-it';
 import markdownItAnchor from 'markdown-it-anchor';
 import GithubSlugger from 'github-slugger';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { roadmaps, loadRoadmaps } from './roadmaps.config.mjs';
@@ -359,13 +359,31 @@ export default function (eleventyConfig) {
 
   // Per-roadmap assets fetched into .content/<slug>/assets → /<slug>/assets/…
   //
-  // Today the only file here is roadmap.svg, which no page links (the map is
-  // inlined and the README's <img> is stripped), so this looks like dead weight
-  // — it is not. The fetcher downloads ANY assets/… path a README references and
-  // rewriteUrl() points those references at /<slug>/assets/…; drop this and the
-  // next image an upstream README adds 404s silently, unfixable from here.
+  // The passthrough itself stays: the fetcher downloads ANY assets/… path a
+  // README references and rewriteUrl() points those references at
+  // /<slug>/assets/…, so dropping it would make the next image an upstream
+  // README adds 404 silently, unfixable from here.
+  //
+  // roadmap.svg is the one exclusion, and only because this build CONSUMES it:
+  // the map is inlined into the page and the README's own <img> is stripped, so
+  // the copied file is referenced by nothing. Measured before removing it — zero
+  // occurrences of assets/roadmap.svg across all five rendered pages — and worth
+  // 15,567 bytes today, roughly double that once the maps are redrawn. That is
+  // the same class of finding as PERF-5 in wave A.
+  //
+  // Enumerated file by file rather than excluded by glob so the intent is
+  // visible in the diff, and asserted on every build by the DEAD MAP COPIES gate
+  // in check-build: if a page ever does reference the file, the build fails
+  // instead of shipping a 404.
   for (const r of roadmaps) {
-    eleventyConfig.addPassthroughCopy({ [`.content/${r.slug}/assets`]: `${r.slug}/assets` });
+    const dir = join(REPO_ROOT, '.content', r.slug, 'assets');
+    if (!existsSync(dir)) continue;
+    for (const file of readdirSync(dir)) {
+      if (file === 'roadmap.svg') continue;
+      eleventyConfig.addPassthroughCopy({
+        [`.content/${r.slug}/assets/${file}`]: `${r.slug}/assets/${file}`
+      });
+    }
   }
 
   // One real milestone (heading + its proof block) lifted out of a rendered roadmap,

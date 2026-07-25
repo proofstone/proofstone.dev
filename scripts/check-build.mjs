@@ -119,6 +119,41 @@ for (const r of roadmaps.filter((x) => x.status === 'live')) {
   else pass(`${r.slug}`, `${m[1]}/${m[2]} sections clickable`);
 }
 
+// ── 3c. Dead map copies ──────────────────────────────────────────────────────
+// The build consumes roadmap.svg by inlining it and stripping the README's own
+// <img>, so the copied file at /<slug>/assets/roadmap.svg is referenced by
+// nothing. It is excluded from the passthrough for that reason — 15,567 bytes
+// today, about double once the maps are redrawn.
+//
+// "Referenced by nothing" is a property of the current content, not a law, and
+// an upstream README could link the file directly tomorrow. So it is re-proved
+// on every build rather than checked once: if any rendered page references the
+// path, the build fails here and says why, instead of shipping a 404 that only
+// a reader would find. The reverse is asserted too — the file must not be back
+// in the output, or the weight returns silently.
+console.log('\nDEAD MAP COPIES — the inlined map must not also ship as a file');
+{
+  const referenced = [];
+  for (const file of pages) {
+    const html = readFileSync(file, 'utf8');
+    const rel = relative(site, file).replace(/\\/g, '/');
+    const hits = [...html.matchAll(/["'(]([^"'()\s]*\/assets\/roadmap\.svg)["')]/g)].map((m) => m[1]);
+    if (hits.length) referenced.push(`${rel} → ${[...new Set(hits)].join(', ')}`);
+  }
+  const shipped = roadmaps
+    .filter((x) => x.status === 'live')
+    .filter((r) => existsSync(join(site, r.slug, 'assets', 'roadmap.svg')))
+    .map((r) => `${r.slug}/assets/roadmap.svg`);
+
+  if (referenced.length) {
+    fail('a page references the map file', `${referenced.join(' · ')} — it is no longer deployed, so this link is a 404`);
+  } else if (shipped.length) {
+    fail('the map is deployed as a file again', `${shipped.join(', ')} — nothing links it, so this is dead weight`);
+  } else {
+    pass('map ships inline only', `${roadmaps.filter((x) => x.status === 'live').length} roadmap(s), no unreferenced copy`);
+  }
+}
+
 // ── 3b. Map generation ───────────────────────────────────────────────────────
 // The series migrates its maps one repository at a time, and each one triggers
 // an autonomous rebuild the moment it is pushed. So a mixed state — one new map,
