@@ -13,6 +13,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { inspectReadme, inspectSvg, shapeOf } from './content-guard.mjs';
 import { inspectRenderedPage } from './a11y-guard.mjs';
+import { inspectFlagships } from './star-guard.mjs';
 import { roadmaps } from '../roadmaps.config.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -68,6 +69,94 @@ if (!inspectSvg(svgOk.replace('<rect', '<script>fetch("//evil")</script><rect'))
   bad('SVG with <script>', 'guard accepted it'); else ok('SVG with <script> rejected');
 if (!inspectSvg('<svg onload="alert(1)"></svg>').length)
   bad('SVG with onload=', 'guard accepted it'); else ok('SVG with onload= rejected');
+
+console.log('\nFLAGSHIP DISPLAY — the star comes out of the heading, so the stamp must be there');
+{
+  // The README the site does not own, and the HTML this build makes of it. Two
+  // milestones, because the interesting failure is a flagship that has NO
+  // criterion of its own while a LATER milestone does — the shape that was
+  // silently counted as stamped for as long as this rule lived inline.
+  const FLAG_MD = [
+    '### M1.1 — ⭐ The flagship',
+    '',
+    "> **You're done when** it ships.",
+    '',
+    '### M1.2 — The ordinary one',
+    '',
+    "> **You're done when** it runs.",
+    ''
+  ].join('\n');
+  const FLAG_HTML = [
+    '<h3 id="m11" class="ps-ms-h is-star" data-ms="M1.1">M1.1 — The flagship</h3>',
+    '<blockquote class="ps-criterion">',
+    "<p><strong>You're done when</strong> it ships.</p>",
+    '</blockquote>',
+    '<h3 id="m12" class="ps-ms-h" data-ms="M1.2">M1.2 — The ordinary one</h3>',
+    '<blockquote class="ps-criterion">',
+    "<p><strong>You're done when</strong> it runs.</p>",
+    '</blockquote>'
+  ].join('\n');
+
+  const flagReject = (name, html, md, fragment) => {
+    const { problems } = inspectFlagships(html, md);
+    if (!problems.length) return bad(name, 'guard accepted a page it must refuse');
+    const said = problems.map((p) => `${p.title}: ${p.detail}`).join('; ');
+    if (fragment && !said.includes(fragment)) return bad(name, `rejected, but for the wrong reason: ${said}`);
+    ok(name, problems[0].title);
+  };
+
+  const healthy = inspectFlagships(FLAG_HTML, FLAG_MD);
+  if (healthy.problems.length) bad('a healthy flagship passes', `false positive: ${healthy.problems[0].detail}`);
+  else ok('a healthy flagship passes', `${healthy.starred} starred, ${healthy.stamped} stamped`);
+
+  // Poison 1 — the criterion is still there, one paragraph below. The CSS rule
+  // that draws the gold stamp is an adjacent-sibling rule, so the reader sees an
+  // ordinary milestone with the star already stripped out of its heading.
+  flagReject(
+    'criterion separated from its flagship by a paragraph',
+    FLAG_HTML.replace(
+      '<h3 id="m11" class="ps-ms-h is-star" data-ms="M1.1">M1.1 — The flagship</h3>',
+      '<h3 id="m11" class="ps-ms-h is-star" data-ms="M1.1">M1.1 — The flagship</h3>\n<p>This is the headline artifact.</p>'
+    ),
+    FLAG_MD,
+    'flagship without a stamp'
+  );
+
+  // Poison 2 — the flagship has no criterion at all; the next milestone does.
+  flagReject(
+    'flagship with no criterion, a later milestone with one',
+    FLAG_HTML.replace(
+      '<blockquote class="ps-criterion">\n<p><strong>You\'re done when</strong> it ships.</p>\n</blockquote>\n',
+      ''
+    ),
+    FLAG_MD,
+    'flagship without a stamp'
+  );
+
+  flagReject(
+    'emoji survived in the rendered heading',
+    FLAG_HTML.replace('M1.1 — The flagship</h3>', 'M1.1 — ⭐ The flagship</h3>'),
+    FLAG_MD,
+    'emoji survived'
+  );
+
+  flagReject(
+    'is-star lost while the README still says flagship',
+    FLAG_HTML.replace('"ps-ms-h is-star"', '"ps-ms-h"'),
+    FLAG_MD,
+    'flagship count drifted'
+  );
+
+  // A roadmap with no flagship at all is legal and must not be failed.
+  {
+    const none = inspectFlagships(
+      FLAG_HTML.replace('"ps-ms-h is-star"', '"ps-ms-h"'),
+      FLAG_MD.replace('⭐ ', '')
+    );
+    if (none.problems.length) bad('a roadmap with no flagship passes', none.problems[0].detail);
+    else ok('a roadmap with no flagship passes');
+  }
+}
 
 console.log('\nDRIFT — a legitimate roadmap change warns, it does not fail the build');
 {

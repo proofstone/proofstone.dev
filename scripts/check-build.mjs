@@ -17,6 +17,7 @@ import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { roadmaps } from '../roadmaps.config.mjs';
 import { inspectRenderedPage } from './a11y-guard.mjs';
+import { inspectFlagships } from './star-guard.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const site = join(root, '_site');
@@ -227,17 +228,8 @@ for (const r of roadmaps.filter((x) => x.status === 'live')) {
 }
 
 // ── 3a. Flagship display ─────────────────────────────────────────────────────
-// The render layer strips ⭐ out of milestone headings and lets the FLAGSHIP
-// stamp carry the meaning. That is an edit to text this repo does not own, so
-// it gets asserted rather than trusted, in both directions:
-//   • the count of is-star headings must equal the count of starred milestone
-//     headings in the source README — if a strip ever ran before the class was
-//     assigned, or the regex drifted, flagships would silently become ordinary;
-//   • no ⭐ may survive inside a milestone heading in the output;
-//   • every is-star heading must be followed by the criterion blockquote that
-//     renders the stamp — otherwise removing the emoji removes the only marker
-//     the reader had, and nothing replaces it.
-// Stars elsewhere in the prose are none of our business and are left alone.
+// The rule itself lives in scripts/star-guard.mjs, so check-guards.mjs can
+// poison it directly. See that file for what it asserts and why.
 console.log('\nSTAR DISPLAY — the stamp replaces the emoji, and loses nothing');
 for (const r of roadmaps.filter((x) => x.status === 'live')) {
   const file = join(site, r.slug, 'index.html');
@@ -246,29 +238,10 @@ for (const r of roadmaps.filter((x) => x.status === 'live')) {
     fail(`${r.slug}: cannot check flagships`, 'page or source README missing');
     continue;
   }
-  const html = readFileSync(file, 'utf8');
-  const md = readFileSync(readme, 'utf8');
+  const { starred, problems } = inspectFlagships(readFileSync(file, 'utf8'), readFileSync(readme, 'utf8'));
 
-  const inSource = (md.match(/^###\s+M\d+\.\d+.*[⭐★].*$/gm) || []).length;
-  const headings = [...html.matchAll(/<h3 id="[^"]*" class="([^"]*)" data-ms="[^"]*">([\s\S]*?)<\/h3>/g)];
-  const starred = headings.filter((h) => / is-star|^is-star/.test(h[1]));
-  const leaked = starred.filter((h) => /[⭐★]/.test(h[2])).length;
-
-  // Adjacency, checked the same way the CSS selector matches: heading, then
-  // whitespace, then the criterion blockquote.
-  const stamped = [...html.matchAll(
-    /<h3 id="[^"]*" class="[^"]*is-star[^"]*"[\s\S]*?<\/h3>\s*<blockquote class="ps-criterion">/g
-  )].length;
-
-  if (starred.length !== inSource) {
-    fail(`${r.slug}: flagship count drifted`, `${starred.length} is-star headings for ${inSource} starred milestones in the README`);
-  } else if (leaked) {
-    fail(`${r.slug}: emoji survived`, `${leaked} milestone heading(s) still render ⭐`);
-  } else if (stamped !== starred.length) {
-    fail(`${r.slug}: flagship without a stamp`, `${stamped} of ${starred.length} starred milestones are followed by a criterion block — the rest lost their only marker`);
-  } else {
-    pass(`${r.slug}`, `${starred.length} flagship(s), emoji stripped, all stamped`);
-  }
+  if (problems.length) fail(`${r.slug}: ${problems[0].title}`, problems[0].detail);
+  else pass(`${r.slug}`, `${starred} flagship(s), emoji stripped, all stamped`);
 }
 
 // ── 4. The home page actually shows a milestone ──────────────────────────────

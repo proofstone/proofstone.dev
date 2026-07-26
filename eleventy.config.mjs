@@ -392,11 +392,18 @@ export default function (eleventyConfig) {
   eleventyConfig.addFilter('milestoneSample', (roadmap, msId) => {
     const { html } = renderRoadmap(roadmap);
 
+    // (?:(?!<\/h3>)[\s\S])* rather than [\s\S]*? — see scripts/star-guard.mjs.
+    // A plain lazy run backtracks past the heading's own closing tag, so a
+    // milestone whose criterion is missing or separated by a paragraph yields a
+    // "sample" spanning it AND the next milestone: measured at 1610 bytes with
+    // two data-ms attributes in it, on a green build. Bounded, the match either
+    // is this milestone's own proof block or does not exist, and the fallback
+    // below picks a milestone that really has one.
     const blockFor = (id) => {
       const esc = String(id).replace(/\./g, '\\.');
       const m = html.match(
         new RegExp(
-          `<h3 id="[^"]*"[^>]*data-ms="${esc}">[\\s\\S]*?<\\/h3>\\s*<blockquote class="ps-criterion">[\\s\\S]*?<\\/blockquote>`
+          `<h3 id="[^"]*"[^>]*data-ms="${esc}">(?:(?!<\\/h3>)[\\s\\S])*<\\/h3>\\s*<blockquote class="ps-criterion">[\\s\\S]*?<\\/blockquote>`
         )
       );
       return m ? m[0] : null;
@@ -410,7 +417,7 @@ export default function (eleventyConfig) {
     // old behaviour — left a heading promising a sample above an empty div.
     if (!block) {
       const first = html.match(
-        /<h3 id="[^"]*"[^>]*data-ms="(M\d+\.\d+)">[\s\S]*?<\/h3>\s*<blockquote class="ps-criterion">[\s\S]*?<\/blockquote>/
+        /<h3 id="[^"]*"[^>]*data-ms="(M\d+\.\d+)">(?:(?!<\/h3>)[\s\S])*<\/h3>\s*<blockquote class="ps-criterion">[\s\S]*?<\/blockquote>/
       );
       if (first) {
         console.warn(
