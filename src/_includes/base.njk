@@ -126,7 +126,12 @@
   </main>
 
   <footer class="site-footer">
-    <p>{{ site.name }} — engineering roadmaps. Static site. No tracking, no cookies.</p>
+    {#- This line is a promise, so it tracks what the site actually does. It read
+        "No tracking, no cookies" until 2026-07-26, when a counter was added: the
+        negative claims that survive are stated, the vendor is named so a reader
+        can go and check rather than take our word, and "no tracking" is gone
+        because counting visits is tracking, however anonymous. #}
+    <p>{{ site.name }} — engineering roadmaps. Static site. No cookies, no personal data — anonymous analytics via <a href="https://umami.is" rel="noopener">Umami</a>.</p>
     <p>
       Content licensed per each roadmap's repository ·
       <a href="{{ site.org }}" rel="noopener">github.com/proofstone</a>
@@ -134,5 +139,20 @@
   </footer>
 
   <script src="/assets/app.js" defer></script>
+  {#- Analytics. Cookieless by construction: Umami stores nothing on the client,
+      so the footer's "no cookies" stays literally true and no consent banner is
+      owed. It is the only third-party byte this page loads — fonts, styles and
+      app.js are all self-hosted, and every other external URL here is a link the
+      reader may follow, not a request the browser makes.
+      Placed here rather than in <head> as the vendor suggests: with `defer` the
+      two are equivalent, and this file's rule is that <head> carries only what
+      must run before paint — the theme script and JSON-LD — while behaviour that
+      can wait ships at the end of <body>.
+      `data-domains` pins collection to the live host. Without it every local
+      `eleventy --serve` session and every preview build would report into the
+      same dashboard as real visitors, and launch-day numbers would be mostly us.
+      Kept on one line on purpose: the shape of this tag is asserted verbatim by
+      tools/proxy-check.mjs, and wrapping it would break that comparison. #}
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="eff26170-20d5-4083-ba7b-cdf715ee6e31" data-domains="proofstone.dev"></script>
 </body>
 </html>
