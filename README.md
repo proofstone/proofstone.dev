@@ -44,10 +44,16 @@ npm run build        # SITE_NOINDEX defaults to "true" (pre-launch)
    sync* below), so a public roadmap repo needs nothing else. A repo still private
    for its practitioner review needs its own copy of the secret — on the Free plan
    org secrets reach public repositories only.
-4. Generate its social card: `npm run og`, then commit the new PNG **and**
+4. In the roadmap's repo, add [`docs/check_form.py`](docs/check_form.py) as
+   `scripts/check_form.py` and the job in
+   [`docs/checks-form-job.yml.tmpl`](docs/checks-form-job.yml.tmpl) to its checks
+   workflow. Both files are identical in every roadmap repo. Without them the
+   rules below run only here, after a merge: a contributor's pull request can be
+   green in their repo and break this build the moment it lands.
+5. Generate its social card: `npm run og`, then commit the new PNG **and**
    `og-manifest.json`. Skipping this ships a page whose `og:image` 404s, and the
    build refuses to pass without a card for every registered roadmap.
-5. Commit and push — the site build fetches and renders it.
+6. Commit and push — the site build fetches and renders it.
 
 ## How content stays in sync
 

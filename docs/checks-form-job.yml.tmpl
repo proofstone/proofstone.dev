@@ -1,0 +1,37 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Connect-a-roadmap step 4 — see "Connect a new roadmap" in the
+# proofstone/proofstone.dev README.
+# Copy this JOB into a ROADMAP repo's .github/workflows/links.yml, alongside the
+# jobs already there, and copy docs/check_form.py next to it as
+# scripts/check_form.py. Both files are the same in every roadmap repo; nothing
+# in either is per-repo, so a new roadmap needs no edits, only the copy.
+#
+# What it is for: this site renders each roadmap README directly and rebuilds
+# within seconds of a push to main. The rules that protect that render live
+# HERE — content-guard.mjs, check-build.mjs, eleventy.config.mjs — which means
+# they run after a merge. Without this job a contributor's pull request can be
+# green in the roadmap repo, break the site the moment it lands, and the
+# contributor never sees it: the red mark is on a repository they may not even
+# know exists.
+#
+# check_form.py asserts the four things this site depends on — a parseable
+# §-section and milestone, a criterion block adjacent to every starred
+# milestone, no executable markup, and a map node for every §-section. Its
+# patterns are transcribed from this repository's source with the origin named
+# at each one; if you change a rule here, change it there in the same commit, or
+# the roadmap CI will go green while the site build stays red.
+#
+# The workflow already runs on pull_request and on push to main, so the job
+# needs no `on:` block of its own. No dependencies to install: the script is
+# stdlib-only, like the map renderer next to it.
+# ─────────────────────────────────────────────────────────────────────────────
+  form:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: README keeps the shape the site renders
+        run: |
+          python scripts/check_form.py
