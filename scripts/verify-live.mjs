@@ -65,6 +65,32 @@ async function get(url, attempts = 3) {
   throw lastErr;
 }
 
+// The same reasoning as get(), for the checks that only need a status code.
+// They used bare fetch, and one blip on one of them printed as a production
+// defect: 2026-07-28, "fonts/plex-sans-var.woff2 — check failed: fetch failed"
+// on a file curl then served four times in a row. A launch-day instrument that
+// cries wolf gets ignored, which is the whole of its value.
+//
+// It retries what the NETWORK threw and never what the SERVER answered. A 404
+// is an answer: retrying it would only make a real defect slower to report, and
+// one of these checks (the deleted map copy) is asserting a 404 on purpose.
+async function probe(url, init = {}, attempts = 3) {
+  let lastErr;
+  for (let i = 1; i <= attempts; i++) {
+    try {
+      return await fetch(url, {
+        headers: { 'user-agent': 'proofstone-verify' },
+        signal: AbortSignal.timeout(20000),
+        ...init
+      });
+    } catch (e) {
+      lastErr = e;
+      if (i < attempts) await new Promise((r) => setTimeout(r, 800 * i));
+    }
+  }
+  throw lastErr;
+}
+
 console.log(`\nverifying ${BASE} — expecting the ${launched ? 'POST-launch' : 'PRE-launch'} posture\n`);
 
 // ── Sitemap is the list of pages that are meant to be public ─────────────────
@@ -151,7 +177,7 @@ console.log('\nSOCIAL CARDS');
         fail(url, 'no og:image');
         continue;
       }
-      const img = await fetch(og[1], { method: 'GET', signal: AbortSignal.timeout(20000) });
+      const img = await probe(og[1], { method: 'GET' });
       if (!img.ok) {
         fail(og[1], `card unreachable: HTTP ${img.status}`);
         continue;
@@ -202,7 +228,7 @@ console.log('\nDEPLOYED REDESIGN');
   // "the origin no longer serves it" is not the same statement.
   for (const slug of slugs) {
     try {
-      const res = await fetch(`${BASE}/${slug}/assets/roadmap.svg`, { method: 'HEAD', signal: AbortSignal.timeout(20000) });
+      const res = await probe(`${BASE}/${slug}/assets/roadmap.svg`, { method: 'HEAD' });
       if (res.status === 404) pass(`${slug}/assets/roadmap.svg`, 'gone, as intended — the map ships inline');
       else fail(`${slug}/assets/roadmap.svg`, `HTTP ${res.status} — nothing links this file, so shipping it is dead weight`);
     } catch (e) {
@@ -219,7 +245,7 @@ console.log('\nDEPLOYED REDESIGN');
   let facesOk = 0;
   for (const f of FACES) {
     try {
-      const res = await fetch(`${BASE}/assets/fonts/${f}`, { method: 'HEAD', signal: AbortSignal.timeout(20000) });
+      const res = await probe(`${BASE}/assets/fonts/${f}`, { method: 'HEAD' });
       if (res.ok) facesOk++;
       else fail(`fonts/${f}`, `HTTP ${res.status} — the page would fall back silently`);
     } catch (e) {
