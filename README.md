@@ -112,6 +112,7 @@ eleventy.config.mjs       # markdown render: GitHub-compatible anchors, link rew
                           #   milestone/criterion tagging, §-section outline
 scripts/fetch-content.mjs # fetch-at-build: README + assets per live roadmap → .content/
 scripts/content-guard.mjs # border checks applied to fetched content (shape, markup)
+scripts/star-guard.mjs    # how a flagship milestone is allowed to render
 scripts/check-build.mjs   # post-build assertions over _site (runs inside `npm run build`)
 scripts/check-guards.mjs  # proves the border guards still reject what they must
 scripts/check-links.mjs   # external link check (advisory, never blocks a deploy)
@@ -120,6 +121,8 @@ scripts/screenshots.mjs   # dev-only visual QA (both themes + mobile)
 scripts/make-icons.mjs    # dev-only: rasterise the SVG mark into PNG icon fallbacks
 src/                      # templates, data, assets (css/js/icons)
 docs/notify-site.yml.tmpl # drop-in workflow for a roadmap repo
+docs/check_form.py        # the form check a roadmap repo runs on its own pull requests
+docs/checks-form-job.yml.tmpl # the CI job that runs it there
 ```
 
 The three `dev-only` scripts (`make-og`, `screenshots`, `make-icons`) drive the
