@@ -97,12 +97,17 @@ build by itself**, so the flip only reaches visitors once a run happens:
    (Settings → Secrets and variables → Actions → Variables).
 2. Run the workflow: Actions → **build-deploy** → **Run workflow** on `main`.
    Without this the change lands whenever the nightly build next runs — up to ~24h later.
-3. Confirm what actually shipped: `npm run verify:live -- --launched`.
+3. Confirm what actually shipped: `npm run verify:live`.
    It walks the sitemap and asserts noindex is gone where it should be, still
    present on `/404.html`, robots.txt now advertises the sitemap, and every social
    card is reachable **and** numerically matches its page.
 
-Before launch, the same script with no flag asserts the pre-launch posture.
+This site launched on 2026-07-28, so the launched posture is what `verify:live`
+expects with no flags — an instrument whose default disagrees with production is
+one that reports five failures for the sole reason that the launch worked, and
+gets ignored accordingly. `npm run verify:live -- --prelaunch` asserts the other
+posture: use it before a first launch, or after deliberately pulling a site out
+of the index by setting `SITE_NOINDEX` back to `true` and re-running the workflow.
 
 ## Structure
 

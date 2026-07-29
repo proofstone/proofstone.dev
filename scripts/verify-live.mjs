@@ -5,8 +5,26 @@
 // which fires no workflow: the flip only reaches visitors after a build runs, and
 // until now nothing confirmed it had. This script is the confirmation step.
 //
-//   node scripts/verify-live.mjs              # expects the pre-launch posture
-//   node scripts/verify-live.mjs --launched   # expects the post-launch posture
+//   node scripts/verify-live.mjs               # expects the site as it IS: launched
+//   node scripts/verify-live.mjs --prelaunch   # expects noindex and no Sitemap: line
+//
+// The default flipped on 2026-07-29. It used to expect the pre-launch posture,
+// which stopped being true on 2026-07-28 when the site launched: from that day
+// on, an unflagged run reported five failures for the sole reason that the
+// launch had succeeded. An instrument that is always red is an instrument that
+// stops being read, and this one is the only thing that checks the deployed
+// artifact rather than the one on the build machine.
+//
+// The pre-launch branch is KEPT rather than deleted, because the lever it
+// verifies is still in the build: SITE_NOINDEX is read by src/_data/site.js,
+// asserted by check-build, and passed by build-deploy.yml. Setting it back to
+// true and re-running the workflow is the emergency way to pull the site out of
+// the index — and pulling that lever is exactly the moment someone needs to
+// confirm the de-index actually shipped, which is what this script exists for.
+// Deleting the verifier while keeping the lever would leave that operation
+// unverifiable. It is not a decorative branch either: the poison harness
+// (Redisgn/tools/poison-verify-live.mjs, `posture` mode) proves BOTH postures
+// can fail, so neither can rot into an assertion that always passes.
 //
 // Checks, in both modes:
 //   · every sitemap URL responds 200 and carries the expected robots posture
@@ -36,7 +54,13 @@ import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const BASE = process.env.SITE_URL || 'https://proofstone.dev';
-const launched = process.argv.includes('--launched');
+const launched = !process.argv.includes('--prelaunch');
+// `--launched` is what the launch runbook in the project docs tells the operator
+// to type. It is now the default, so it is accepted and says so instead of
+// looking like a typo — and the notice is what will make the doc get updated.
+if (process.argv.includes('--launched')) {
+  console.log('note: --launched is the default since 2026-07-29 and does nothing; the flag to pass now is --prelaunch');
+}
 
 let failures = 0;
 const pass = (m, d = '') => console.log(`  ✓ ${m}${d ? ` — ${d}` : ''}`);
@@ -117,8 +141,11 @@ for (const url of urls) {
       continue;
     }
     const noindex = /<meta name="robots" content="noindex/.test(body);
-    if (launched && noindex) fail(url, 'still carries noindex after launch');
-    else if (!launched && !noindex) fail(url, 'noindex missing before launch');
+    // The advice matters: a page that still carries noindex after launch and a
+    // deliberate de-index look identical from here, so the failure names both
+    // the defect and the flag that says "this was on purpose".
+    if (launched && noindex) fail(url, 'carries noindex — if the site was pulled from the index on purpose, run with --prelaunch');
+    else if (!launched && !noindex) fail(url, 'noindex missing — the site is indexable, which is the default posture');
     else {
       const canon = body.match(/<link rel="canonical" href="([^"]+)"/);
       if (!canon) fail(url, 'no canonical');
@@ -150,8 +177,8 @@ try {
   const allows = /Allow:\s*\//i.test(body);
   const hasSitemap = /Sitemap:/i.test(body);
   if (!allows) fail('robots.txt', 'crawling not allowed — the noindex tag would never be read');
-  else if (launched && !hasSitemap) fail('robots.txt', 'no Sitemap: line after launch');
-  else if (!launched && hasSitemap) fail('robots.txt', 'advertises the sitemap before launch');
+  else if (launched && !hasSitemap) fail('robots.txt', 'no Sitemap: line — the site is launched and should advertise it');
+  else if (!launched && hasSitemap) fail('robots.txt', 'advertises the sitemap while --prelaunch was asked for');
   else pass('robots.txt', launched ? 'allows crawling, advertises sitemap' : 'allows crawling, no sitemap line');
 } catch (e) {
   fail('robots.txt', e.message);
@@ -268,7 +295,12 @@ console.log('\nDEPLOYED REDESIGN');
       ];
       const missing = need.filter(([t]) => !body.includes(t));
       if (missing.length) fail('styles.css', `${missing.map(([, n]) => n).join(', ')} not in the served stylesheet`);
-      else pass('styles.css', `${need.length} palette/type markers present, ${body.length} bytes`);
+      // Buffer.byteLength, not body.length: the stylesheet's comments carry
+      // arrows, section signs and em dashes, and `.length` counts UTF-16 code
+      // units. On 2026-07-29 that made the instrument report 64,357 "bytes" for
+      // a 66,605-byte file — a 2 KB discrepancy that needed a footnote to
+      // explain instead of a number that was simply right.
+      else pass('styles.css', `${need.length} palette/type markers present, ${Buffer.byteLength(body)} bytes`);
     }
   } catch (e) {
     fail('styles.css', `check failed: ${e.message}`);
