@@ -81,14 +81,23 @@ description: Engineering roadmaps where every milestone is a proof — a verifia
 
 <section class="roadmaps scene--series" id="roadmaps" aria-label="Roadmaps">
   <span class="road__stone" aria-hidden="true"></span>
+  {#- The showcase used to state its two categories only through a 9.6px stamp
+      and a border-style, which is why it read as one undifferentiated ribbon.
+      The category is now said once, in words, above the group it applies to —
+      and the count is computed here like every other number on this page. #}
+  {%- if liveRoadmaps.length %}
+  <p class="shelf-cap"><span class="shelf-cap__text">Live maps</span><span class="shelf-cap__n">{{ liveRoadmaps.length }}</span></p>
+  {%- endif %}
   {%- for r in liveRoadmaps %}
   <article class="card">
     <a class="card__main" href="/{{ r.slug }}/">
       {#- The archive number and the status stamp are what tell one direction
           from another now. `order` is the registry's own field, printed with a
-          leading zero — it is a shelf mark, not a ranking. #}
+          leading zero — it is a shelf mark, not a ranking. Split in two: "No."
+          is the word, the figure is the mark, and only the figure is worth
+          2.1rem in the record's own margin. #}
       <p class="card__head">
-        <span class="card__num">No. {% if r.order < 10 %}0{% endif %}{{ r.order }}</span>
+        <span class="card__num"><span class="card__num-pre">No.</span><span class="card__num-fig">{% if r.order < 10 %}0{% endif %}{{ r.order }}</span></span>
         <span class="stamp stamp--live">Live</span>
       </p>
       <h2 class="card__title">{{ r.title }}</h2>
@@ -108,10 +117,13 @@ description: Engineering roadmaps where every milestone is a proof — a verifia
   </article>
   {%- endfor %}
 
+  {%- if reviewRoadmaps.length %}
+  <p class="shelf-cap"><span class="shelf-cap__text">In practitioner review</span><span class="shelf-cap__n">{{ reviewRoadmaps.length }}</span></p>
+  {%- endif %}
   {%- for r in reviewRoadmaps %}
   <article class="card card--review">
     <p class="card__head">
-      <span class="card__num">No. {% if r.order < 10 %}0{% endif %}{{ r.order }}</span>
+      <span class="card__num"><span class="card__num-pre">No.</span><span class="card__num-fig">{% if r.order < 10 %}0{% endif %}{{ r.order }}</span></span>
       <span class="stamp stamp--open">In review</span>
     </p>
     <h2 class="card__title">{{ r.title }}</h2>

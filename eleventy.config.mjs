@@ -59,6 +59,35 @@ function markCriteria(html) {
   );
 }
 
+// The three stamps are the site's own vocabulary, and a reader meets the first
+// one with no idea that there are three or that they mean different things. This
+// says it once, at the first criterion of the document, and never again — the
+// cost is one line per page rather than one per milestone, and unlike a tooltip
+// it is still there when the page is printed.
+//
+// The audience is not being changed: the home page still says this is for people
+// who already ship software. What changes is that a vocabulary the site invented
+// gets defined where it is first used, which is what a document does.
+//
+// (?:(?!<\/blockquote>)[\s\S])* rather than the lazy [\s\S]*?: the same tempered
+// token the flagship guard is built on. A lazy match is not bounded — it can
+// backtrack past this blockquote's own closing tag and land the legend after a
+// later one, which is exactly the class of failure that shipped once already
+// (REPORT-C, defect 1).
+const STAMP_LEGEND =
+  '\n<p class="stamp-legend">Every milestone carries one of three stamps: ' +
+  '<span class="stamp-legend__k stamp-legend__k--proof">PROOF</span> — the finishing condition, stated in advance; ' +
+  '<span class="stamp-legend__k stamp-legend__k--flag">FLAGSHIP PROOF</span> — the artifact is public and carries your name; ' +
+  '<span class="stamp-legend__k stamp-legend__k--art">ARTICULATION</span> — you can state and defend it, there is nothing to build.</p>\n';
+
+function insertStampLegend(html) {
+  const re = /<blockquote class="ps-criterion">(?:(?!<\/blockquote>)[\s\S])*<\/blockquote>/;
+  const m = html.match(re);
+  if (!m) return html;                       // no criteria on this page, nothing to explain
+  const end = m.index + m[0].length;
+  return html.slice(0, end) + STAMP_LEGEND + html.slice(end);
+}
+
 // Wide tables and code blocks scroll sideways inside themselves. A scroll
 // container that cannot be focused cannot be scrolled without a mouse, so the
 // right-hand columns were unreachable by keyboard in Safari and older Chromium.
@@ -272,6 +301,10 @@ function renderRoadmap(roadmap) {
   html = wrapScrollables(html);
 
   const result = enhanceHeadings(html);
+  // After enhanceHeadings, so the legend can never sit between a flagship
+  // heading and its criterion — that adjacency is what draws the gold stamp,
+  // and star-guard fails the build if it breaks.
+  result.html = insertStampLegend(result.html);
 
   const stripped = extractAndRemoveMapImg(result.html);
   const map = buildInteractiveMap(roadmap.mapSvg, result.toc, stripped.alt);

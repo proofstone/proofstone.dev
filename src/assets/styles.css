@@ -112,14 +112,31 @@
      not by hue. */
   --accent: #9d3b1f;           /*  6.16:1 on --bg */
   --on-accent: #f7f3ea;        /*  6.16:1 on --accent */
-  --accent-weak: #f0e3d8;
+  /* The QUIET REGISTER of the same wax — not a second accent. Same hue (OKLCH
+     H 36.2 against the accent's 36.4), chroma down 31% (0.137 → 0.0946), and
+     the contrast is BETTER for it: 6.29:1 against 6.16:1 on paper.
+     It exists because the complaint was never about how many colours compete —
+     measured, a roadmap's first screen carries exactly one family. It was about
+     how much of that one there is further down: 97 accent-coloured text nodes
+     per roadmap page, 4.1% of the area of every line in the reading column.
+     Loud stays where the wax is small and rare: stamps, the mark, the one CTA,
+     the criterion's left edge. Quiet takes the rest. */
+  --accent-quiet: #894735;     /*  6.29:1 on --bg, 5.77:1 on --accent-weak */
+  /* The criterion's fill. The measure that matters for a large area is not
+     contrast (it stays 14.53:1) but ΔOKLab from the paper — how much of a STAIN
+     it is. 0.0429 → 0.0286, a third quieter, hue kept.
+     The floor is not arbitrary: an ordinary callout (--surface) sits 0.0277 from
+     the paper, and the one element the whole format turns on may not read
+     quieter than a run-of-the-mill quote. A first attempt at #f5ece4 (0.0177)
+     did exactly that and was thrown out by the measurement, not by taste. */
+  --accent-weak: #f3e8df;
   /* Measured against BOTH surfaces it appears on, not just the page: the
      flagship badge and the FLAGSHIP PROOF stamp sit on --gold-weak, where
      the previous #8a6410 was 4.44:1 — under the bar, and invisible to a
      check that only looked at --bg. */
-  --gold: #7a5809;             /*  5.88:1 on --bg, 5.38:1 on --gold-weak */
+  --gold: #7a5809;             /*  5.88:1 on --bg, 5.43:1 on --gold-weak */
   --on-gold: #f7f3ea;          /*  5.88:1 on --gold */
-  --gold-weak: #f2e9d3;
+  --gold-weak: #f1ead9;        /*  ΔOKLab from paper 0.0346 → 0.0290 */
   --ok: #1f6b45;               /*  5.84:1 on --bg — PROVEN */
   --on-ok: #f7f3ea;            /*  5.84:1 on --ok */
   --ok-weak: #e2ebdf;
@@ -148,8 +165,25 @@
   --font-display: 'Zilla Slab', 'Display Fallback', Georgia, "Times New Roman", serif;
   --font: 'IBM Plex Sans', 'Text Fallback', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --mono: 'IBM Plex Mono', 'Mono Fallback', ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* Three rungs for every service label on the site, replacing eleven ad-hoc
+     values between .6rem and .78rem. The floor is 12.48px, and it is enforced:
+     a11y-guard refuses any stylesheet rule that sets a font-size below it.
+       stamp — .78rem and not higher on purpose: these are uppercase with .14em
+               tracking, and a bigger face turns a seal into a slab;
+       label — counters, numbers, badges, kickers, captions;
+       meta  — buttons, chips, label lines that read as sentences.
+     Everything smaller that survives is inside the roadmap SVG (7 labels at 9px),
+     which lives in render_map.py in three other repositories. */
+  --fs-stamp: .78rem;
+  --fs-label: .82rem;
+  --fs-meta: .85rem;
+
   --measure: 46rem;
   --page: 60rem;
+  /* The showcase widens on a wide screen; the reading column never does. */
+  --page-wide: 76rem;
+  --spread: 58rem;
 }
 
 [data-theme="dark"] {
@@ -164,10 +198,11 @@
   --accent: #e08b62;           /*  7.20:1 — sealing wax thinned out for dark */
   /* The accent is light in dark theme, so the label on it goes dark instead. */
   --on-accent: #14110d;        /*  7.20:1 on --accent */
-  --accent-weak: #2b1d15;
+  --accent-quiet: #d5997d;     /*  7.78:1 on --bg; chroma 0.118 → 0.0824 */
+  --accent-weak: #251b15;      /*  ΔOKLab from paper 0.0685 → 0.0538; text 13.44:1 */
   --gold: #e0b64d;             /*  9.83:1 */
   --on-gold: #14110d;
-  --gold-weak: #2b2413;
+  --gold-weak: #231d0f;        /*  --gold on it: 8.75:1 */
   --ok: #63b98a;               /*  7.92:1 */
   --on-ok: #14110d;
   --ok-weak: #16251d;
@@ -186,9 +221,9 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #14110d; --surface: #1e1a14; --surface-2: #2a251d; --text: #ece5d6;
-    --muted: #a89d8a; --border: #322b22; --accent: #e08b62; --accent-weak: #2b1d15;
-    --control-border: #7b7061; --on-accent: #14110d;
-    --gold: #e0b64d; --on-gold: #14110d; --gold-weak: #2b2413;
+    --muted: #a89d8a; --border: #322b22; --accent: #e08b62; --accent-weak: #251b15;
+    --control-border: #7b7061; --on-accent: #14110d; --accent-quiet: #d5997d;
+    --gold: #e0b64d; --on-gold: #14110d; --gold-weak: #231d0f;
     --ok: #63b98a; --on-ok: #14110d; --ok-weak: #16251d;
     --code-bg: #241f18; --shadow: none;
     --map-paper: #14110d; --map-node: #241f18; --map-node-spine: #2c261e;
@@ -282,7 +317,7 @@ main:focus { outline: none; }
 /* ── Home ─────────────────────────────────────────────────────────────────── */
 .hero { max-width: var(--page); margin: 1rem auto 3rem; }
 .hero__kicker {
-  font-family: var(--mono); font-size: .72rem; letter-spacing: .16em;
+  font-family: var(--mono); font-size: var(--fs-label); letter-spacing: .16em;
   text-transform: uppercase; color: var(--muted); margin: 0 0 .9rem;
 }
 .hero__title {
@@ -299,7 +334,26 @@ main:focus { outline: none; }
   max-width: var(--measure);
 }
 
-.roadmaps { max-width: var(--page); margin: 0 auto; display: grid; gap: 1rem; }
+.roadmaps { max-width: var(--page); margin: 0 auto; display: grid; gap: 0; }
+
+/* A shelf caption. The showcase used to state its two categories only through a
+   9.6px stamp and a border-style — solid for live, dashed for review — which is
+   why five developers read the page as one undifferentiated ribbon. The category
+   is now said once, in words, above the group it applies to. The count comes from
+   the registry like every other number on this page. */
+.shelf-cap {
+  display: flex; align-items: baseline; gap: .7rem;
+  margin: 2.6rem 0 .2rem; padding: 0 0 .5rem;
+  font-family: var(--mono); font-size: var(--fs-label); letter-spacing: .16em;
+  text-transform: uppercase; color: var(--muted);
+}
+.shelf-cap:first-child { margin-top: 0; }
+.shelf-cap__text { order: 0; flex: 0 0 auto; }
+.shelf-cap__n { order: 1; flex: 0 0 auto; color: var(--text); letter-spacing: .1em; }
+.shelf-cap__n::before { content: "\00b7\00a0"; color: var(--muted); }
+/* The rule runs to the edge of the shelf, like a ruled line in a register. */
+.shelf-cap::after { content: ""; order: 2; flex: 1 1 auto; height: 1px; background: var(--border); }
+.shelf-cap + .card { border-top: 1px solid var(--control-border); }
 /* A card is a document in an archive, not a tile: a shelf mark, a status stamp
    and a rule under it. The coloured left bar is gone with the five accents it
    used to carry, and so is the -2px hover lift — every card on the internet
@@ -314,23 +368,45 @@ main:focus { outline: none; }
 }
 .card:last-child { border-bottom: 1px solid var(--border); }
 .card:hover { background: var(--surface); }
+/* The record is a two-column entry: a margin holding the shelf mark, and the
+   document itself. The mark used to be a 11.5px muted whisper on the same left
+   edge as everything else — nothing for the eye to run down. At 2.1rem it
+   becomes the anchor of the scan, which is the whole job of a shelf mark. */
+.card__main,
+.card--review {
+  display: grid;
+  grid-template-columns: 5.25rem minmax(0, 1fr);
+  column-gap: 1.75rem;
+  padding: 1.9rem 1.5rem 1.9rem 0;
+}
+.card__main > *,
+.card--review > * { grid-column: 2; }
+.card__main { color: inherit; }
+.card__main:hover { text-decoration: none; }
 .card__head {
-  display: flex; align-items: center; gap: .7rem;
-  margin: 0 0 .5rem;
+  grid-column: 1; grid-row: 1 / span 4;
+  display: flex; flex-direction: column; align-items: flex-start; gap: .55rem;
+  margin: 0;
 }
 .card__num {
-  font-family: var(--mono); font-size: .72rem; letter-spacing: .12em;
-  text-transform: uppercase; color: var(--muted);
+  display: flex; flex-direction: column; align-items: flex-start; line-height: 1;
+  font-family: var(--mono); color: var(--muted);
 }
-.card__main { display: block; padding: 1.4rem 1.5rem 1.4rem 0; color: inherit; }
-.card__main:hover { text-decoration: none; }
+.card__num-pre {
+  font-size: var(--fs-stamp); letter-spacing: .14em; text-transform: uppercase;
+  margin-bottom: .25rem;
+}
+.card__num-fig { font-size: 2.1rem; font-weight: 600; letter-spacing: -.01em; color: var(--text); }
+/* Nothing in a 5.25rem margin may wrap: "In review" broken across two lines
+   reads as a rendering fault, not as a stamp. */
+.card__head .stamp { white-space: nowrap; }
 /* Dashed already means "not a live map" on this site (the review cards, the
    series pill), so the language is inherited rather than reinvented. */
-.card--review { padding: 1.4rem 1.5rem 1.4rem 0; border-top-style: dashed; }
+.card--review { border-top-style: dashed; }
 .card--review:hover { background: transparent; }
-.card__title { margin: 0 0 .35rem; font-size: 1.4rem; letter-spacing: -.01em; color: var(--text); }
-.card__tagline { margin: 0 0 1rem; color: var(--muted); }
-.card__meta { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin: 0; }
+.card__title { margin: 0 0 .4rem; font-size: 1.55rem; letter-spacing: -.01em; color: var(--text); }
+.card__tagline { margin: 0 0 1.1rem; max-width: 62ch; color: var(--muted); }
+.card__meta { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; margin: 0; }
 /* A drawn arrow, not "→". The character is a font glyph: it changes shape with
    the typeface, sits on the text baseline rather than the optical centre, and
    in the mono fallback it is a different width again. This one is 20x10 and
@@ -342,15 +418,20 @@ main:focus { outline: none; }
 .badge--review {
   color: var(--muted); background: transparent; border-style: dashed; white-space: normal;
 }
+/* The lab line hangs off the record, so it starts where the document does —
+   past the shelf-mark margin, not under it. On a live card it is a sibling of
+   the <a> that holds the grid, so it has to reproduce that margin itself; on a
+   review card it is IN the grid and the column already places it. Giving both
+   the padding indents the review card's line twice. */
 .card__lab {
-  margin: 0; padding: .75rem 1.5rem 1.1rem 0; font-size: .87rem; color: var(--muted);
+  margin: 0; padding: .75rem 1.5rem 1.1rem 7rem; font-size: .87rem; color: var(--muted);
   border-top: 1px dashed var(--border);
 }
 .card--review .card__lab { padding: .75rem 0 0; }
 .card__lab-tag {
-  font-family: var(--mono); font-size: .62rem; text-transform: uppercase; letter-spacing: .08em;
-  color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
-  border-radius: var(--r-sm); padding: .1rem .35rem; margin-right: .45rem;
+  font-family: var(--mono); font-size: var(--fs-stamp); text-transform: uppercase; letter-spacing: .08em;
+  color: var(--accent-quiet); border: 1px solid color-mix(in srgb, var(--accent-quiet) 40%, var(--border));
+  border-radius: var(--r-sm); padding: .14rem .4rem; margin-right: .45rem;
 }
 .card__lab code { background: var(--code-bg); padding: .08em .35em; border-radius: var(--r-sm); font-size: .95em; }
 
@@ -386,8 +467,8 @@ main:focus { outline: none; }
 .scene { position: relative; padding: 3.5rem 0; }
 .scene + .scene { border-top: 1px solid var(--border); }
 .scene__label {
-  font-family: var(--mono); font-size: .7rem; letter-spacing: .18em;
-  text-transform: uppercase; color: var(--accent); margin: 0 0 .7rem;
+  font-family: var(--mono); font-size: var(--fs-label); letter-spacing: .18em;
+  text-transform: uppercase; color: var(--accent-quiet); margin: 0 0 .7rem;
 }
 .scene__title { font-size: clamp(1.6rem, 3.2vw, 2.2rem); line-height: 1.12; margin: 0 0 .7rem; }
 .scene__body { color: var(--muted); margin: 0 0 1.6rem; max-width: 54ch; }
@@ -404,7 +485,7 @@ main:focus { outline: none; }
 /* Scene 1 -- the keyword cloud */
 .keywords { display: flex; flex-wrap: wrap; gap: .5rem; list-style: none; margin: 0; padding: 0; max-width: 46rem; }
 .keyword {
-  font-family: var(--mono); font-size: .8rem;
+  font-family: var(--mono); font-size: var(--fs-meta);
   padding: .3rem .6rem; border-radius: var(--r-md);
   border: 1px dashed var(--control-border); color: var(--muted); background: var(--surface);
   --ps-dx: 0px; --ps-dy: 0px; --ps-r: 0deg;
@@ -413,7 +494,7 @@ main:focus { outline: none; }
 .keyword:nth-child(3n+1) { --ps-dx: -10px; --ps-dy: 7px;  --ps-r: 3deg; }
 .keyword:nth-child(3n+2) { --ps-dx: 6px;   --ps-dy: 11px; --ps-r: -2deg; }
 .keywords__verdict {
-  margin: 1.4rem 0 0; font-family: var(--mono); font-size: .85rem; color: var(--text);
+  margin: 1.4rem 0 0; font-family: var(--mono); font-size: var(--fs-meta); color: var(--text);
 }
 
 /* Scene 2 -- the artifact strip. Fixed minimum height so the reveal cannot move
@@ -421,7 +502,7 @@ main:focus { outline: none; }
 .artifact {
   margin: 1.2rem 0 0; padding: .8rem 1rem;
   background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--r-sm);
-  font-family: var(--mono); font-size: .78rem; color: var(--muted);
+  font-family: var(--mono); font-size: var(--fs-meta); color: var(--muted);
   min-height: 4.1rem;
 }
 .artifact__line { display: block; white-space: nowrap; overflow: hidden; line-height: 1.7; }
@@ -430,7 +511,7 @@ main:focus { outline: none; }
 /* -- Skip visuals ---------------------------------------------------------- */
 .skip-visuals {
   display: inline-flex; align-items: center; gap: .45rem; margin-top: 1.5rem;
-  font-family: var(--mono); font-size: .76rem; letter-spacing: .06em;
+  font-family: var(--mono); font-size: var(--fs-meta); letter-spacing: .06em;
   padding: .4rem .8rem; border-radius: var(--r-sm);
   border: 1px solid var(--control-border); color: var(--text);
 }
@@ -511,7 +592,7 @@ main:focus { outline: none; }
 }
 .how__steps strong { color: var(--text); }
 .how__num {
-  font-family: var(--mono); font-size: .75rem; color: var(--accent);
+  font-family: var(--mono); font-size: var(--fs-label); color: var(--accent-quiet);
   border: 1px solid var(--border); border-radius: var(--r-sm); text-align: center; padding: .1rem 0;
 }
 
@@ -542,7 +623,7 @@ main:focus { outline: none; }
   -webkit-box-decoration-break: clone; box-decoration-break: clone;
 }
 .companion__tag {
-  font-family: var(--mono); font-size: .62rem; text-transform: uppercase; letter-spacing: .08em;
+  font-family: var(--mono); font-size: var(--fs-stamp); text-transform: uppercase; letter-spacing: .08em;
   color: var(--muted); border: 1px solid var(--border); border-radius: var(--r-sm); padding: .1rem .35rem;
 }
 .companion__note { margin: 0; color: var(--muted); font-size: .95rem; }
@@ -559,7 +640,7 @@ main:focus { outline: none; }
    a seal that lands differently on every reload is an animation, not a seal. */
 .stamp {
   display: inline-flex; align-items: center;
-  font-family: var(--mono); font-size: .6rem; font-weight: 600;
+  font-family: var(--mono); font-size: var(--fs-stamp); font-weight: 600;
   letter-spacing: .14em; text-transform: uppercase;
   padding: .16rem .45rem; border-radius: var(--r-sm);
   background: var(--accent); color: var(--on-accent);
@@ -577,7 +658,7 @@ main:focus { outline: none; }
 /* ── Badges ───────────────────────────────────────────────────────────────── */
 .badge {
   display: inline-flex; align-items: center; gap: .3rem;
-  font-family: var(--mono); font-size: .72rem; letter-spacing: .02em;
+  font-family: var(--mono); font-size: var(--fs-label); letter-spacing: .02em;
   padding: .2rem .5rem; border-radius: var(--r-md); border: 1px solid var(--border);
   color: var(--muted); background: var(--bg);
 }
@@ -590,7 +671,7 @@ main:focus { outline: none; }
   color: var(--gold);
   border-color: color-mix(in srgb, var(--gold) 45%, var(--border));
   background: var(--gold-weak);
-  text-transform: uppercase; letter-spacing: .1em; font-size: .66rem;
+  text-transform: uppercase; letter-spacing: .1em; font-size: var(--fs-label);
 }
 .badge--flag { color: var(--gold); border-color: color-mix(in srgb, var(--gold) 45%, var(--border)); background: var(--gold-weak); }
 
@@ -613,7 +694,7 @@ main:focus { outline: none; }
 
 .roadmap__updated {
   flex-basis: 100%; margin: .55rem 0 0;
-  font-size: .8rem; color: var(--muted);
+  font-size: var(--fs-meta); color: var(--muted);
 }
 
 /* ── The rest of the series (lateral links between roadmaps) ──────────────── */
@@ -632,7 +713,7 @@ main:focus { outline: none; }
 .series__item--review { background: transparent; border-style: dashed; }
 .series__link { font-weight: 600; }
 .series__link--plain { color: var(--muted); font-weight: 600; }
-.series__meta { font-family: var(--mono); font-size: .72rem; color: var(--muted); }
+.series__meta { font-family: var(--mono); font-size: var(--fs-label); color: var(--muted); }
 
 /* ── Prose (rendered README) ──────────────────────────────────────────────── */
 .prose { max-width: var(--measure); margin: 0 auto; }
@@ -654,14 +735,19 @@ main:focus { outline: none; }
    footer, missed because that line is neither .prose nor .site-footer. The <code>
    chip around it is a background, not a text-level cue, and it disappears the
    moment a lab is mentioned without one. */
+/* These are also where the site's wax is DENSEST: a roadmap page carries ~107
+   prose links, and in the accent proper they measured 4.1% of the area of every
+   line in the column. They move to the quiet register — same hue, a third less
+   chroma, and 6.29:1 instead of 6.16:1, so nothing is traded away for it. */
 .prose a:not(.ps-anchor),
 .site-footer p a,
 .thesis__contribute a,
 .card__lab a {
+  color: var(--accent-quiet);
   text-decoration: underline;
   text-underline-offset: .16em;
   text-decoration-thickness: .06em;
-  text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  text-decoration-color: color-mix(in srgb, var(--accent-quiet) 45%, transparent);
 }
 .prose a:not(.ps-anchor):hover,
 .site-footer p a:hover,
@@ -764,7 +850,7 @@ main:focus { outline: none; }
 .ps-map__cap {
   margin: .7rem .2rem 0; padding: 0 1rem .8rem; padding-top: .6rem;
   border-top: 1px solid var(--border);
-  font-family: var(--mono); font-size: .74rem; color: var(--muted); text-align: center;
+  font-family: var(--mono); font-size: var(--fs-label); color: var(--muted); text-align: center;
 }
 
 /* Section hotspots: invisible until pointed at, then a soft wash + outline. */
@@ -812,7 +898,7 @@ main:focus { outline: none; }
 .prose blockquote.ps-criterion::before {
   content: "PROOF";
   position: absolute; top: -.62rem; left: 1rem;
-  font-family: var(--mono); font-size: .62rem; font-weight: 700; letter-spacing: .12em;
+  font-family: var(--mono); font-size: var(--fs-stamp); font-weight: 700; letter-spacing: .12em;
   padding: .12rem .45rem; border-radius: var(--r-sm);
   background: var(--accent); color: var(--on-accent);
 }
@@ -834,6 +920,30 @@ main:focus { outline: none; }
   border-left-color: var(--muted);
 }
 .ps-ms-h.is-articulation + .ps-criterion::before { content: "ARTICULATION"; background: var(--muted); }
+
+/* ── The stamp legend: one line, at the first stamp a reader meets ────────── */
+/* The audience does not change — "people who already ship software" is still
+   what the home page says. What changes is that the first PROOF on a page no
+   longer arrives unexplained. It is inserted by the build after the FIRST
+   criterion of the document (eleventy.config.mjs), so it costs one line per
+   page and nothing per milestone, and unlike a tooltip it survives printing.
+   The keys are drawn as the stamps they name — the same fills, the same mono —
+   because a legend whose sample does not look like the thing is a caption. */
+.stamp-legend {
+  margin: -.6rem 0 1.6rem;
+  padding: .55rem 0 0;
+  max-width: var(--measure);
+  font-size: var(--fs-meta); line-height: 1.6; color: var(--muted);
+  border-top: 1px dashed var(--border);
+}
+.stamp-legend__k {
+  font-family: var(--mono); font-size: var(--fs-stamp); font-weight: 600;
+  letter-spacing: .1em; padding: .08rem .35rem; border-radius: var(--r-sm);
+  white-space: nowrap;
+}
+.stamp-legend__k--proof { background: var(--accent); color: var(--on-accent); }
+.stamp-legend__k--flag { background: var(--gold); color: var(--on-gold); }
+.stamp-legend__k--art { background: var(--muted); color: var(--bg); }
 
 /* ── Milestone heading + badges ───────────────────────────────────────────── */
 .prose h3.ps-ms-h {
@@ -879,7 +989,7 @@ main:focus { outline: none; }
   position: sticky; top: 3.4rem; z-index: 10;
   margin: 0 0 1.5rem;
   display: flex; align-items: center; gap: .7rem; flex-wrap: wrap;
-  font-size: .82rem; color: var(--muted);
+  font-size: var(--fs-label); color: var(--muted);
   background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(6px);
   padding: .45rem 0;
 }
@@ -893,22 +1003,24 @@ main:focus { outline: none; }
   flex: 1 1 8rem; display: flex; align-items: flex-end; gap: 2px;
   min-width: 6rem; border: 0; background: none; overflow: visible;
 }
+/* Heights follow the row's type: the label went from .82rem to .85rem, and a
+   course that stays put while the line around it grows reads as a leftover. */
 .stone {
-  flex: 1 1 auto; min-width: 2px; height: 11px;
+  flex: 1 1 auto; min-width: 2px; height: 12px;
   border: 1px solid var(--control-border); border-radius: 1px;
   background: transparent;
 }
-.stone:nth-child(2n) { height: 14px; }
-.stone:nth-child(3n) { height: 9px; }
+.stone:nth-child(2n) { height: 15px; }
+.stone:nth-child(3n) { height: 10px; }
 .stone.is-laid { background: var(--ok); border-color: var(--ok); }
 
 .progress__next {
-  font-size: .78rem; padding: .22rem .55rem; border: 1px solid var(--control-border);
+  font-size: var(--fs-meta); padding: .22rem .55rem; border: 1px solid var(--control-border);
   border-radius: var(--r-md); background: var(--surface); color: var(--text); cursor: pointer; white-space: nowrap;
 }
 .progress__next:hover:not([disabled]) { background: var(--surface-2); border-color: var(--accent); }
 .progress__next[disabled] { opacity: .45; cursor: default; }
-.progress__reset { color: var(--muted); background: none; border: 0; cursor: pointer; font-size: .8rem; text-decoration: underline; }
+.progress__reset { color: var(--muted); background: none; border: 0; cursor: pointer; font-size: var(--fs-meta); text-decoration: underline; }
 
 /* ── Roadmap layout + sticky section outline ──────────────────────────────── */
 .roadmap-layout { display: grid; gap: 2rem; grid-template-columns: minmax(0, 1fr); max-width: var(--measure); margin: 0 auto; }
@@ -926,11 +1038,14 @@ main:focus { outline: none; }
 }
 .toc__link:hover { background: var(--surface-2); color: var(--text); text-decoration: none; }
 /* "You are here" is now expressed by aria-current alone — the styling hangs off
-   the same attribute the screen reader reads, so the two cannot drift apart. */
+   the same attribute the screen reader reads, so the two cannot drift apart.
+   Eleven §-numbers in the accent is eleven identical shouts down one column, so
+   the accent is spent on the ONE row that means something: where the reader is. */
 .toc__link[aria-current] { color: var(--text); background: var(--surface-2); border-left-color: var(--accent); font-weight: 600; }
-.toc__num { font-family: var(--mono); font-size: .72rem; color: var(--accent); flex: 0 0 auto; }
+.toc__link[aria-current] .toc__num { color: var(--accent); }
+.toc__num { font-family: var(--mono); font-size: var(--fs-label); color: var(--muted); flex: 0 0 auto; }
 .toc__title { flex: 1 1 auto; }
-.toc__count { font-family: var(--mono); font-size: .68rem; color: var(--muted); flex: 0 0 auto; }
+.toc__count { font-family: var(--mono); font-size: var(--fs-label); color: var(--muted); flex: 0 0 auto; }
 .toc__link.is-complete .toc__count { color: var(--ok); font-weight: 700; }
 
 @media (min-width: 70rem) {
@@ -956,6 +1071,58 @@ main:focus { outline: none; }
   }
 }
 
+/* ── The spread: what the margins are for ─────────────────────────────────── */
+/* At 1920 the page left 452px unused on each side of a roadmap and 480px beside
+   the showcase — nearly half the screen. The reading measure is NOT the thing to
+   spend it on: it is 70ch today, dead centre of the 68–72 hygiene, and stretching
+   prose is how a document stops being readable.
+   So the width goes to the two things that actually want it:
+     • the showcase, whose records gain a third column for their tally;
+     • the figures — the map, tables and code — which are the only blocks on a
+       roadmap page that are genuinely too big for the column.
+   The map is the clearest case: it is drawn 800–880px wide and squeezed into 736,
+   i.e. every label in it is shown at 92%. Here it simply stops being squeezed —
+   nothing in the map itself is touched, which is what §3 of the brief forbids. */
+@media (min-width: 90rem) {
+  :root { --page: var(--page-wide); }
+
+  /* A record becomes a ledger row: shelf mark | document | tally. */
+  .card__main,
+  .card--review {
+    grid-template-columns: 5.25rem minmax(0, 1fr) 15rem;
+    column-gap: 2rem;
+  }
+  .card__meta {
+    grid-column: 3; grid-row: 1 / span 3;
+    display: flex; flex-direction: column; align-items: flex-start; gap: .5rem;
+    margin: 0; padding-left: 1.5rem;
+    border-left: 1px solid var(--border);
+  }
+  .card__go { margin-left: 0; margin-top: .3rem; }
+  .card__tagline { max-width: 58ch; margin-bottom: 0; }
+  .card__lab { grid-column: 2 / -1; }
+
+  /* The roadmap page becomes a spread, and the whole spread is centred as one
+     object — so widening it does not shift the text sideways. */
+  .roadmap-layout,
+  .roadmap__bar { max-width: calc(15.5rem + 2rem + var(--spread)); }
+
+  /* The reading column keeps its measure and stops centring inside the wider
+     main column: everything in the article has to share one left edge, or the
+     figures below would break out from a different origin than the prose. */
+  .roadmap-main .prose,
+  .roadmap-main .series,
+  .roadmap-main .progress { max-width: var(--measure); margin-left: 0; margin-right: 0; }
+
+  /* And these leave the column. `width` and not `max-width`: a block inside a
+     46rem parent never grows past it until a width says so. `min-width: 100%`
+     keeps a short code block exactly as wide as it is today — only the ones that
+     have something to show take the extra room. */
+  .roadmap-main .ps-map { width: var(--spread); max-width: none; }
+  .roadmap-main .prose__scroll,
+  .roadmap-main .prose pre { width: max-content; min-width: 100%; max-width: var(--spread); }
+}
+
 /* ── 404 ──────────────────────────────────────────────────────────────────── */
 .notfound { max-width: var(--measure); margin: 3rem auto; text-align: center; }
 .notfound h1 { font-size: 4rem; margin: 0; letter-spacing: -.03em; }
@@ -965,6 +1132,15 @@ main:focus { outline: none; }
   body { font-size: 16.5px; }
   main { padding: 1.75rem 1rem 3rem; }
   .roadmap__bar { align-items: flex-start; }
+  /* The shelf-mark margin is 7rem of a 320px screen at the desktop figure, and
+     the tagline has to live in what is left. The mark stays a mark; it just
+     stops being a monument. */
+  .card__main,
+  .card--review { grid-template-columns: 4rem minmax(0, 1fr); column-gap: 1rem; padding: 1.5rem 0; }
+  .card__num-fig { font-size: 1.7rem; }
+  .card__title { font-size: 1.35rem; }
+  .card__lab { padding-left: 5rem; padding-right: 0; }
+  .card--review .card__lab { padding-left: 0; }
   /* The owner/repo chip needs 320 px and the default 1.2rem padding leaves 318
      at a 390 px viewport — two pixels short of one line. Below ~380 px it wraps
      regardless, and box-decoration-break makes that wrap look deliberate. */
@@ -1009,7 +1185,7 @@ main:focus { outline: none; }
     --bg: #fff; --surface: #fff; --surface-2: #fff;
     --text: #000; --muted: #333;
     --border: #999; --control-border: #333;
-    --accent: #000; --on-accent: #fff; --accent-weak: #fff;
+    --accent: #000; --on-accent: #fff; --accent-weak: #fff; --accent-quiet: #000;
     --gold: #000; --on-gold: #fff; --gold-weak: #fff;
     --ok: #000; --on-ok: #fff; --ok-weak: #fff;
     --code-bg: #f2f2f2; --shadow: none;
@@ -1043,6 +1219,11 @@ main:focus { outline: none; }
   main { padding: 0; }
   .roadmap-layout { display: block; max-width: none; }
   .prose, .roadmap__bar, .series { max-width: none; }
+  /* The spread is a screen affordance. On paper the sheet is the width, so the
+     figures go back to fitting it — a 58rem map on A4 would print cropped. */
+  .roadmap-main .ps-map,
+  .roadmap-main .prose__scroll,
+  .roadmap-main .prose pre { width: auto; min-width: 0; max-width: 100%; }
 
   /* Ink, not fill: the stamps' label colour is var(--bg) on screen, which would
      print white on unpainted paper. Same for a ticked checkbox. */
@@ -1052,7 +1233,21 @@ main:focus { outline: none; }
   .prose blockquote.ps-criterion::before,
   .ps-ms-h.is-star + .ps-criterion::before,
   .ps-ms-h.is-articulation + .ps-criterion::before,
-  .ps-ms.is-done .ps-criterion::before { background: none; color: #000; border: 1px solid #000; }
+  .ps-ms.is-done .ps-criterion::before,
+  /* The legend's keys are the same objects and print by the same rule: they are
+     samples of the stamps, so a printed page must show them as stamps and not as
+     three white gaps in a sentence. */
+  .stamp-legend__k,
+  /* Found by measuring the printed page, not by reading it: the showcase stamps
+     were never in this list. Their label colour is var(--on-accent) — #fff under
+     print — over a fill browsers do not print, so "Live" and "Proven" came out
+     white on white. The criterion stamps were repainted here in wave A and these
+     were missed because they live on the home page, which nobody prints to check
+     a milestone list. Raising them from 9.6px to 12.5px would have made the gap
+     bigger, not smaller. */
+  .stamp { background: none; color: #000; border: 1px solid #000; }
+  /* Dashed still means "not a live map", on paper as on screen. */
+  .stamp--open { border-style: dashed; color: #333; }
   .ps-check { border-color: #000; background: none; }
   .ps-check:checked { background: none; border-color: #000; }
   .ps-check:checked::after { color: #000; }

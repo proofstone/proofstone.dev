@@ -12,7 +12,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { inspectReadme, inspectSvg, shapeOf } from './content-guard.mjs';
-import { inspectRenderedPage } from './a11y-guard.mjs';
+import { inspectRenderedPage, inspectStylesheet, FONT_SIZE_FLOOR_REM } from './a11y-guard.mjs';
 import { inspectFlagships } from './star-guard.mjs';
 import { roadmaps } from '../roadmaps.config.mjs';
 
@@ -244,6 +244,45 @@ console.log('\nACCESSIBILITY — each rule refuses the exact regression it was w
     'does not force ::details-content visible',
     '.toc__details { border: 0; }'
   );
+}
+
+console.log(`\nTYPE FLOOR — a label under ${(FONT_SIZE_FLOOR_REM * 16).toFixed(2)}px must fail, and only a label`);
+{
+  const floorReject = (name, css, fragment) => {
+    const { problems } = inspectStylesheet(css);
+    if (!problems.length) return bad(name, 'guard accepted a size it must refuse');
+    if (fragment && !problems.join('; ').includes(fragment))
+      return bad(name, `rejected, but for the wrong reason: ${problems.join('; ')}`);
+    ok(name, problems[0].slice(0, 74) + (problems[0].length > 74 ? '…' : ''));
+  };
+  const floorAccept = (name, css) => {
+    const { problems } = inspectStylesheet(css);
+    if (problems.length) return bad(name, `false positive: ${problems.join('; ')}`);
+    ok(name);
+  };
+
+  // Rejected — each of these is a real size the site shipped before this wave.
+  floorReject('a stamp back at .6rem', '.stamp { font-size: .6rem; }', '9.60px');
+  floorReject('the PROOF stamp back at .62rem', '.ps-criterion::before { font-size: .62rem; }', '9.92px');
+  floorReject('a counter back at .68rem', '.toc__count { font-size: .68rem; }', '10.88px');
+  floorReject('the shelf mark back at .72rem', '.card__num { font-size: .72rem; }', '11.52px');
+  floorReject('a px value under the floor', '.x { font-size: 12px; }', '12.00px');
+  // clamp() is judged by the size it can actually reach, not by its middle term.
+  floorReject('clamp() whose floor is too low', '.y { font-size: clamp(.7rem, 2vw, 1.4rem); }', '11.20px');
+
+  // Accepted — the guard must not become a reason to stop writing small type
+  // where small type is correct, or the next person will delete it.
+  floorAccept('the bottom rung itself', '.stamp { font-size: .78rem; }');
+  floorAccept('an em value in prose', '.prose code { font-size: .86em; }');
+  floorAccept('a percentage', '.z { font-size: 90%; }');
+  floorAccept('11pt inside @media print', '@media print { body { font-size: 11pt; } .a { font-size: .5rem; } }');
+  floorAccept('a var() the guard cannot resolve', '.stamp { font-size: var(--fs-stamp); }');
+  floorAccept('a comment mentioning a small size', '/* was .6rem before the wave */ .stamp { font-size: .82rem; }');
+
+  // And the shipped stylesheet itself, which is the case that actually matters.
+  const shipped = join(siteRoot, 'assets', 'styles.css');
+  if (existsSync(shipped)) floorAccept('the shipped stylesheet passes', readFileSync(shipped, 'utf8'));
+  else console.warn('  … no _site/assets/styles.css (run: npm run build) — skipped');
 }
 
 console.log('\nACCESSIBILITY — the built pages must pass exactly as they are');

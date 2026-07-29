@@ -17,8 +17,55 @@
 // announces nothing is axe's `aria-hidden-focus` (serious, WCAG 4.1.2).
 const FOCUSABLE_TAG = /<(a\b[^>]*\shref=|button\b|input\b|select\b|textarea\b|summary\b)[^>]*>/gi;
 
+// The floor for a service label, in rem. Below this the site had eleven ad-hoc
+// values between .6rem and .78rem — stamps at 9.6px, PROOF at 9.92px, the shelf
+// mark and the milestone count at 11.52px. Five readers named the small type
+// before anything else. 0.78rem = 12.48px is the bottom rung of the scale that
+// replaced them, so the guard's job is to keep a twelfth ad-hoc value from
+// appearing later, when nobody is looking at the page with fresh eyes.
+export const FONT_SIZE_FLOOR_REM = 0.78;
+
 function tagsWith(html, re) {
   return [...html.matchAll(re)].map((m) => m[0]);
+}
+
+// ── Minimum size of a rendered label, asserted in the stylesheet ────────────
+//
+// Checked in the CSS rather than in the browser because that is what this file
+// has: the guard runs offline inside the deploy path, with no renderer. That
+// costs nothing here — every small label on this site gets its size from a rule,
+// not from an inline style or a script.
+//
+// Three exclusions, each for a reason and not for convenience:
+//   • @media print — a different medium with its own units (body is 11pt there),
+//     and a screen floor applied to paper is a category error;
+//   • em and % — relative to a parent whose own rule is checked, so flagging
+//     `.prose code { font-size: .86em }` would be flagging 15.05px as too small;
+//   • comments are stripped first, or the text before a rule lands in the
+//     reported selector and the failure names the wrong thing.
+// Inside clamp()/min()/max() the SMALLEST absolute value decides — that is the
+// size the label can actually reach.
+export function inspectStylesheet(css, floorRem = FONT_SIZE_FLOOR_REM) {
+  const problems = [];
+  const screen = css.replace(/@media\s+print\s*\{[\s\S]*$/m, '').replace(/\/\*[\s\S]*?\*\//g, '');
+  for (const [, selRaw, body] of screen.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const decl = body.match(/(?:^|;)\s*font-size\s*:\s*([^;]+)/);
+    if (!decl) continue;
+    const value = decl[1].trim();
+    const sizes = [...value.matchAll(/(-?[\d.]+)(rem|px)\b/g)].map(([, n, unit]) =>
+      unit === 'rem' ? Number(n) : Number(n) / 16
+    );
+    if (!sizes.length) continue;
+    const smallest = Math.min(...sizes);
+    if (smallest < floorRem) {
+      const sel = selRaw.trim().replace(/\s+/g, ' ').slice(0, 60);
+      problems.push(
+        `${sel} sets font-size ${value} = ${(smallest * 16).toFixed(2)}px, under the ` +
+          `${(floorRem * 16).toFixed(2)}px floor for a service label`
+      );
+    }
+  }
+  return { problems };
 }
 
 export function inspectRenderedPage(html, opts = {}) {

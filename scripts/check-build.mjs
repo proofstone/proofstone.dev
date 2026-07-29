@@ -16,7 +16,7 @@ import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { roadmaps } from '../roadmaps.config.mjs';
-import { inspectRenderedPage } from './a11y-guard.mjs';
+import { inspectRenderedPage, inspectStylesheet, FONT_SIZE_FLOOR_REM } from './a11y-guard.mjs';
 import { inspectFlagships } from './star-guard.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -329,6 +329,22 @@ console.log('\nACCESSIBILITY — no silent tab stops, named landmarks, reachable
     const { problems } = inspectRenderedPage(html, { css });
     if (problems.length) for (const p of problems) fail(`${rel}`, p);
     else pass(`${rel}`, 'clean');
+  }
+}
+
+// ── 4d. No service label falls back below the readable floor ────────────────
+// Asserted once over the stylesheet rather than once per page: it is one file,
+// and five identical failures would say the same thing five times.
+console.log(`\nTYPE FLOOR — no rule may set a label under ${(FONT_SIZE_FLOOR_REM * 16).toFixed(2)}px`);
+{
+  const cssPath = join(site, 'assets', 'styles.css');
+  const css = existsSync(cssPath) ? readFileSync(cssPath, 'utf8') : '';
+  if (!css) {
+    fail('assets/styles.css missing from _site', 'cannot check label sizes');
+  } else {
+    const { problems } = inspectStylesheet(css);
+    if (problems.length) for (const p of problems) fail('styles.css', p);
+    else pass('styles.css', `every font-size rule is at or above ${FONT_SIZE_FLOOR_REM}rem (em/% and @media print excluded by design)`);
   }
 }
 
