@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url';
 import { roadmaps } from '../roadmaps.config.mjs';
 import { inspectRenderedPage, inspectStylesheet, FONT_SIZE_FLOOR_REM } from './a11y-guard.mjs';
 import { inspectFlagships } from './star-guard.mjs';
-import { inspectPalette, OG_MIRRORED } from './palette-guard.mjs';
+import { inspectPalette, inspectFonts, OG_MIRRORED } from './palette-guard.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const site = join(root, '_site');
@@ -374,6 +374,13 @@ console.log('\nPALETTE — one source of colour, and the two files that must mir
       pass('favicon.svg', `mirrors --accent ${tokens.accent} / --on-accent ${tokens.onAccent}`);
       pass('make-og.mjs', `its ${OG_MIRRORED.length} literals equal the dark-theme tokens they copy`);
     }
+
+    // Fonts: declared and shipped must be the same set, in both directions.
+    const fontDir = join(site, 'assets', 'fonts');
+    const bundled = existsSync(fontDir) ? readdirSync(fontDir) : [];
+    const f = inspectFonts({ css, bundled });
+    if (f.problems.length) for (const p of f.problems) fail('fonts', p);
+    else pass('fonts', `${f.present.length} faces shipped, ${f.declared.length} declared, sets identical — ${f.present.join(', ')}`);
   }
 }
 

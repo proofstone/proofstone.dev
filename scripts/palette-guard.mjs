@@ -72,6 +72,28 @@ export const OG_MIRRORED = [
   ['MUTED', 'muted']
 ];
 
+// Fonts nobody asked for. Written because the Stone wave shipped exactly this
+// defect for one build: the display serif's @font-face and both <link rel=preload>
+// tags were removed, and the two 26 KB woff2 files stayed on disk. The whole
+// assets directory is a passthrough copy, so the deploy got BIGGER — 631.0 KiB
+// against 622.8 before — while every visible sign said the family was gone. Only
+// weighing the output caught it, and only because someone thought to weigh it.
+//
+// Both directions matter and both are cheap:
+//   • a face in the bundle that no @font-face names is dead weight;
+//   • a face an @font-face names that is not in the bundle is a silent fallback,
+//     which is worse — the page still renders, in the wrong typeface.
+export function inspectFonts({ css, bundled }) {
+  const problems = [];
+  const declared = new Set(
+    [...String(css).matchAll(/url\(\s*['"]?([^'")]*?([a-z0-9-]+\.woff2))/gi)].map((m) => m[2])
+  );
+  const present = new Set(bundled.filter((f) => f.endsWith('.woff2')));
+  for (const f of present) if (!declared.has(f)) problems.push(`${f} is in the bundle but no @font-face names it`);
+  for (const f of declared) if (!present.has(f)) problems.push(`@font-face names ${f} but it is not in the bundle`);
+  return { problems, declared: [...declared].sort(), present: [...present].sort() };
+}
+
 export function inspectPalette({ css, favicon, ogSource }) {
   const problems = [];
   if (!css) return { problems: ['no stylesheet to check'], tokens: {} };

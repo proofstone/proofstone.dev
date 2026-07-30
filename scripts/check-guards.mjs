@@ -8,13 +8,13 @@
 //
 //   node scripts/check-guards.mjs
 // ─────────────────────────────────────────────────────────────────────────────
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { inspectReadme, inspectSvg, shapeOf } from './content-guard.mjs';
 import { inspectRenderedPage, inspectStylesheet, FONT_SIZE_FLOOR_REM } from './a11y-guard.mjs';
 import { inspectFlagships } from './star-guard.mjs';
-import { inspectPalette } from './palette-guard.mjs';
+import { inspectPalette, inspectFonts } from './palette-guard.mjs';
 import { roadmaps } from '../roadmaps.config.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -384,6 +384,43 @@ console.log('\nPALETTE — a colour that escapes the token block must fail, and 
       ogSource: readFileSync(shippedOg, 'utf8')
     });
   } else console.warn('  … no _site/assets/styles.css (run: npm run build) — skipped');
+
+  // ── Fonts declared vs fonts shipped ──────────────────────────────────────
+  // The first case is not hypothetical. It is what this wave actually shipped for
+  // one build: the display serif's @font-face and both preloads were removed and
+  // the two 26 KB files stayed in the passthrough, so the deploy grew from 622.8
+  // to 631.0 KiB while every visible sign said the family was gone. Weighing the
+  // output caught it. This guard is so that next time nobody has to think of it.
+  const FONT_CSS = "@font-face { src: url('fonts/plex-sans-var.woff2') format('woff2'); }\n"
+    + "@font-face { src: url('fonts/plex-mono-400.woff2') format('woff2'); }";
+  const fontReject = (name, payload, fragment) => {
+    const { problems } = inspectFonts(payload);
+    if (!problems.length) return bad(name, 'guard accepted a bundle it must refuse');
+    if (fragment && !problems.join('; ').includes(fragment))
+      return bad(name, `rejected, but for the wrong reason: ${problems.join('; ')}`);
+    ok(name, problems[0]);
+  };
+  const fontAccept = (name, payload) => {
+    const { problems } = inspectFonts(payload);
+    if (problems.length) return bad(name, `false positive: ${problems.join('; ')}`);
+    ok(name);
+  };
+
+  fontAccept('declared and shipped agree', { css: FONT_CSS, bundled: ['plex-sans-var.woff2', 'plex-mono-400.woff2', 'OFL-IBMPlex.txt'] });
+  fontReject('a retired face left in the bundle',
+    { css: FONT_CSS, bundled: ['plex-sans-var.woff2', 'plex-mono-400.woff2', 'zilla-slab-700.woff2'] },
+    'zilla-slab-700.woff2 is in the bundle but no @font-face names it');
+  fontReject('a declared face missing from the bundle',
+    { css: FONT_CSS, bundled: ['plex-sans-var.woff2'] },
+    '@font-face names plex-mono-400.woff2 but it is not in the bundle');
+  fontAccept('licence files are not faces', { css: FONT_CSS, bundled: ['plex-sans-var.woff2', 'plex-mono-400.woff2', 'OFL-IBMPlex.txt', 'readme.md'] });
+
+  const fontDir = join(siteRoot, 'assets', 'fonts');
+  if (existsSync(shippedCss) && existsSync(fontDir)) {
+    const r = inspectFonts({ css: readFileSync(shippedCss, 'utf8'), bundled: readdirSync(fontDir) });
+    if (r.problems.length) bad('the shipped bundle carries only declared faces', r.problems.join('; '));
+    else ok('the shipped bundle carries only declared faces', `${r.present.length}: ${r.present.join(', ')}`);
+  }
 }
 
 console.log('\nACCESSIBILITY — the built pages must pass exactly as they are');

@@ -52,17 +52,20 @@ const FONT = "'IBM Plex Sans',-apple-system,'Segoe UI',Arial,sans-serif";
 const DISPLAY = FONT;
 const MONO = "'IBM Plex Mono',ui-monospace,Consolas,monospace";
 
-// The proofstone mark (chiseled P), identical to favicon.svg and the header
-// lockup. It is the same on every card — the series identity is the mark, and
+// The proofstone mark (chiseled P), the same object as favicon.svg and the header
+// lockup. It is identical on every card — the series identity is the mark, and
 // there is one accent behind every direction rather than one hue each.
-// The badge takes the LIGHT accent even though the card is dark: the mark is an
-// object with its own paint, and #005ab8 with a white P is what ships in the
-// favicon and the org avatar. On this background it measures 1.42:1, which is
-// why the wordmark next to it carries the readable dark-theme accent instead.
+// Painted from the two constants above rather than from its own literals. This
+// card IS the dark theme, so the mark takes the dark theme's paint, exactly as it
+// does in the site header: a light-blue badge with a dark glyph. The first draft
+// used the favicon's light-accent badge and measured 1.42:1 against this
+// background — a mark you have to look for. Going through ACCENT/BG also means
+// there is no colour here for a future repaint to miss, because the palette guard
+// already asserts those two against the stylesheet.
 const MARK =
   '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">' +
-  '<rect width="32" height="32" rx="7" fill="#005ab8"/>' +
-  '<path fill="#ffffff" fill-rule="evenodd" d="M8.5 9.3L10.3 7.5L21.7 7.5L23.5 9.3L23.5 15.7L21.7 17.5L13.5 17.5L13.5 22.8L11.7 24.5L10.3 24.5L8.5 22.8Z M13.5 10.6L20 10.6L21.3 11.9L21.3 13.1L20 14.4L13.5 14.4Z"/></svg>';
+  `<rect width="32" height="32" rx="7" fill="${ACCENT}"/>` +
+  `<path fill="${BG}" fill-rule="evenodd" d="M8.5 9.3L10.3 7.5L21.7 7.5L23.5 9.3L23.5 15.7L21.7 17.5L13.5 17.5L13.5 22.8L11.7 24.5L10.3 24.5L8.5 22.8Z M13.5 10.6L20 10.6L21.3 11.9L21.3 13.1L20 14.4L13.5 14.4Z"/></svg>`;
 
 function card({ title, meta }) {
   return `<!doctype html><html><head><meta charset="utf-8"><style>
