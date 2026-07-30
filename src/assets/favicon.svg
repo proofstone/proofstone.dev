@@ -1,14 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
   <!-- proofstone mark: a chiseled "P" hewn from stone. The 45° cuts read as a
        cut-stone edge at large sizes and resolve to a clean, legible P at 16px.
-       A sealing-wax badge with a paper-coloured P: the mark IS the impression
-       the site is named after. Fixed literals, not tokens — a logo that
-       repaints with the theme stops being a logo. 6.16:1 between glyph and
-       badge; the badge itself reads on both papers (6.16:1 light, 2.57:1 dark),
-       and the mark is decorative anyway, named by its link.
+       The shape is unchanged; only the paint is. Fixed literals, not tokens — a
+       favicon is rendered by the browser chrome, outside any page that could
+       supply a variable, and a logo that repaints with the theme stops being a
+       logo. (The mark IN the header is the opposite case and does go through the
+       tokens: it sits on the page and has to stay legible in both themes.)
+       Measured: 6.66:1 between glyph and badge, and the badge itself reads on
+       both papers — 6.54:1 on white, 9.26:1 on graphite. That second number was
+       2.57:1 under the old sealing-wax paint, so the dark-theme tab icon stops
+       being a dark square on a dark bar.
        Same mark in the header, OG cards and the org avatar. -->
-  <rect width="32" height="32" rx="7" fill="#9d3b1f"/>
-  <path fill="#f7f3ea" fill-rule="evenodd"
+  <rect width="32" height="32" rx="7" fill="#005ab8"/>
+  <path fill="#ffffff" fill-rule="evenodd"
         d="M8.5 9.3L10.3 7.5L21.7 7.5L23.5 9.3L23.5 15.7L21.7 17.5L13.5 17.5L13.5 22.8L11.7 24.5L10.3 24.5L8.5 22.8Z
            M13.5 10.6L20 10.6L21.3 11.9L21.3 13.1L20 14.4L13.5 14.4Z"/>
 </svg>

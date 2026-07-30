@@ -4,109 +4,57 @@ pageType: home
 title: proofstone — engineering roadmaps where every milestone is a proof
 description: Engineering roadmaps where every milestone is a proof — a verifiable artifact, not a keyword. Built for working engineers.
 ---
-{#- Left-aligned, no pill. A centred clamp() headline over a rounded badge is
-    the skeleton of every generated landing page; a document starts at the left
-    margin and states what it is on the line above. The counts stay computed —
-    they are the one number on this page and hardcoding them is how this project
-    burned twice. #}
+{#- Static and short. The three scroll-driven scenes that used to open this page
+    are gone — with them the road, the stones, the keyword cloud, the typing
+    artifact strip and the "Skip visuals" escape hatch that only existed because
+    there was something to escape. What is left is the shape of the argument:
+    thesis, the maps themselves, then how a milestone works.
+    The counts stay computed — they are the one number on this page and
+    hardcoding them is how this project burned twice. #}
 <section class="hero">
   <p class="hero__kicker">Engineering roadmaps &#183; {{ liveRoadmaps.length }} live &#183; {{ reviewRoadmaps.length }} in review</p>
   <h1 class="hero__title">{{ site.tagline }}</h1>
   <p class="hero__sub">{{ site.thesisSub }}</p>
   <p class="hero__series">{{ site.seriesLine }}</p>
-  {#- Inline, not pinned to the viewport. The reference this borrows its bar
-      from floats it, but a floating control has to be dismissed, hidden after
-      the scenes, and kept out of the tab order's way. Here it sits where the
-      sceptic already is — the line after the thesis — reaches the cards in one
-      key, and needs neither script nor a scroll timeline to know when to go. #}
-  <a class="skip-visuals" href="#roadmaps">Skip visuals
-    <svg class="arrow arrow--down" viewBox="0 0 10 20" aria-hidden="true" focusable="false"><path d="M5 0v17M1 13l4 4 4-4"/></svg>
-  </a>
 </section>
 
-{#- The road. Scenes hang off it and each lays a stone as it is read: the same
-    masonry the roadmap pages use for milestones, doing the same job here for
-    the argument. Decorative, so it is hidden from assistive tech — the scenes
-    themselves carry the meaning in text. #}
-<div class="road">
-
-<section class="scene scene--keywords" aria-labelledby="scene-keywords">
-  <span class="road__stone" aria-hidden="true"></span>
-  <div class="scene__text">
-    <p class="scene__label">The keyword way</p>
-    <h2 class="scene__title" id="scene-keywords">A list you can nod at.</h2>
-    <p class="scene__body">
-      This is the AI Safety map with its milestones taken out — just the section
-      names. Every one is real, every one is something you can say you know, and
-      not one of them can be finished.
-    </p>
-  </div>
-  <div class="scene__stage">
-    {#- The chips are the roadmap's own §-section titles, read from the rendered
-        README. Inventing a plausible-looking skills list would have been the
-        exact thing this scene argues against. #}
-    <ul class="keywords">
-      {%- for r in liveRoadmaps %}{% if r.sampleMilestone %}{% for s in r | roadmapToc %}
-      <li class="keyword">{{ s.title }}</li>
-      {%- endfor %}{% endif %}{% endfor %}
-    </ul>
-    <p class="keywords__verdict">Not one of them says when you are done.</p>
-  </div>
-</section>
-
-<section class="scene scene--proof" aria-labelledby="scene-proof">
-  <span class="road__stone" aria-hidden="true"></span>
-  <div class="scene__text">
-    <p class="scene__label">The proof way</p>
-    <h2 class="scene__title" id="scene-proof">The same field, one milestone at a time.</h2>
-    <p class="scene__body">
-      Same map, one section deep. A milestone states its finishing condition in
-      advance, and meeting it leaves something outside your head.
-    </p>
-  </div>
-  <div class="scene__stage">
-    <div class="prose sample__block">
-      {%- for r in liveRoadmaps %}{% if r.sampleMilestone %}{{ r | milestoneSample(r.sampleMilestone) | safe }}{% endif %}{% endfor %}
-    </div>
-    {#- The artifact strip uses the criterion's own nouns — dataset, solver,
-        scorer, log — rather than a mocked-up terminal. A fabricated log line
-        would be a fake artifact in a scene about not faking artifacts. #}
-    <p class="artifact" aria-hidden="true">
-      <span class="artifact__line">dataset &#8594; solver &#8594; scorer &#8594; log</span>
-      <span class="artifact__line artifact__line--done">read the log, say why each sample scored</span>
-    </p>
-    <p class="scene__verdict"><span class="stamp stamp--ok">Proven</span> That is the whole format.</p>
-  </div>
-</section>
-
-<section class="roadmaps scene--series" id="roadmaps" aria-label="Roadmaps">
-  <span class="road__stone" aria-hidden="true"></span>
-  {#- The showcase used to state its two categories only through a 9.6px stamp
-      and a border-style, which is why it read as one undifferentiated ribbon.
-      The category is now said once, in words, above the group it applies to —
-      and the count is computed here like every other number on this page. #}
+{#- "Saw it → clicked it → reading it": nothing stands between the visitor and a
+    roadmap. The showcase is the second thing on the page, and the explanation of
+    the format comes after it rather than before. #}
+<section class="roadmaps" id="roadmaps" aria-label="Roadmaps">
+  {#- The category is said once, in words, above the group it applies to — and
+      the count is computed here like every other number on this page. #}
   {%- if liveRoadmaps.length %}
   <p class="shelf-cap"><span class="shelf-cap__text">Live maps</span><span class="shelf-cap__n">{{ liveRoadmaps.length }}</span></p>
   {%- endif %}
   {%- for r in liveRoadmaps %}
   <article class="card">
     <a class="card__main" href="/{{ r.slug }}/">
-      {#- The archive number and the status stamp are what tell one direction
-          from another now. `order` is the registry's own field, printed with a
-          leading zero — it is a shelf mark, not a ranking. Split in two: "No."
-          is the word, the figure is the mark, and only the figure is worth
-          2.1rem in the record's own margin. #}
-      <p class="card__head">
-        <span class="card__num"><span class="card__num-pre">No.</span><span class="card__num-fig">{% if r.order < 10 %}0{% endif %}{{ r.order }}</span></span>
-        <span class="stamp stamp--live">Live</span>
-      </p>
-      <h2 class="card__title">{{ r.title }}</h2>
-      <p class="card__tagline">{{ r.tagline }}</p>
-      <p class="card__meta">
-        <span class="badge badge--count">{{ r.milestones }} milestones</span>
-        <span class="badge badge--flagship">{{ r | roadmapStars }} flagship</span>
-        <span class="card__go"><svg class="arrow" viewBox="0 0 20 10" aria-hidden="true" focusable="false"><path d="M0 5h17M13 1l4 4-4 4"/></svg></span>
-      </p>
+      {#- The face of the card is the roadmap's own shape — spine, fork, column
+          with branches — derived from the SAME assets/roadmap.svg that the
+          roadmap page inlines. One source of geometry, so a card can never show
+          a shape the map does not have. The filter strips the labels, the status
+          plates, the legend and the <defs> marker (id="arw" exists in all three
+          maps, and three copies on one page is a triple duplicate id).
+          aria-hidden lives inside the derived SVG: this is a preview standing in
+          for a link, not a figure, and the link is already named by the title. #}
+      <div class="card__map">{{ r | roadmapSilhouette | safe }}</div>
+      <div class="card__body">
+        {#- `order` is the registry's own field, printed with a leading zero — it
+            is a shelf mark, not a ranking. In a grid it is a mark again: the eye
+            scans the silhouettes, so the number does not need to be a monument. #}
+        <p class="card__head">
+          <span class="card__num"><span class="card__num-pre">No.</span><span class="card__num-fig">{% if r.order < 10 %}0{% endif %}{{ r.order }}</span></span>
+          <span class="stamp">Live</span>
+        </p>
+        <h2 class="card__title">{{ r.title }}</h2>
+        <p class="card__tagline">{{ r.cardLine }}</p>
+        <p class="card__meta">
+          <span class="badge badge--count">{{ r.milestones }} milestones</span>
+          <span class="badge badge--flagship">{{ r | roadmapStars }} flagship</span>
+          <span class="card__go"><svg class="arrow" viewBox="0 0 20 10" aria-hidden="true" focusable="false"><path d="M0 5h17M13 1l4 4-4 4"/></svg></span>
+        </p>
+      </div>
     </a>
     {%- if r.lab %}
     <p class="card__lab">
@@ -120,27 +68,30 @@ description: Engineering roadmaps where every milestone is a proof — a verifia
   {%- if reviewRoadmaps.length %}
   <p class="shelf-cap"><span class="shelf-cap__text">In practitioner review</span><span class="shelf-cap__n">{{ reviewRoadmaps.length }}</span></p>
   {%- endif %}
+  {#- No silhouette on a review card, and no placeholder either: these maps are
+      not published yet, and a framed box saying "map coming later" is a
+      placeholder occupying space for its own sake. The card is text. #}
   {%- for r in reviewRoadmaps %}
   <article class="card card--review">
-    <p class="card__head">
-      <span class="card__num"><span class="card__num-pre">No.</span><span class="card__num-fig">{% if r.order < 10 %}0{% endif %}{{ r.order }}</span></span>
-      <span class="stamp stamp--open">In review</span>
-    </p>
-    <h2 class="card__title">{{ r.title }}</h2>
-    <p class="card__tagline">{{ r.tagline }}</p>
-    <p class="card__meta">
-      <span class="badge badge--count">{{ r.milestones }} milestones</span>
-      <span class="badge badge--flagship">{{ r | roadmapStars }} flagship</span>
-      <span class="badge badge--review">private until published</span>
-    </p>
+    <div class="card__body">
+      <p class="card__head">
+        <span class="card__num"><span class="card__num-pre">No.</span><span class="card__num-fig">{% if r.order < 10 %}0{% endif %}{{ r.order }}</span></span>
+        <span class="stamp stamp--open">In review</span>
+      </p>
+      <h2 class="card__title">{{ r.title }}</h2>
+      <p class="card__tagline">{{ r.cardLine }}</p>
+      <p class="card__meta">
+        <span class="badge badge--count">{{ r.milestones }} milestones</span>
+        <span class="badge badge--flagship">{{ r | roadmapStars }} flagship</span>
+        <span class="badge badge--review">private until published</span>
+      </p>
+    </div>
     {%- if r.labNote %}
     <p class="card__lab"><span class="card__lab-tag">lab</span> {{ r.labNote }}.</p>
     {%- endif %}
   </article>
   {%- endfor %}
 </section>
-
-</div>
 
 <section class="how">
   <h2>How it works</h2>
@@ -149,6 +100,21 @@ description: Engineering roadmaps where every milestone is a proof — a verifia
     <li><span class="how__num">2</span><span class="how__body"><strong>An artifact.</strong> Meeting it leaves something outside your head — a merged eval, a green test suite, a fabricated board.</span></li>
     <li><span class="how__num">3</span><span class="how__body"><strong>Proof.</strong> The artifact is the evidence. Nothing here is finished by reading about it.</span></li>
   </ol>
+</section>
+
+{#- One real milestone, rendered from a real README. This is the only place on the
+    home page where a visitor sees an actual PROOF stamp and an actual "You're
+    done when …" rather than a sentence describing one — which is why it survived
+    the scenes it used to live inside. Static: no timeline, no script, no reveal.
+    The milestone is named in the registry (sampleMilestone), so which one is
+    shown is a registry decision and the build fails if it stops resolving. #}
+<section class="sample" aria-labelledby="sample-heading">
+  <h2 class="sample__title" id="sample-heading">What one milestone looks like</h2>
+  <p class="sample__lead">Taken from a live map, as it is rendered there.</p>
+  <div class="prose sample__block">
+    {%- for r in liveRoadmaps %}{% if r.sampleMilestone %}{{ r | milestoneSample(r.sampleMilestone) | safe }}{% endif %}{% endfor %}
+  </div>
+  <p class="sample__verdict"><span class="stamp stamp--ok">Proven</span> That is the whole format.</p>
 </section>
 
 {#- Related work sits here for the same reason it sits near the end of every

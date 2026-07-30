@@ -1,25 +1,25 @@
 /* ============================================================================
-   proofstone — "an engineering archive that came alive"
-   Paper, ink, impressions, drafting lines. The series props are the stone and
-   the stamp: a touchstone, a milestone by the road, a seal pressed into wax.
+   proofstone — white paper, one blue, stone grey.
+   A quiet document: the character is carried by two things only — the roadmap
+   maps and the status stamps — and everything else is silent chrome.
    Light + dark. Self-hosted fonts, zero external requests.
    ============================================================================ */
 
 /* ── Fonts: self-hosted, no CDN (ARCHITECTURE §7) ─────────────────────────── */
 /* latin-subset woff2, OFL licences alongside them in assets/fonts/. Weights are
-   carried because something uses them, not in case: display lives on 600/700,
-   body text is one variable file covering 400-600, mono is 400/600.
-   128,612 bytes total — measured, and inside the deploy budget. */
+   carried because something uses them, not in case: one variable sans covers
+   400-700 for both display and body, mono is 400/600.
+   76,040 bytes total — measured, and inside the deploy budget.
+   The display serif is gone. It was a second family paid for twice — 51.3 KiB of
+   woff2 plus a metric-matched Georgia stand-in — and the range below is why that
+   was avoidable: the variable sans carries a REAL 700. Measured, not assumed —
+   a 40px line of site copy renders 846.3px at 600 and 858.0px at 700, and 900
+   also renders 858.0px, i.e. the axis ends exactly at 700.
+   The old declaration stopped at 600, so `font-weight: 700` was being clamped:
+   every `.prose strong` on the shipped site was rendering at 600 while the rule
+   asked for 700. Widening the range costs zero bytes and fixes that too. */
 @font-face {
-  font-family: 'Zilla Slab'; font-style: normal; font-weight: 600;
-  font-display: swap; src: url('fonts/zilla-slab-600.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'Zilla Slab'; font-style: normal; font-weight: 700;
-  font-display: swap; src: url('fonts/zilla-slab-700.woff2') format('woff2');
-}
-@font-face {
-  font-family: 'IBM Plex Sans'; font-style: normal; font-weight: 400 600;
+  font-family: 'IBM Plex Sans'; font-style: normal; font-weight: 400 700;
   font-display: swap; src: url('fonts/plex-sans-var.woff2') format('woff2');
 }
 @font-face {
@@ -46,24 +46,12 @@
    the line height instead.
    Vertical metrics were read straight out of the woff2 (head + hhea) and then
    checked against what the engine actually uses for the line box: hhea matched
-   in all 8 cases, so hhea is the source here, not OS/2. That mattered — Zilla
-   Slab's OS/2 typo metrics say 78.70/21.30 while hhea says 94.40/25.60, and
-   picking the wrong table is a ~16% error in line height.
-   Weight-splitting is not decoration either: Georgia bold relates to Zilla 600
-   and 700 differently (84.63% vs 85.24%), and one averaged value would leave
-   the error on the largest text on the page. */
-@font-face {
-  font-family: 'Display Fallback';
-  font-style: normal; font-weight: 600;
-  src: local('Georgia Bold'), local('Georgia'), local('Liberation Serif');
-  size-adjust: 84.63%; ascent-override: 111.55%; descent-override: 30.25%; line-gap-override: 0%;
-}
-@font-face {
-  font-family: 'Display Fallback';
-  font-style: normal; font-weight: 700;
-  src: local('Georgia Bold'), local('Georgia'), local('Liberation Serif');
-  size-adjust: 85.24%; ascent-override: 110.74%; descent-override: 30.03%; line-gap-override: 0%;
-}
+   in every case, so hhea is the source here, not OS/2.
+   Weight-splitting is not decoration either, and the 700 row is the proof of it:
+   Segoe UI Bold is WIDER than Plex Sans 700 (size-adjust 99.80%) while Segoe UI
+   Semibold is NARROWER than Plex Sans 600 (102.67%). Reusing the 600 numbers for
+   700 would have put a 2.9% width error on the largest text on the page — the
+   headings — which is exactly where a swap is most visible. */
 @font-face {
   font-family: 'Text Fallback';
   font-style: normal; font-weight: 400;
@@ -75,6 +63,12 @@
   font-style: normal; font-weight: 600;
   src: local('Segoe UI Semibold'), local('Segoe UI'), local('Arial'), local('Liberation Sans');
   size-adjust: 102.67%; ascent-override: 99.84%; descent-override: 26.79%; line-gap-override: 0%;
+}
+@font-face {
+  font-family: 'Text Fallback';
+  font-style: normal; font-weight: 700;
+  src: local('Segoe UI Bold'), local('Segoe UI Semibold'), local('Arial'), local('Liberation Sans');
+  size-adjust: 99.80%; ascent-override: 102.71%; descent-override: 27.56%; line-gap-override: 0%;
 }
 /* Mono carries milestone ids, stamps, counters and badges — a lot of small
    inline boxes, any of which can rewrap a line when the face changes. Consolas
@@ -92,55 +86,73 @@
   size-adjust: 109.13%; ascent-override: 93.92%; descent-override: 25.20%; line-gap-override: 0%;
 }
 
+/* ── Palette ────────────────────────────────────────────────────────────────
+   White, one blue, stone grey. Every number in the comments below is measured
+   (Redisgn/tools/palette-s.mjs), and the thresholds it is measured against are
+   fixed: text 4.5:1, large text and control boundaries 3:1, focus indicators
+   3:1. 66 pairs across both themes, no failures.
+   The colours are AUTHORED IN OKLCH and the hex is the derived value — what a
+   palette argument is actually about is lightness and chroma, not six digits.
+   The grey ramp raises chroma as it darkens (0.0015 at L 99.4% up to 0.0170 at
+   L 48%): at paper lightness any chroma is a tinted sheet, at ink lightness it
+   is granite. One hue (250°) throughout, so white, blue and grey read as one
+   family instead of a blue accent dropped onto neutral grey.
+   ────────────────────────────────────────────────────────────────────────── */
 :root {
-  /* Warm paper and ink. The old palette was cool (#fdfdfc light, #0e1116 dark)
-     and any warm accent on it read as a printing error. Every ratio in the
-     comments below is measured, not intended. */
-  --bg: #f7f3ea;
-  --surface: #f1eadb;          /* a sheet on top of a sheet */
-  --surface-2: #e9e0cd;        /* a pressed-in area: progress track, code */
-  --text: #1c1914;             /* 15.82:1 on --bg */
-  --muted: #6b6152;            /*  5.49:1 on --bg, 5.07:1 on --surface */
+  --bg: #fcfdfe;
+  --surface: #f4f7fb;          /* a sheet on top of a sheet */
+  --surface-2: #eaeef3;        /* a pressed-in area: progress track, code */
+  --text: #181e23;             /* 16.51:1 on --bg */
+  --muted: #575f67;            /*  6.37:1 on --bg, 6.04:1 on --surface */
   /* Hairline dividers (--border) may be quiet; the visual boundary of a CONTROL
      may not — WCAG 1.4.11 wants 3:1 for it. Separate token so making the
      checkbox perceivable does not repaint every card edge. */
-  --border: #ddd4c1;
-  --control-border: #8a7f6c;   /*  3.56:1 on --bg, 3.29:1 on --surface */
+  --border: #dadfe6;
+  --control-border: #7d848c;   /*  3.71:1 on --bg, 3.52:1 on --surface */
 
-  /* One accent for the whole site: sealing wax. The five equal per-direction
-     card accents are gone — directions are told apart by number and stamp,
-     not by hue. */
-  --accent: #9d3b1f;           /*  6.16:1 on --bg */
-  --on-accent: #f7f3ea;        /*  6.16:1 on --accent */
-  /* The QUIET REGISTER of the same wax — not a second accent. Same hue (OKLCH
-     H 36.2 against the accent's 36.4), chroma down 31% (0.137 → 0.0946), and
-     the contrast is BETTER for it: 6.29:1 against 6.16:1 on paper.
+  /* One accent for the whole site. Chosen at the sketch gate out of three blues
+     that differed by a factor of 1.9 in chroma — this is the loudest of them.
+     For the record of what this palette is NOT: the site's pre-2026-07 blue was
+     #2457d6 (L 50.5, C 0.2028, H 263.9), and this sits 0.051 away in OKLab —
+     the same neighbourhood, deliberately, but 18% less chroma and darker. */
+  --accent: #005ab8;           /*  6.54:1 on --bg — L 48.0, C 0.1656, H 256.3 */
+  --on-accent: #ffffff;        /*  6.66:1 on --accent */
+  /* The QUIET REGISTER of the same blue — not a second accent. Same hue, chroma
+     down 27% (0.1656 → 0.1206).
      It exists because the complaint was never about how many colours compete —
      measured, a roadmap's first screen carries exactly one family. It was about
      how much of that one there is further down: 97 accent-coloured text nodes
      per roadmap page, 4.1% of the area of every line in the reading column.
-     Loud stays where the wax is small and rare: stamps, the mark, the one CTA,
-     the criterion's left edge. Quiet takes the rest. */
-  --accent-quiet: #894735;     /*  6.29:1 on --bg, 5.77:1 on --accent-weak */
+     Loud stays where the accent is small and rare: stamps, the mark, the one
+     CTA, the criterion's left edge. Quiet takes the rest. */
+  --accent-quiet: #2462a2;     /*  6.17:1 on --bg, 5.84:1 on --surface */
   /* The criterion's fill. The measure that matters for a large area is not
-     contrast (it stays 14.53:1) but ΔOKLab from the paper — how much of a STAIN
-     it is. 0.0429 → 0.0286, a third quieter, hue kept.
-     The floor is not arbitrary: an ordinary callout (--surface) sits 0.0277 from
+     contrast (it stays 15.52:1) but ΔOKLab from the paper — how much of a STAIN
+     it is: 0.0253 here.
+     The floor is not arbitrary: an ordinary callout (--surface) sits 0.0191 from
      the paper, and the one element the whole format turns on may not read
-     quieter than a run-of-the-mill quote. A first attempt at #f5ece4 (0.0177)
-     did exactly that and was thrown out by the measurement, not by taste. */
-  --accent-weak: #f3e8df;
-  /* Measured against BOTH surfaces it appears on, not just the page: the
-     flagship badge and the FLAGSHIP PROOF stamp sit on --gold-weak, where
-     the previous #8a6410 was 4.44:1 — under the bar, and invisible to a
-     check that only looked at --bg. */
-  --gold: #7a5809;             /*  5.88:1 on --bg, 5.43:1 on --gold-weak */
-  --on-gold: #f7f3ea;          /*  5.88:1 on --gold */
-  --gold-weak: #f1ead9;        /*  ΔOKLab from paper 0.0346 → 0.0290 */
-  --ok: #1f6b45;               /*  5.84:1 on --bg — PROVEN */
-  --on-ok: #f7f3ea;            /*  5.84:1 on --ok */
-  --ok-weak: #e2ebdf;
-  --code-bg: #ece4d3;
+     quieter than a run-of-the-mill quote.
+     Nor is the fill hand-picked. Its chroma is SOLVED for a target distance at a
+     fixed lightness step, because tuning the total distance alone degenerates:
+     in dark theme one lightness step already exceeds the target, the solver
+     returns zero chroma, and three different accents produce the same grey. */
+  --accent-weak: #eef7ff;
+  /* FLAGSHIP is ink, not gold. Gold was never chosen on its own merits — it was
+     chosen because it RHYMED with the sealing-wax accent that used to be here.
+     That accent is gone, and on white with cool stone an ochre was the only warm
+     thing left on the page: it read as a leftover from another palette rather
+     than as the highest award. So the stamp hierarchy stops being three hues and
+     becomes three registers of one scale — accent, ink, muted outline — and the
+     site is down to two colours plus what the reader EARNS (--ok).
+     The tokens stay: gold is a mechanism (stamp, badge, legend, and the plate
+     inside the map SVG), so there has to be exactly one place to repaint it. */
+  --gold: #181e23;             /* 16.51:1 on --bg */
+  --on-gold: #ffffff;          /* 16.82:1 on --gold */
+  --gold-weak: #f1f6fb;        /* ΔOKLab from paper 0.0238 */
+  --ok: #216e3e;               /*  6.13:1 on --bg — PROVEN */
+  --on-ok: #ffffff;            /*  6.24:1 on --ok */
+  --ok-weak: #eff8f2;          /* ΔOKLab from paper 0.0260 */
+  --code-bg: #eff3f7;
   /* No elevation in this language: a document lies on the desk, it does not
      float above it. Kept as a token because the print block and the card rules
      still reference it. */
@@ -150,19 +162,23 @@
      and standalone on GitHub (where var() does not resolve and the literal
      baked into the attribute wins), so one file serves both themes and both
      places. Only the second-generation maps use them. */
-  --map-paper: #f7f3ea;
-  --map-node: #efe8d9;
-  --map-node-spine: #e7ded0;
-  --map-ink: #3a3128;          /* 10.43:1 on --map-node */
-  --map-line: #6b6152;         /*  5.49:1 on --map-paper */
-  --map-ring: #1c1914;         /* focus ring: >=13:1 on every node fill */
+  --map-paper: #fcfdfe;
+  --map-node: #f2f5f9;
+  --map-node-spine: #e8ecf1;
+  --map-ink: #292e35;          /* 12.50:1 on --map-node */
+  --map-line: #575f67;         /*  6.37:1 on --map-paper */
+  --map-ring: #181e23;         /* focus ring: >=15:1 on every node fill */
 
   /* Two radii for the whole system. Four-to-twelve-pixels-everywhere is what
      made the old components read as a UI kit. */
   --r-sm: 2px;
   --r-md: 6px;
 
-  --font-display: 'Zilla Slab', 'Display Fallback', Georgia, "Times New Roman", serif;
+  /* One grotesque everywhere. The token survives as a mechanism — .prose h*, the
+     cards and the hero all go through it — but it now points at the same stack
+     as body text. A display face was the wrong place to spend 51 KiB on a site
+     whose character is carried by the maps and the stamps. */
+  --font-display: 'IBM Plex Sans', 'Text Fallback', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font: 'IBM Plex Sans', 'Text Fallback', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --mono: 'IBM Plex Mono', 'Mono Fallback', ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 
@@ -186,48 +202,51 @@
   --spread: 58rem;
 }
 
+/* Cool graphite, the same 250° hue as the light ramp — a dark theme whose greys
+   pull the other way from its accent is two palettes in one file. The accent is
+   the brightest of the three candidate blues, so its dark counterpart was the
+   one worth measuring hardest: 9.26:1 on the page and 8.42:1 on a surface. */
 [data-theme="dark"] {
-  /* Warm graphite, not blue graphite. */
-  --bg: #14110d;
-  --surface: #1e1a14;
-  --surface-2: #2a251d;
-  --text: #ece5d6;             /* 15.01:1 on --bg */
-  --muted: #a89d8a;            /*  7.04:1 on --bg, 6.48:1 on --surface */
-  --border: #322b22;
-  --control-border: #7b7061;   /*  3.88:1 on --bg, 3.57:1 on --surface */
-  --accent: #e08b62;           /*  7.20:1 — sealing wax thinned out for dark */
+  --bg: #101317;
+  --surface: #191d22;
+  --surface-2: #252b31;
+  --text: #e3e8ee;             /* 15.12:1 on --bg */
+  --muted: #a0a9b2;            /*  7.82:1 on --bg, 7.11:1 on --surface */
+  --border: #2c323a;
+  --control-border: #677079;   /*  3.70:1 on --bg, 3.36:1 on --surface */
+  --accent: #72bdff;           /*  9.26:1 on --bg — cobalt opened up for dark */
   /* The accent is light in dark theme, so the label on it goes dark instead. */
-  --on-accent: #14110d;        /*  7.20:1 on --accent */
-  --accent-quiet: #d5997d;     /*  7.78:1 on --bg; chroma 0.118 → 0.0824 */
-  --accent-weak: #251b15;      /*  ΔOKLab from paper 0.0685 → 0.0538; text 13.44:1 */
-  --gold: #e0b64d;             /*  9.83:1 */
-  --on-gold: #14110d;
-  --gold-weak: #231d0f;        /*  --gold on it: 8.75:1 */
-  --ok: #63b98a;               /*  7.92:1 */
-  --on-ok: #14110d;
-  --ok-weak: #16251d;
-  --code-bg: #241f18;
+  --on-accent: #101317;        /*  9.26:1 on --accent */
+  --accent-quiet: #8ec0fa;     /*  9.82:1 on --bg; chroma 0.121 → 0.0855 */
+  --accent-weak: #17202b;      /*  ΔOKLab from page 0.0569; text on it 13.34:1 */
+  --gold: #e3e8ee;             /* 15.12:1 — FLAGSHIP is ink here too */
+  --on-gold: #101317;
+  --gold-weak: #1a2128;        /*  --gold on it: 13.19:1 */
+  --ok: #75ce96;               /*  9.78:1 */
+  --on-ok: #101317;
+  --ok-weak: #1c221e;
+  --code-bg: #1d2228;
   --shadow: none;
 
-  --map-paper: #14110d;
-  --map-node: #241f18;
-  --map-node-spine: #2c261e;
-  --map-ink: #ded5c3;          /* 11.22:1 on --map-node */
-  --map-line: #a89d8a;         /*  7.04:1 on --map-paper */
-  --map-ring: #ece5d6;
+  --map-paper: #101317;
+  --map-node: #1d2228;
+  --map-node-spine: #272d34;
+  --map-ink: #d4dae0;          /* 11.36:1 on --map-node */
+  --map-line: #a0a9b2;         /*  7.82:1 on --map-paper */
+  --map-ring: #e3e8ee;
 }
 
 /* No-JS fallback: honor OS dark unless the user explicitly picked light. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #14110d; --surface: #1e1a14; --surface-2: #2a251d; --text: #ece5d6;
-    --muted: #a89d8a; --border: #322b22; --accent: #e08b62; --accent-weak: #251b15;
-    --control-border: #7b7061; --on-accent: #14110d; --accent-quiet: #d5997d;
-    --gold: #e0b64d; --on-gold: #14110d; --gold-weak: #231d0f;
-    --ok: #63b98a; --on-ok: #14110d; --ok-weak: #16251d;
-    --code-bg: #241f18; --shadow: none;
-    --map-paper: #14110d; --map-node: #241f18; --map-node-spine: #2c261e;
-    --map-ink: #ded5c3; --map-line: #a89d8a; --map-ring: #ece5d6;
+    --bg: #101317; --surface: #191d22; --surface-2: #252b31; --text: #e3e8ee;
+    --muted: #a0a9b2; --border: #2c323a; --accent: #72bdff; --accent-weak: #17202b;
+    --control-border: #677079; --on-accent: #101317; --accent-quiet: #8ec0fa;
+    --gold: #e3e8ee; --on-gold: #101317; --gold-weak: #1a2128;
+    --ok: #75ce96; --on-ok: #101317; --ok-weak: #1c221e;
+    --code-bg: #1d2228; --shadow: none;
+    --map-paper: #101317; --map-node: #1d2228; --map-node-spine: #272d34;
+    --map-ink: #d4dae0; --map-line: #a0a9b2; --map-ring: #e3e8ee;
   }
 }
 
@@ -246,14 +265,18 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Display face on every heading, including the ones markdown-it renders inside
-   .prose. The metric-matched 'Display Fallback' sits behind it, so the swap
-   when zilla-slab-*.woff2 lands does not move the document. */
+/* One grotesque on every heading, including the ones markdown-it renders inside
+   .prose. The metric-matched 'Text Fallback' sits behind it at all three
+   weights, so the swap when plex-sans-var.woff2 lands does not move the page.
+   Tighter tracking than the serif needed: a slab's own letter widths held a
+   large line together, a grotesque has to be pulled in to do the same. */
 h1, h2, h3, h4, .hero__title, .card__title {
   font-family: var(--font-display);
   font-weight: 600;
 }
-.hero__title, .prose h1 { font-weight: 700; }
+.hero__title { font-weight: 700; letter-spacing: -.032em; }
+.prose h1 { font-weight: 700; letter-spacing: -.028em; }
+.prose h2 { letter-spacing: -.018em; }
 
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
@@ -315,16 +338,22 @@ main:focus { outline: none; }
 .site-footer p { margin: .25rem 0; }
 
 /* ── Home ─────────────────────────────────────────────────────────────────── */
-.hero { max-width: var(--page); margin: 1rem auto 3rem; }
+.hero { max-width: var(--shell); margin: .5rem auto 2.5rem; }
 .hero__kicker {
   font-family: var(--mono); font-size: var(--fs-label); letter-spacing: .16em;
   text-transform: uppercase; color: var(--muted); margin: 0 0 .9rem;
 }
+/* 24ch, not 22ch. The old figure was tuned to a slab, and one grotesque has
+   different letter widths: at 22ch the box came out 718.08px while the first
+   line — "Engineering roadmaps where" — needs 720.0px, so the thesis broke
+   across THREE lines over a two-pixel miss. The usable window is 720…896px
+   (above 896 the greedy break pulls "every" up and reads worse); 24ch is 783px,
+   which leaves room for the metric-matched fallback face to differ. */
 .hero__title {
-  font-size: clamp(2.1rem, 5vw, 3.4rem); line-height: 1.06; letter-spacing: -.02em;
-  margin: 0 0 .7rem; font-weight: 700; max-width: 22ch;
+  font-size: clamp(2.1rem, 5vw, 3.4rem); line-height: 1.06;
+  margin: 0 0 .7rem; max-width: 24ch;
 }
-.hero__sub { font-size: 1.15rem; color: var(--muted); margin: 0 0 1.5rem; max-width: 46ch; }
+.hero__sub { font-size: 1.15rem; color: var(--muted); margin: 0 0 1.5rem; max-width: 44ch; }
 /* Was a dashed pill. Dashed means "not live" on this site, which is the wrong
    thing to say about the series line; a rule under it says the same "this is an
    aside" without borrowing a word that already means something else. */
@@ -334,7 +363,23 @@ main:focus { outline: none; }
   max-width: var(--measure);
 }
 
-.roadmaps { max-width: var(--page); margin: 0 auto; display: grid; gap: 0; }
+/* The showcase, and the one width the whole home page shares.
+   --shell exists because the showcase is wide and the reading blocks under it
+   are a reading measure: if each centres itself, at 1280px their left edges sit
+   240px apart and the page reads as two unrelated documents. The shell fixes the
+   left edge; the measure moves off the block and onto its contents. */
+:root { --shell: var(--page-wide); }
+
+.roadmaps {
+  max-width: var(--shell); margin: 0 auto;
+  display: grid;
+  /* One / two / three columns with no media query for the count. The card wants
+     19rem to hold a silhouette that can still be read, and that number alone
+     decides the breakpoints. */
+  grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+  gap: 1.15rem;
+  align-items: stretch;
+}
 
 /* A shelf caption. The showcase used to state its two categories only through a
    9.6px stamp and a border-style — solid for live, dashed for review — which is
@@ -342,8 +387,9 @@ main:focus { outline: none; }
    is now said once, in words, above the group it applies to. The count comes from
    the registry like every other number on this page. */
 .shelf-cap {
+  grid-column: 1 / -1;
   display: flex; align-items: baseline; gap: .7rem;
-  margin: 2.6rem 0 .2rem; padding: 0 0 .5rem;
+  margin: 1.9rem 0 .1rem; padding: 0 0 .5rem;
   font-family: var(--mono); font-size: var(--fs-label); letter-spacing: .16em;
   text-transform: uppercase; color: var(--muted);
 }
@@ -353,60 +399,80 @@ main:focus { outline: none; }
 .shelf-cap__n::before { content: "\00b7\00a0"; color: var(--muted); }
 /* The rule runs to the edge of the shelf, like a ruled line in a register. */
 .shelf-cap::after { content: ""; order: 2; flex: 1 1 auto; height: 1px; background: var(--border); }
-.shelf-cap + .card { border-top: 1px solid var(--control-border); }
-/* A card is a document in an archive, not a tile: a shelf mark, a status stamp
-   and a rule under it. The coloured left bar is gone with the five accents it
-   used to carry, and so is the -2px hover lift — every card on the internet
-   does that, which is precisely why it read as generated. Hover moves the ink,
-   not the box. */
+
+/* A card is a specimen plate, not a UI tile: no shadow, no hover lift, 2px of
+   radius (a trimmed corner, not a rounded button). The face of it is the map's
+   own silhouette, and that is what the eye scans — which is why the shelf mark
+   went back to being a mark instead of the 2.1rem monument it had to be when a
+   card was a line in a ledger. */
 .card {
-  position: relative;
-  background: transparent; border: 0;
-  border-top: 1px solid var(--border);
-  border-radius: 0; box-shadow: var(--shadow);
-  transition: background-color .12s ease;
+  display: flex; flex-direction: column;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow);
+  transition: background-color .12s ease, border-color .12s ease;
 }
-.card:last-child { border-bottom: 1px solid var(--border); }
-.card:hover { background: var(--surface); }
-/* The record is a two-column entry: a margin holding the shelf mark, and the
-   document itself. The mark used to be a 11.5px muted whisper on the same left
-   edge as everything else — nothing for the eye to run down. At 2.1rem it
-   becomes the anchor of the scan, which is the whole job of a shelf mark. */
+.card:hover { background: var(--surface); border-color: var(--control-border); }
+
 .card__main,
 .card--review {
-  display: grid;
-  grid-template-columns: 5.25rem minmax(0, 1fr);
-  column-gap: 1.75rem;
-  padding: 1.9rem 1.5rem 1.9rem 0;
+  display: flex; flex-direction: column; flex: 1 1 auto;
+  min-width: 0; padding: 0;
 }
-.card__main > *,
-.card--review > * { grid-column: 2; }
 .card__main { color: inherit; }
 .card__main:hover { text-decoration: none; }
+
+/* The silhouette. Height is fixed rather than aspect-driven because the three
+   maps have three different proportions (748x874, 740x942, 830x632) and a row of
+   cards whose faces are different heights is a broken grid. 14.5rem is measured,
+   not picked: at 11.5rem the most vertical of the three fitted by height and came
+   out 108px wide — present, but not legible as a shape; here it gets 189px. */
+.card__map {
+  height: 14.5rem; margin: 0; padding: .8rem .9rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  display: grid; place-items: center; overflow: hidden;
+}
+.card__map svg { width: 100%; height: 100%; display: block; }
+
+.card__body { padding: 1.05rem 1.1rem 1.2rem; display: flex; flex-direction: column; flex: 1 1 auto; }
 .card__head {
-  grid-column: 1; grid-row: 1 / span 4;
-  display: flex; flex-direction: column; align-items: flex-start; gap: .55rem;
-  margin: 0;
+  display: flex; align-items: center; gap: .6rem;
+  margin: 0 0 .55rem;
 }
 .card__num {
-  display: flex; flex-direction: column; align-items: flex-start; line-height: 1;
+  display: flex; align-items: baseline; gap: .3rem; line-height: 1;
   font-family: var(--mono); color: var(--muted);
 }
-.card__num-pre {
-  font-size: var(--fs-stamp); letter-spacing: .14em; text-transform: uppercase;
-  margin-bottom: .25rem;
+.card__num-pre { font-size: var(--fs-stamp); letter-spacing: .14em; text-transform: uppercase; }
+.card__num-fig { font-size: var(--fs-label); font-weight: 600; letter-spacing: .02em; color: var(--text); }
+/* Nothing in the head row may wrap: "In review" broken across two lines reads as
+   a rendering fault, not as a stamp. */
+.card__head .stamp { white-space: nowrap; margin-left: auto; }
+.card__title { margin: 0 0 .35rem; font-size: 1.22rem; letter-spacing: -.015em; color: var(--text); }
+/* The card gets the registry's SHORT line, not the full tagline. The taglines run
+   130–177 characters, which is four to five lines in a 19rem column; the full
+   text still ships in og:description and on the roadmap page. */
+.card__tagline { margin: 0 0 .9rem; font-size: .95rem; line-height: 1.55; color: var(--muted); }
+/* The tally follows its own tagline. It was pinned to the bottom of the card at
+   first — `margin: auto 0 0` — so the tally lines would align across a row, and
+   that turned out to cost a measurable layout shift.
+   The mechanism: pinning makes every card's tally position depend on the height
+   of the TALLEST card in the row. The tallest card is the one with a lab line,
+   and a lab line is 94px of markup that arrives later in the document than the
+   first card's tally. Under CPU x6 the browser painted the row, the lab line
+   then arrived, the row stretched, and the already-painted tally dropped 93.84px
+   — CLS 1.29e-3 on one run in three, from a shift that is nothing to do with
+   fonts (the metric-matched fallbacks were measured and hold exactly).
+   Top-anchored, a card's tally depends only on that card's own content, which
+   arrives contiguously. The slack collects below it instead, which also removes
+   the pool of white space the pinned version left on cards with no lab. What is
+   given up is the horizontal alignment of the tally across a row. */
+.card__meta {
+  margin: 1rem 0 0; padding-top: .8rem; border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: .45rem; flex-wrap: wrap;
 }
-.card__num-fig { font-size: 2.1rem; font-weight: 600; letter-spacing: -.01em; color: var(--text); }
-/* Nothing in a 5.25rem margin may wrap: "In review" broken across two lines
-   reads as a rendering fault, not as a stamp. */
-.card__head .stamp { white-space: nowrap; }
-/* Dashed already means "not a live map" on this site (the review cards, the
-   series pill), so the language is inherited rather than reinvented. */
-.card--review { border-top-style: dashed; }
-.card--review:hover { background: transparent; }
-.card__title { margin: 0 0 .4rem; font-size: 1.55rem; letter-spacing: -.01em; color: var(--text); }
-.card__tagline { margin: 0 0 1.1rem; max-width: 62ch; color: var(--muted); }
-.card__meta { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; margin: 0; }
 /* A drawn arrow, not "→". The character is a font glyph: it changes shape with
    the typeface, sits on the text baseline rather than the optical centre, and
    in the mono fallback it is a different width again. This one is 20x10 and
@@ -415,19 +481,11 @@ main:focus { outline: none; }
 .arrow { width: 1.25rem; height: .62rem; display: inline-block; flex: 0 0 auto; vertical-align: -.05em; }
 .arrow path { stroke: currentColor; stroke-width: 1.4; fill: none; stroke-linecap: square; }
 .thesis__contribute .arrow { margin-left: .15rem; }
-.badge--review {
-  color: var(--muted); background: transparent; border-style: dashed; white-space: normal;
-}
-/* The lab line hangs off the record, so it starts where the document does —
-   past the shelf-mark margin, not under it. On a live card it is a sibling of
-   the <a> that holds the grid, so it has to reproduce that margin itself; on a
-   review card it is IN the grid and the column already places it. Giving both
-   the padding indents the review card's line twice. */
+.badge--review { color: var(--muted); background: none; border: 0; padding: 0; white-space: normal; }
 .card__lab {
-  margin: 0; padding: .75rem 1.5rem 1.1rem 7rem; font-size: .87rem; color: var(--muted);
+  margin: 0; padding: .7rem 1.1rem .9rem; font-size: .85rem; color: var(--muted);
   border-top: 1px dashed var(--border);
 }
-.card--review .card__lab { padding: .75rem 0 0; }
 .card__lab-tag {
   font-family: var(--mono); font-size: var(--fs-stamp); text-transform: uppercase; letter-spacing: .08em;
   color: var(--accent-quiet); border: 1px solid color-mix(in srgb, var(--accent-quiet) 40%, var(--border));
@@ -435,152 +493,24 @@ main:focus { outline: none; }
 }
 .card__lab code { background: var(--code-bg); padding: .08em .35em; border-radius: var(--r-sm); font-size: .95em; }
 
-/* -- The road, and the scenes that hang off it ----------------------------- */
-/* THE RULE THIS SECTION IS BUILT ON: the default state of every animated thing
-   here is its FINAL state. Nothing is hidden, offset or scaled until a browser
-   has said it can animate it back. So a reader with no JavaScript, an engine
-   without scroll-driven animations, or a reduced-motion preference gets the
-   finished frame -- complete text, stamp already pressed -- rather than an
-   empty box waiting for a script that is never coming.
-   That ordering also keeps CLS at zero: the page is laid out once, in its final
-   geometry, and the animations only ever touch opacity, colour and transform.
-
-   No IntersectionObserver. A CSS view() timeline is tied to scroll POSITION,
-   not to a one-way "has entered" event, so a scene skipped past and scrolled
-   back to plays again for free -- which is a requirement here -- while the
-   observer version needs state removed on exit and flickers doing it. Where
-   view() is unsupported the scene is simply already finished. */
-
-.road { position: relative; max-width: var(--page); margin: 0 auto; }
-/* The rule the stones sit on. Decorative: it says nothing the scenes do not
-   already say in words, so it is drawn, not announced. */
-.road::before {
-  content: ""; position: absolute; left: -1.6rem; top: 2rem; bottom: 2rem;
-  width: 1px; background: var(--border);
-}
-.road__stone {
-  position: absolute; left: -2.1rem; top: 3.2rem;
-  width: 1rem; height: .75rem; border-radius: 1px;
-  border: 1px solid var(--control-border); background: var(--bg);
-}
-
-.scene { position: relative; padding: 3.5rem 0; }
-.scene + .scene { border-top: 1px solid var(--border); }
-.scene__label {
-  font-family: var(--mono); font-size: var(--fs-label); letter-spacing: .18em;
-  text-transform: uppercase; color: var(--accent-quiet); margin: 0 0 .7rem;
-}
-.scene__title { font-size: clamp(1.6rem, 3.2vw, 2.2rem); line-height: 1.12; margin: 0 0 .7rem; }
-.scene__body { color: var(--muted); margin: 0 0 1.6rem; max-width: 54ch; }
-.scene__stage { position: relative; }
-/* .prose centres itself in the reading column, which is right inside an article
-   and wrong inside a scene: here it has to start at the same left margin as the
-   sentence that introduces it. */
-.scene__stage .prose { margin-left: 0; margin-right: 0; }
-.scene__verdict {
-  display: flex; align-items: center; gap: .6rem; flex-wrap: wrap;
-  margin: 1.1rem 0 0; font-size: .95rem; color: var(--muted);
-}
-
-/* Scene 1 -- the keyword cloud */
-.keywords { display: flex; flex-wrap: wrap; gap: .5rem; list-style: none; margin: 0; padding: 0; max-width: 46rem; }
-.keyword {
-  font-family: var(--mono); font-size: var(--fs-meta);
-  padding: .3rem .6rem; border-radius: var(--r-md);
-  border: 1px dashed var(--control-border); color: var(--muted); background: var(--surface);
-  --ps-dx: 0px; --ps-dy: 0px; --ps-r: 0deg;
-}
-.keyword:nth-child(3n)   { --ps-dx: 13px;  --ps-dy: -8px; --ps-r: -4deg; }
-.keyword:nth-child(3n+1) { --ps-dx: -10px; --ps-dy: 7px;  --ps-r: 3deg; }
-.keyword:nth-child(3n+2) { --ps-dx: 6px;   --ps-dy: 11px; --ps-r: -2deg; }
-.keywords__verdict {
-  margin: 1.4rem 0 0; font-family: var(--mono); font-size: var(--fs-meta); color: var(--text);
-}
-
-/* Scene 2 -- the artifact strip. Fixed minimum height so the reveal cannot move
-   the page: one line growing inside a box that was always this tall. */
-.artifact {
-  margin: 1.2rem 0 0; padding: .8rem 1rem;
-  background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--r-sm);
-  font-family: var(--mono); font-size: var(--fs-meta); color: var(--muted);
-  min-height: 4.1rem;
-}
-.artifact__line { display: block; white-space: nowrap; overflow: hidden; line-height: 1.7; }
-.artifact__line--done { color: var(--ok); }
-
-/* -- Skip visuals ---------------------------------------------------------- */
-.skip-visuals {
-  display: inline-flex; align-items: center; gap: .45rem; margin-top: 1.5rem;
-  font-family: var(--mono); font-size: var(--fs-meta); letter-spacing: .06em;
-  padding: .4rem .8rem; border-radius: var(--r-sm);
-  border: 1px solid var(--control-border); color: var(--text);
-}
-.skip-visuals:hover { background: var(--surface); text-decoration: none; border-color: var(--text); }
-.arrow--down { width: .5rem; height: 1rem; }
-
-/* -- The animated layer ---------------------------------------------------- */
-/* Everything above is the finished frame. Everything below runs it backwards
-   and plays it, and only where both conditions hold. */
-@supports (animation-timeline: view()) {
-  @media not (prefers-reduced-motion: reduce) {
-    /* A stone is laid as its scene is read. */
-    .road__stone {
-      animation: ps-stone linear both;
-      animation-timeline: view();
-      animation-range: entry 70% cover 25%;
-    }
-    @keyframes ps-stone {
-      from { background: var(--bg); border-color: var(--control-border); }
-      to   { background: var(--ok); border-color: var(--ok); }
-    }
-
-    /* Scene 1: the chips fade and drift apart as the argument lands. The
-       offsets are per-position, not random -- a cloud that scatters differently
-       on every reload is an animation pretending to be one. */
-    .keyword {
-      animation: ps-scatter linear both;
-      animation-timeline: view();
-      animation-range: cover 35% cover 75%;
-    }
-    @keyframes ps-scatter {
-      from { opacity: 1; transform: none; filter: none; }
-      to   { opacity: .2; filter: blur(1.4px);
-             transform: translate(var(--ps-dx), var(--ps-dy)) rotate(var(--ps-r)); }
-    }
-    .keywords__verdict {
-      animation: ps-fade-in linear both;
-      animation-timeline: view();
-      animation-range: cover 45% cover 70%;
-    }
-    @keyframes ps-fade-in { from { opacity: 0; } to { opacity: 1; } }
-
-    /* Scene 2: the line is revealed, not written by a script. steps() on width
-       inside an overflow-hidden line, in a box that already reserved its
-       height, so nothing on the page moves. */
-    .artifact__line {
-      animation: ps-type steps(34) both;
-      animation-timeline: view();
-      animation-range: cover 30% cover 55%;
-    }
-    .artifact__line--done { animation-range: cover 50% cover 72%; }
-    @keyframes ps-type { from { width: 0; } to { width: 100%; } }
-
-    /* The stamp is pressed: it arrives oversized and off-angle, and settles. */
-    .scene--proof .stamp--ok {
-      animation: ps-press cubic-bezier(.2,.8,.3,1) both;
-      animation-timeline: view();
-      animation-range: cover 68% cover 76%;
-    }
-
-  }
-}
-
 /* ── Live milestone sample ────────────────────────────────────────────────── */
+/* One real milestone, rendered from a real README, as a static block. It used to
+   live inside a scroll-driven scene; the scenes are gone and this is the part of
+   them worth keeping, because it is the only place on the home page where a
+   visitor sees an actual PROOF stamp and an actual "You're done when …" instead
+   of a sentence about them. No animation, no timeline, no script. */
 .sample { max-width: var(--measure); margin: 3.5rem auto 0; }
 .sample__title { font-size: 1.3rem; letter-spacing: -.01em; margin: 0 0 .3rem; }
 .sample__lead { color: var(--muted); margin: 0 0 1.2rem; font-size: .95rem; }
-.sample__block { margin: 0; }
+/* .prose centres itself in the reading column, which is right inside an article
+   and wrong here: the sample has to start at the same left margin as the
+   sentence that introduces it. */
+.sample__block { margin: 0; margin-left: 0; margin-right: 0; }
 .sample__block h3 { margin-top: 0; }
+.sample__verdict {
+  display: flex; align-items: center; gap: .6rem; flex-wrap: wrap;
+  margin: 1.1rem 0 0; font-size: .95rem; color: var(--muted);
+}
 
 /* ── How it works ─────────────────────────────────────────────────────────── */
 .how { max-width: var(--measure); margin: 3.5rem auto 0; }
@@ -633,20 +563,46 @@ main:focus { outline: none; }
 .thesis p { color: var(--text); }
 .thesis__contribute { color: var(--muted); font-size: .95rem; margin-top: 1.25rem; }
 
+/* The home page's one left edge. The showcase is --shell wide and everything
+   below it is a reading measure; centring each independently puts their left
+   edges 240px apart at 1280 and the page stops reading as one document. So the
+   BLOCK takes the shell and its CONTENTS keep the measure. Scoped to the home
+   page: on a roadmap the measure is the whole column and there is nothing to
+   align it to. */
+body[data-page="home"] .sample,
+body[data-page="home"] .how,
+body[data-page="home"] .companions,
+body[data-page="home"] .thesis {
+  max-width: var(--shell);
+  margin-left: auto; margin-right: auto;
+}
+body[data-page="home"] .sample > *,
+body[data-page="home"] .how > *,
+body[data-page="home"] .companions > *,
+body[data-page="home"] .thesis > * { max-width: var(--measure); }
+/* The sample's inner block carries `.prose`, whose own `margin: 0 auto` is
+   declared later in this file and therefore wins at equal specificity — which
+   centred the milestone inside the shell and left it 240px to the right of every
+   other left edge on the page. Beating it needs the extra class, not source
+   order: source order is what put it there. */
+body[data-page="home"] .sample .prose { margin-left: 0; margin-right: auto; }
+
 /* ── Status stamps ───────────────────────────────────────────────────────── */
 /* The same object as the PROOF / FLAGSHIP / PROVEN stamps on a milestone, in
-   the same mono, at the same tilt. Physical rather than pill-shaped: a stamp is
-   pressed, so it sits slightly off-square. The tilt is a constant, not random —
-   a seal that lands differently on every reload is an animation, not a seal. */
+   the same mono. The mechanism stays; the physics goes. There is no -2.5deg
+   tilt and no impression any more: a tilted seal was the vocabulary of the
+   archive, and a quiet document does not lean. */
 .stamp {
   display: inline-flex; align-items: center;
   font-family: var(--mono); font-size: var(--fs-stamp); font-weight: 600;
   letter-spacing: .14em; text-transform: uppercase;
   padding: .16rem .45rem; border-radius: var(--r-sm);
   background: var(--accent); color: var(--on-accent);
-  transform: rotate(-2.5deg);
 }
-.stamp--live,
+/* "Live" is a property of the MAP; "Proven" is something the READER did. They
+   used to share the green, so one colour said both — and on the home page that
+   made three green stamps the loudest thing on the first screen, in a palette
+   that has no green in it. Green is now spent only on what is earned. */
 .stamp--ok { background: var(--ok); color: var(--on-ok); }
 /* "In review" is a state, not an achievement: outline only, and dashed, which
    is this site's existing word for "not live". */
@@ -656,24 +612,25 @@ main:focus { outline: none; }
 }
 
 /* ── Badges ───────────────────────────────────────────────────────────────── */
+/* Not pills. The tally line on a card is one mono sentence separated by middots;
+   a border and a fill around each number turned three facts into three widgets. */
 .badge {
   display: inline-flex; align-items: center; gap: .3rem;
   font-family: var(--mono); font-size: var(--fs-label); letter-spacing: .02em;
-  padding: .2rem .5rem; border-radius: var(--r-md); border: 1px solid var(--border);
-  color: var(--muted); background: var(--bg);
+  border: 0; background: none; padding: 0; border-radius: 0;
+  color: var(--muted);
 }
-.badge--count { color: var(--muted); }
-/* Flagship count. Gold, because that is what FLAGSHIP PROOF is stamped in on
-   the milestone itself — the badge and the stamp are the same fact seen twice,
-   so they are the same colour. Replaces "N ★ artifacts": the star was borrowed
-   punctuation, and the site already has a word for this. */
-.badge--flagship {
-  color: var(--gold);
-  border-color: color-mix(in srgb, var(--gold) 45%, var(--border));
-  background: var(--gold-weak);
-  text-transform: uppercase; letter-spacing: .1em; font-size: var(--fs-label);
-}
-.badge--flag { color: var(--gold); border-color: color-mix(in srgb, var(--gold) 45%, var(--border)); background: var(--gold-weak); }
+.badge--count + .badge::before { content: "\00b7\00a0"; color: var(--muted); }
+/* Flagship count. The same colour as FLAGSHIP PROOF is stamped in on the
+   milestone itself — the badge and the stamp are the same fact seen twice, so
+   they are the same colour. Now that the stamp is ink rather than gold, the
+   badge's difference from the plain count has to be carried by weight.
+   Replaces "N ★ artifacts": the star was borrowed punctuation. */
+/* `.badge--flag` used to sit here as a second, identical rule. Nothing in the
+   templates or the build ever emitted that class — it went out with an earlier
+   wave's markup and the rule stayed behind. Dead colour rules are exactly what
+   makes a repaint miss a spot, so it is gone rather than repainted. */
+.badge--flagship { color: var(--gold); font-weight: 600; }
 
 /* ── Roadmap page: top bar ────────────────────────────────────────────────── */
 .roadmap__bar {
@@ -821,12 +778,14 @@ main:focus { outline: none; }
 .ps-anchor { margin-left: .4rem; color: var(--muted); opacity: 0; text-decoration: none; font-weight: 400; }
 .prose :hover > .ps-anchor, .ps-anchor:focus { opacity: 1; }
 
-/* One press, used twice: by the scene on the home page and by a milestone the
-   moment a reader ticks it. Declared outside the scroll-timeline block, because
-   the milestone stamp is not a scroll animation and must exist regardless. */
+/* Feedback on ticking a milestone. It used to be a press: the stamp arrived
+   oversized and off-angle and settled into the -2.5deg the stamps used to sit at.
+   The stamps are square now, so a landing animation has nowhere to land from —
+   what remains is the acknowledgement itself, which the click still owes the
+   reader. Same 150ms, opacity only, no transform. */
 @keyframes ps-press {
-  from { opacity: 0; transform: rotate(-14deg) scale(1.9); }
-  to   { opacity: 1; transform: rotate(-2.5deg) scale(1); }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 /* ── Roadmap map (inlined SVG, section boxes link into the page) ──────────── */
@@ -853,9 +812,16 @@ main:focus { outline: none; }
   font-family: var(--mono); font-size: var(--fs-label); color: var(--muted); text-align: center;
 }
 
-/* Section hotspots: invisible until pointed at, then a soft wash + outline. */
+/* Section hotspots: invisible until pointed at, then a soft wash + outline.
+   Through the token, not a literal. These two rules were the only place in the
+   stylesheet where the accent was baked in as hex — which meant repainting the
+   palette left the map's section highlight the old colour on a new page, and
+   nothing would have caught it: no guard reads a hover state. */
 .ps-map__hit { fill: transparent; stroke: transparent; stroke-width: 2; cursor: pointer; transition: fill .12s ease, stroke .12s ease; }
-.ps-map a:hover .ps-map__hit { fill: rgba(157, 59, 31, .12); stroke: #9d3b1f; }
+.ps-map a:hover .ps-map__hit {
+  fill: color-mix(in srgb, var(--accent) 12%, transparent);
+  stroke: var(--accent);
+}
 
 /* The hotspot sits exactly on top of the section box, same geometry and stroke
    width, so focusing only repainted a 2px stroke that was already coloured:
@@ -863,7 +829,8 @@ main:focus { outline: none; }
    wants 3:1. Every failing pair was a hue-only shift inside one colour, which
    deuteranopia flattens to nothing, and `outline: none` left no fallback ring. */
 .ps-map a:focus-visible .ps-map__hit {
-  fill: rgba(157, 59, 31, .18); stroke-width: 4; paint-order: stroke;
+  fill: color-mix(in srgb, var(--accent) 18%, transparent);
+  stroke: var(--accent); stroke-width: 4; paint-order: stroke;
 }
 /* The figure is the scroll container AND holds focusable children, which
    disqualifies it from the browsers' "focusable scroll container" heuristic —
@@ -1077,30 +1044,19 @@ main:focus { outline: none; }
    spend it on: it is 70ch today, dead centre of the 68–72 hygiene, and stretching
    prose is how a document stops being readable.
    So the width goes to the two things that actually want it:
-     • the showcase, whose records gain a third column for their tally;
+     • the showcase, which now spends it on a third card in the row rather than a
+       third column inside one record;
      • the figures — the map, tables and code — which are the only blocks on a
        roadmap page that are genuinely too big for the column.
    The map is the clearest case: it is drawn 800–880px wide and squeezed into 736,
    i.e. every label in it is shown at 92%. Here it simply stops being squeezed —
-   nothing in the map itself is touched, which is what §3 of the brief forbids. */
+   nothing in the map itself is touched.
+   Note what is NOT here any more: the showcase does not need this breakpoint.
+   `repeat(auto-fill, minmax(19rem, 1fr))` reaches three columns on its own, so
+   the column count is decided by the card's own minimum instead of by a number
+   in a media query that has to be kept in sync with it. */
 @media (min-width: 90rem) {
   :root { --page: var(--page-wide); }
-
-  /* A record becomes a ledger row: shelf mark | document | tally. */
-  .card__main,
-  .card--review {
-    grid-template-columns: 5.25rem minmax(0, 1fr) 15rem;
-    column-gap: 2rem;
-  }
-  .card__meta {
-    grid-column: 3; grid-row: 1 / span 3;
-    display: flex; flex-direction: column; align-items: flex-start; gap: .5rem;
-    margin: 0; padding-left: 1.5rem;
-    border-left: 1px solid var(--border);
-  }
-  .card__go { margin-left: 0; margin-top: .3rem; }
-  .card__tagline { max-width: 58ch; margin-bottom: 0; }
-  .card__lab { grid-column: 2 / -1; }
 
   /* The roadmap page becomes a spread, and the whole spread is centred as one
      object — so widening it does not shift the text sideways. */
@@ -1132,23 +1088,16 @@ main:focus { outline: none; }
   body { font-size: 16.5px; }
   main { padding: 1.75rem 1rem 3rem; }
   .roadmap__bar { align-items: flex-start; }
-  /* The shelf-mark margin is 7rem of a 320px screen at the desktop figure, and
-     the tagline has to live in what is left. The mark stays a mark; it just
-     stops being a monument. */
-  .card__main,
-  .card--review { grid-template-columns: 4rem minmax(0, 1fr); column-gap: 1rem; padding: 1.5rem 0; }
-  .card__num-fig { font-size: 1.7rem; }
-  .card__title { font-size: 1.35rem; }
-  .card__lab { padding-left: 5rem; padding-right: 0; }
-  .card--review .card__lab { padding-left: 0; }
   /* The owner/repo chip needs 320 px and the default 1.2rem padding leaves 318
      at a 390 px viewport — two pixels short of one line. Below ~380 px it wraps
      regardless, and box-decoration-break makes that wrap look deliberate. */
   .companion { padding: 1rem; }
-  /* No room for a margin rule at this width, and a road nobody can see is not
-     a metaphor, it is one pixel of noise. */
-  .road::before, .road__stone { display: none; }
-  .scene { padding: 2.25rem 0; }
+}
+/* At 320–420px the silhouette at its desktop height eats half the viewport before
+   the card has said what it is. It stays legible at 9rem — the shapes are what it
+   is for, and the shapes survive. */
+@media (max-width: 26rem) {
+  .card__map { height: 9rem; }
 }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
@@ -1201,9 +1150,10 @@ main:focus { outline: none; }
   @page { margin: 14mm; }
   body { font-size: 11pt; }
 
-  /* Screen furniture: nothing here survives on paper. */
-  .road::before, .road__stone, .skip-visuals,
-  .site-header, .site-footer, .skip-link,
+  /* Screen furniture: nothing here survives on paper. The silhouette goes with
+     it — on a card it is a preview that stands in for a link, and a printed page
+     cannot be clicked; the map itself prints in full on the roadmap page. */
+  .site-header, .site-footer, .skip-link, .card__map,
   .roadmap__actions, .progress__next, .progress__reset { display: none; }
 
   /* Sticky elements must not reserve or repeat space in a paged medium. */

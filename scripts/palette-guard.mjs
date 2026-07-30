@@ -1,0 +1,106 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// palette-guard.mjs — the palette has exactly one home.
+//
+// Written after the Stone repaint, which found FIVE places where a colour was
+// baked in as a literal and therefore could not be reached by changing a token:
+// the map's hover/focus wash, the header mark, favicon.svg, the OG generator and
+// verify-live's own assertions. Three of the five were fixed by routing through
+// var(). The two that CANNOT be are pinned here instead:
+//
+//   • favicon.svg is painted by browser chrome, outside any page that could
+//     supply a custom property;
+//   • the OG card is rendered standalone by a headless browser, which never sees
+//     the stylesheet.
+//
+// Copies are allowed. Copies nobody checks are how a repaint ships half done.
+//
+// Pure functions over text, no filesystem: check-build runs them on the built
+// site, check-guards runs them on poisoned payloads to prove they refuse.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Read a token out of a SPECIFIC block. The light and dark values differ only by
+// which selector holds them, so a search over the whole file would happily
+// return the wrong theme's colour and call it a match.
+export function readToken(css, name, theme = 'light') {
+  const marker = theme === 'dark' ? '[data-theme="dark"] {' : ':root {';
+  const at = css.indexOf(marker);
+  if (at < 0) return null;
+  const m = css.slice(at).match(new RegExp(`--${name}:\\s*(#[0-9a-fA-F]{3,8})`));
+  return m ? m[1].toLowerCase() : null;
+}
+
+// Everything that is allowed to hold a colour is BLANKED, and whatever hex is
+// still standing afterwards is the finding. Blanking preserves newlines so a
+// reported line number keeps pointing at the right line.
+//
+// Blanked, and why:
+//   • comments — they are full of measured hexes (the pre-wave-A blue, the 1.2:1
+//     print regression). Flagging those would train everyone to ignore the check,
+//     which is worse than not having it;
+//   • custom-property declarations — this is the one place a colour belongs;
+//   • @media print — it deliberately repaints to pure black and white for paper.
+//
+// The declaration match is on the DECLARATION, not on the line. An earlier draft
+// tested whole lines against `^\s*(--token: value;)+$`, which passed the shipped
+// file only because its no-JS fallback branch happens to put the selector on its
+// own line: writing `:root { --accent: #005ab8; }` on one line was reported as a
+// stray literal. A guard that depends on where someone pressed Enter is a guard
+// that will be switched off.
+export function strayLiterals(css) {
+  const blank = (m) => m.replace(/[^\n]/g, ' ');
+  let text = css.replace(/\/\*[\s\S]*?\*\//g, blank);
+  const printAt = text.indexOf('@media print');
+  if (printAt > 0) text = text.slice(0, printAt) + blank(text.slice(printAt));
+  // Token names carry digits (--surface-2), so the class needs 0-9.
+  text = text.replace(/--[a-z0-9-]+\s*:\s*[^;}]*/g, blank);
+
+  const out = [];
+  text.split('\n').forEach((line, i) => {
+    if (/#[0-9a-fA-F]{3,8}\b/.test(line)) {
+      out.push(`line ${i + 1}: ${css.split('\n')[i].trim().slice(0, 90)}`);
+    }
+  });
+  return out;
+}
+
+// The four dark-theme values make-og.mjs has to copy. Named here rather than in
+// the caller so the guard and its demonstration cannot disagree about the list.
+export const OG_MIRRORED = [
+  ['BG', 'bg'],
+  ['TEXT', 'text'],
+  ['ACCENT', 'accent'],
+  ['MUTED', 'muted']
+];
+
+export function inspectPalette({ css, favicon, ogSource }) {
+  const problems = [];
+  if (!css) return { problems: ['no stylesheet to check'], tokens: {} };
+
+  const tokens = {
+    accent: readToken(css, 'accent', 'light'),
+    onAccent: readToken(css, 'on-accent', 'light')
+  };
+
+  for (const s of strayLiterals(css)) problems.push(`colour literal outside the token block — ${s}`);
+
+  if (favicon !== undefined) {
+    if (!tokens.accent || !tokens.onAccent) problems.push('cannot read --accent / --on-accent from :root');
+    else {
+      const f = String(favicon).toLowerCase();
+      if (!f.includes(tokens.accent)) problems.push(`favicon.svg badge is not --accent ${tokens.accent}`);
+      if (!f.includes(tokens.onAccent)) problems.push(`favicon.svg glyph is not --on-accent ${tokens.onAccent}`);
+    }
+  }
+
+  if (ogSource !== undefined) {
+    for (const [constName, tokenName] of OG_MIRRORED) {
+      const m = String(ogSource).match(new RegExp(`const ${constName} = '(#[0-9a-fA-F]{3,8})'`));
+      const want = readToken(css, tokenName, 'dark');
+      if (!want) problems.push(`cannot read --${tokenName} from the dark block`);
+      else if (!m) problems.push(`make-og.mjs has no ${constName} literal to compare`);
+      else if (m[1].toLowerCase() !== want) problems.push(`make-og.mjs ${constName} is ${m[1]}, --${tokenName} (dark) is ${want}`);
+    }
+  }
+
+  return { problems, tokens };
+}

@@ -265,10 +265,11 @@ console.log('\nDEPLOYED REDESIGN');
 
   // Self-hosted faces. A missing one does not break the page — the metric-matched
   // fallback takes over silently — which is exactly why it needs asserting.
-  const FACES = [
-    'plex-sans-var.woff2', 'plex-mono-400.woff2', 'plex-mono-600.woff2',
-    'zilla-slab-600.woff2', 'zilla-slab-700.woff2'
-  ];
+  // Three now, not five: the display serif is gone and the variable sans covers
+  // every heading weight from one file. Note this list is an assertion about what
+  // the site NEEDS, not about what happens to sit in the bucket — a stale
+  // zilla-slab-*.woff2 left behind by an old deploy is dead weight, not a pass.
+  const FACES = ['plex-sans-var.woff2', 'plex-mono-400.woff2', 'plex-mono-600.woff2'];
   let facesOk = 0;
   for (const f of FACES) {
     try {
@@ -287,20 +288,35 @@ console.log('\nDEPLOYED REDESIGN');
     if (status !== 200) {
       fail('styles.css', `HTTP ${status}`);
     } else {
+      // What the palette IS, and what it must no longer be. The second list is
+      // the half this instrument was missing: after the Stone repaint, every
+      // marker in the first list could be present in a stylesheet that ALSO
+      // still carried the old wave's colours — a half-applied deploy, a stale
+      // CDN object, a bad merge — and the check would have gone green.
       const need = [
-        ['--bg: #f7f3ea', 'warm paper'],
-        ['--accent: #9d3b1f', 'sealing wax'],
+        ['--bg: #fcfdfe', 'white paper'],
+        ['--accent: #005ab8', 'cobalt accent'],
         ['--map-ink', 'map tokens'],
-        ["font-family: 'Zilla Slab'", 'display face declared']
+        ['font-weight: 400 700', 'sans declared through to a real 700']
+      ];
+      const forbid = [
+        ['#9d3b1f', 'sealing wax'],
+        ['#f7f3ea', 'warm paper'],
+        ["'Zilla Slab'", 'the display serif'],
+        ['rgba(157, 59, 31', 'the map hover wash literal']
       ];
       const missing = need.filter(([t]) => !body.includes(t));
-      if (missing.length) fail('styles.css', `${missing.map(([, n]) => n).join(', ')} not in the served stylesheet`);
+      const lingering = forbid.filter(([t]) => body.includes(t));
+      if (missing.length || lingering.length) {
+        if (missing.length) fail('styles.css', `${missing.map(([, n]) => n).join(', ')} not in the served stylesheet`);
+        if (lingering.length) fail('styles.css', `${lingering.map(([, n]) => n).join(', ')} still in the served stylesheet`);
+      }
       // Buffer.byteLength, not body.length: the stylesheet's comments carry
       // arrows, section signs and em dashes, and `.length` counts UTF-16 code
       // units. On 2026-07-29 that made the instrument report 64,357 "bytes" for
       // a 66,605-byte file — a 2 KB discrepancy that needed a footnote to
       // explain instead of a number that was simply right.
-      else pass('styles.css', `${need.length} palette/type markers present, ${Buffer.byteLength(body)} bytes`);
+      else pass('styles.css', `${need.length} markers present, ${forbid.length} retired colours absent, ${Buffer.byteLength(body)} bytes`);
     }
   } catch (e) {
     fail('styles.css', `check failed: ${e.message}`);

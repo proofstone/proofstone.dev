@@ -14,6 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { inspectReadme, inspectSvg, shapeOf } from './content-guard.mjs';
 import { inspectRenderedPage, inspectStylesheet, FONT_SIZE_FLOOR_REM } from './a11y-guard.mjs';
 import { inspectFlagships } from './star-guard.mjs';
+import { inspectPalette } from './palette-guard.mjs';
 import { roadmaps } from '../roadmaps.config.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -283,6 +284,106 @@ console.log(`\nTYPE FLOOR — a label under ${(FONT_SIZE_FLOOR_REM * 16).toFixed
   const shipped = join(siteRoot, 'assets', 'styles.css');
   if (existsSync(shipped)) floorAccept('the shipped stylesheet passes', readFileSync(shipped, 'utf8'));
   else console.warn('  … no _site/assets/styles.css (run: npm run build) — skipped');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PALETTE — each case here is a real thing the Stone repaint found, restated as
+// a payload. The point of the guard is that the NEXT repaint cannot miss the
+// same places, so the demonstrations are the misses themselves.
+// ─────────────────────────────────────────────────────────────────────────────
+console.log('\nPALETTE — a colour that escapes the token block must fail, and only that');
+{
+  // A minimal but honest stylesheet: both theme blocks, a print block, and a
+  // comment carrying a hex — all four are load-bearing for the cases below.
+  const PALETTE_CSS = `:root {
+  --bg: #fcfdfe;
+  --surface-2: #eaeef3;
+  --accent: #005ab8;
+  --on-accent: #ffffff;
+}
+[data-theme="dark"] {
+  --bg: #101317; --text: #e3e8ee; --accent: #72bdff; --muted: #a0a9b2;
+}
+/* The pre-wave-A blue was #2457d6 and the print regression was #e6e8ec on white. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #101317; --accent: #72bdff; }
+}
+.stamp { background: var(--accent); }
+@media print { :root { --bg: #fff; --text: #000; } .x { color: #333; } }`;
+  // Deliberately packed onto one line: the formatting-independence case.
+  const ONE_LINER = ':root { --accent: #005ab8; --on-accent: #ffffff; }\n'
+    + '[data-theme="dark"] { --bg: #101317; --text: #e3e8ee; --accent: #72bdff; --muted: #a0a9b2; }';
+  const FAVICON = '<svg><rect fill="#005ab8"/><path fill="#ffffff"/></svg>';
+  const OG = "const BG = '#101317';\nconst TEXT = '#e3e8ee';\nconst ACCENT = '#72bdff';\nconst MUTED = '#a0a9b2';";
+
+  const reject = (name, payload, fragment) => {
+    const { problems } = inspectPalette(payload);
+    if (!problems.length) return bad(name, 'guard accepted a payload it must refuse');
+    if (fragment && !problems.join('; ').includes(fragment))
+      return bad(name, `rejected, but for the wrong reason: ${problems.join('; ')}`);
+    ok(name, problems[0].slice(0, 78) + (problems[0].length > 78 ? '…' : ''));
+  };
+  const accept = (name, payload) => {
+    const { problems } = inspectPalette(payload);
+    if (problems.length) return bad(name, `false positive: ${problems.join('; ')}`);
+    ok(name);
+  };
+
+  accept('the healthy shape', { css: PALETTE_CSS, favicon: FAVICON, ogSource: OG });
+  accept('a whole rule written on one line', { css: ONE_LINER, favicon: FAVICON, ogSource: OG });
+
+  // The exact miss this guard exists for: the map's hover wash was rgba()/hex.
+  reject('the map hover wash back as a literal',
+    { css: HEALTHY + '\n.ps-map a:hover .ps-map__hit { fill: rgba(157,59,31,.12); stroke: #9d3b1f; }' },
+    'colour literal outside the token block');
+  // And the header mark, which was a presentation attribute no guard could see.
+  reject('a literal fill on the header mark',
+    { css: HEALTHY + '\n.brand__mark rect { fill: #9d3b1f; }' },
+    'colour literal outside the token block');
+  reject('a stray literal in a plain rule',
+    { css: HEALTHY + '\n.card { border-color: #dadfe6; }' },
+    'colour literal outside the token block');
+
+  // Repaint half done: stylesheet moved, the two mirrors did not.
+  reject('favicon left on the old accent',
+    { css: PALETTE_CSS, favicon: '<svg><rect fill="#9d3b1f"/><path fill="#f7f3ea"/></svg>' },
+    'favicon.svg badge is not --accent');
+  reject('OG generator left on the old dark palette',
+    { css: PALETTE_CSS, ogSource: "const BG = '#14110d';\nconst TEXT = '#ece5d6';\nconst ACCENT = '#e08b62';\nconst MUTED = '#a89d8a';" },
+    'make-og.mjs BG is #14110d');
+  // One drifted value out of four still has to fail: three green rows would read
+  // as a pass on a glance, which is how a half-repaint gets shipped.
+  reject('one drifted OG value out of four',
+    { css: PALETTE_CSS, ogSource: "const BG = '#101317';\nconst TEXT = '#e3e8ee';\nconst ACCENT = '#e08b62';\nconst MUTED = '#a0a9b2';" },
+    'make-og.mjs ACCENT is #e08b62');
+  reject('OG generator that stopped declaring a value',
+    { css: PALETTE_CSS, ogSource: "const BG = '#101317';\nconst TEXT = '#e3e8ee';\nconst MUTED = '#a0a9b2';" },
+    'no ACCENT literal to compare');
+  // Light vs dark must not be interchangeable: the OG card is dark, and reading
+  // the light --accent for it would pass a card nobody can read.
+  reject('OG generator mirroring the LIGHT accent',
+    { css: PALETTE_CSS, ogSource: OG.replace('#72bdff', '#005ab8') },
+    'make-og.mjs ACCENT is #005ab8');
+
+  // Accepted — the guard must not become a reason to stop writing colour where
+  // colour belongs, or the next person will delete it.
+  accept('a hex inside a comment', { css: HEALTHY + '\n/* was #9d3b1f before the Stone wave */' });
+  accept('a hex inside @media print', { css: HEALTHY + '\n@media print { .y { color: #999; } }' });
+  accept('the packed no-JS fallback branch', { css: PALETTE_CSS });
+  accept('a token whose name carries a digit', { css: PALETTE_CSS });
+  accept('color-mix over a token', { css: HEALTHY + '\n.a { fill: color-mix(in srgb, var(--accent) 12%, transparent); }' });
+
+  // And the shipped files themselves, which is the case that actually matters.
+  const shippedCss = join(siteRoot, 'assets', 'styles.css');
+  const shippedFav = join(siteRoot, 'assets', 'favicon.svg');
+  const shippedOg = join(root, 'scripts', 'make-og.mjs');
+  if (existsSync(shippedCss) && existsSync(shippedFav)) {
+    accept('the shipped palette passes', {
+      css: readFileSync(shippedCss, 'utf8'),
+      favicon: readFileSync(shippedFav, 'utf8'),
+      ogSource: readFileSync(shippedOg, 'utf8')
+    });
+  } else console.warn('  … no _site/assets/styles.css (run: npm run build) — skipped');
 }
 
 console.log('\nACCESSIBILITY — the built pages must pass exactly as they are');

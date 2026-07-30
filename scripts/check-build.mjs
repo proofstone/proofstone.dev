@@ -18,6 +18,7 @@ import { fileURLToPath } from 'node:url';
 import { roadmaps } from '../roadmaps.config.mjs';
 import { inspectRenderedPage, inspectStylesheet, FONT_SIZE_FLOOR_REM } from './a11y-guard.mjs';
 import { inspectFlagships } from './star-guard.mjs';
+import { inspectPalette, OG_MIRRORED } from './palette-guard.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const site = join(root, '_site');
@@ -345,6 +346,34 @@ console.log(`\nTYPE FLOOR — no rule may set a label under ${(FONT_SIZE_FLOOR_R
     const { problems } = inspectStylesheet(css);
     if (problems.length) for (const p of problems) fail('styles.css', p);
     else pass('styles.css', `every font-size rule is at or above ${FONT_SIZE_FLOOR_REM}rem (em/% and @media print excluded by design)`);
+  }
+}
+
+// ── 4e. The palette has exactly one home ────────────────────────────────────
+// See scripts/palette-guard.mjs for what this is protecting and why the two
+// mirrored files cannot go through var(). Asserted once over the stylesheet
+// rather than once per page: it is one file.
+console.log('\nPALETTE — one source of colour, and the two files that must mirror it');
+{
+  const cssPath = join(site, 'assets', 'styles.css');
+  const favPath = join(site, 'assets', 'favicon.svg');
+  const ogPath = join(root, 'scripts', 'make-og.mjs');
+  const css = existsSync(cssPath) ? readFileSync(cssPath, 'utf8') : '';
+  if (!css) fail('assets/styles.css missing from _site', 'cannot check the palette');
+  else if (!existsSync(favPath)) fail('assets/favicon.svg missing from _site', 'cannot check the mark');
+  else if (!existsSync(ogPath)) fail('scripts/make-og.mjs missing', 'cannot check the OG palette');
+  else {
+    const { problems, tokens } = inspectPalette({
+      css,
+      favicon: readFileSync(favPath, 'utf8'),
+      ogSource: readFileSync(ogPath, 'utf8')
+    });
+    if (problems.length) for (const p of problems) fail('palette', p);
+    else {
+      pass('styles.css', 'every colour literal is a --token declaration (print block and comments excluded by design)');
+      pass('favicon.svg', `mirrors --accent ${tokens.accent} / --on-accent ${tokens.onAccent}`);
+      pass('make-og.mjs', `its ${OG_MIRRORED.length} literals equal the dark-theme tokens they copy`);
+    }
   }
 }
 

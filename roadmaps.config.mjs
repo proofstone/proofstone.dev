@@ -26,6 +26,12 @@ export const roadmaps = [
     branch: 'main',
     title: 'AI Safety Engineer Roadmap',
     tagline: 'The map for the engineer moving into AI safety — evals, red-teaming, guardrails, agent security — and getting hired doing it.',
+    // The home page shows CARDS in a grid now, not records in a full-width ledger.
+    // A tagline of 130-177 characters is four to five lines in a 19rem column, so
+    // the card gets its own short line. The tagline is not replaced — it still
+    // carries the page description, og:description and the SERP snippet; this is
+    // an additional field, not a shortened one.
+    cardLine: 'Evals, red-teaming, guardrails, agent security.',
     milestones: 33,   // fallback only; real count is computed from the README at build
     order: 1,
     status: 'live',                       // "live" | "teaser" | "review"
@@ -46,6 +52,7 @@ export const roadmaps = [
     // ("not a keyword you nod at") off. Shorter variant for the SERP only.
     metaDescription:
       'Moving into distributed systems: consensus, replication, failure detection — every node is a test that passes or fails, not a keyword you nod at.',
+    cardLine: 'Consensus, replication, failure detection.',
     milestones: 29,   // fallback only; real count computed from the README at build
     order: 2,
     status: 'live',
@@ -63,6 +70,7 @@ export const roadmaps = [
     branch: 'main',
     title: 'Applied Cryptography Roadmap',
     tagline: 'For engineers who ship cryptography and cannot afford to get it wrong: break it in Cryptopals and CryptoHack, then ship it right.',
+    cardLine: 'Break it in Cryptopals and CryptoHack, then ship it right.',
     milestones: 18,
     order: 3,
     status: 'live',
@@ -72,6 +80,7 @@ export const roadmaps = [
     slug: 'robotics-software-engineer',
     title: 'Robotics Software Engineer Roadmap',
     tagline: 'You already ship software. Robotics does not need you to start over — it needs you to port what you know and respect what is genuinely different.',
+    cardLine: 'Port what you already know; respect what is genuinely different.',
     // Counts cannot be derived at build while the repo is private, so they are
     // declared — but taken by counting the README itself on 2026-07-20, not copied
     // from a summary. They become automatic the moment status flips to 'live'.
@@ -84,6 +93,7 @@ export const roadmaps = [
     slug: 'pcb-design',
     title: 'PCB Design Roadmap',
     tagline: 'Embedded roadmaps teach you to write the firmware and say plainly that the board is not their topic. This is the map for the board.',
+    cardLine: 'The map for the board, not for the firmware on it.',
     milestones: 22,   // counted from the README 2026-07-20 (see note above)
     stars: 3,
     order: 5,

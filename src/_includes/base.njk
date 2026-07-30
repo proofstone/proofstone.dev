@@ -56,12 +56,11 @@
       the real face is usually there before anything is painted.
       `crossorigin` is required even same-origin — fonts are fetched in CORS
       anonymous mode, and a preload without it is a second, unused download.
-      All five faces are above the fold on a roadmap page: body text, both
-      display weights (h1 and h2/h3), mono for milestone ids and for the stamps,
-      which are mono 700 and therefore resolve to the 600 face. #}
+      Three files now, not five: the display serif is gone, and the variable sans
+      serves body text AND every heading weight from one download — its wght axis
+      runs to 700, which is measured, not assumed. Mono is still two files because
+      it carries milestone ids and the stamps, which are mono 600 above the fold. #}
   <link rel="preload" href="/assets/fonts/plex-sans-var.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/assets/fonts/zilla-slab-700.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/assets/fonts/zilla-slab-600.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/plex-mono-400.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/assets/fonts/plex-mono-600.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/assets/styles.css">
@@ -82,11 +81,16 @@
     {#- Mark + wordmark lockup. The SVG is inlined (≈300 bytes, saves a request)
         and carries the same chiseled-P as the favicon/OG/avatar so the identity
         is one object everywhere. aria-hidden + the link's aria-label keep it a
-        single named landmark, not a second focus target announcing nothing. #}
+        single named landmark, not a second focus target announcing nothing.
+        The fills go through the TOKENS. They used to be literal hex here, which
+        meant the mark was the one element on the page a palette change could not
+        reach: repainting the stylesheet left a sealing-wax square in the header of
+        a blue site, and no guard would have caught it because no guard reads an
+        inline SVG's presentation attributes. #}
     <a class="brand" href="/" aria-label="proofstone — home">
       <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
-        <rect width="32" height="32" rx="7" fill="#9d3b1f"/>
-        <path fill="#f7f3ea" fill-rule="evenodd" d="M8.5 9.3L10.3 7.5L21.7 7.5L23.5 9.3L23.5 15.7L21.7 17.5L13.5 17.5L13.5 22.8L11.7 24.5L10.3 24.5L8.5 22.8Z M13.5 10.6L20 10.6L21.3 11.9L21.3 13.1L20 14.4L13.5 14.4Z"/>
+        <rect width="32" height="32" rx="7" fill="var(--accent)"/>
+        <path fill="var(--bg)" fill-rule="evenodd" d="M8.5 9.3L10.3 7.5L21.7 7.5L23.5 9.3L23.5 15.7L21.7 17.5L13.5 17.5L13.5 22.8L11.7 24.5L10.3 24.5L8.5 22.8Z M13.5 10.6L20 10.6L21.3 11.9L21.3 13.1L20 14.4L13.5 14.4Z"/>
       </svg>
       <span class="brand__word">proof<span>stone</span></span>
     </a>

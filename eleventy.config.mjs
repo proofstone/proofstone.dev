@@ -471,6 +471,112 @@ export default function (eleventyConfig) {
     return block.replace(/href="#([^"]*)"/g, `href="/${roadmap.slug}/#$1"`);
   });
 
+  // ── The card's silhouette ─────────────────────────────────────────────────
+  // DERIVED from the roadmap's own map, not drawn: the home page shows the same
+  // geometry the roadmap page inlines, so a card cannot advertise a shape the map
+  // does not have. A checked-in preview file could drift the first time a
+  // renderer moves a node; this cannot.
+  //
+  // What comes out is the SHAPE and nothing else:
+  //   • <text> goes entirely — at ~0.3 scale a 9–16px label is not small type,
+  //     it is grey mush, and mush reads as a rendering fault;
+  //   • the status plates go with it (rect with height <= 20, or any rotated
+  //     rect): they exist to carry a label, and the label is gone;
+  //   • <defs>/<marker> go because id="arw" appears in every one of the three
+  //     maps, and three cards on one page would be a triple duplicate id;
+  //   • the legend at the foot of the map is cropped — not by a magic Y value,
+  //     but because the viewBox is recomputed from the NODE rects only, and
+  //     connectors outside that box are dropped with it.
+  // Stroke widths are multiplied because at this scale 1.6 units lands on half a
+  // device pixel and the outline dissolves.
+  // The --map-* fallbacks inside the attributes are left alone: they are what the
+  // same file uses on GitHub, where var() does not resolve.
+  const BADGE_H = 20;
+  const STROKE_MUL = 2.6;
+  const SIL_PAD = 10;
+  const nums = (s) => (s.match(/-?\d+(?:\.\d+)?/g) || []).map(Number);
+  const attr = (tag, name) => {
+    const m = tag.match(new RegExp(`\\b${name}="([^"]*)"`));
+    return m ? m[1] : null;
+  };
+  const fnum = (tag, name, dflt = 0) => {
+    const v = attr(tag, name);
+    return v === null ? dflt : Number(v);
+  };
+  // Every path in these maps is M/L/H/V/z with explicit coordinate pairs.
+  const pathPoints = (d) => {
+    const xs = [], ys = [];
+    for (const [, cmd, body] of d.matchAll(/([MLmlHhVvZz])([^MLmlHhVvZz]*)/g)) {
+      if (/[Zz]/.test(cmd)) continue;
+      const v = nums(body);
+      if (/[MLml]/.test(cmd)) { for (let i = 0; i < v.length; i += 2) { xs.push(v[i]); ys.push(v[i + 1]); } }
+      else if (/[Hh]/.test(cmd)) xs.push(...v);
+      else if (/[Vv]/.test(cmd)) ys.push(...v);
+    }
+    return { xs, ys };
+  };
+
+  const silhouette = (svg) => {
+    const vb = nums(attr(svg, 'viewBox') || '');
+    if (vb.length < 4) return '';
+    const [, , vbw, vbh] = vb;
+    const rects = [], boxes = [];
+    for (const tag of svg.match(/<rect[^>]*\/?>/g) || []) {
+      const w = fnum(tag, 'width'), h = fnum(tag, 'height');
+      const x = fnum(tag, 'x'), y = fnum(tag, 'y');
+      if (w >= vbw * 0.98 && h >= vbh * 0.98) continue;   // the map's own paper
+      if (h <= BADGE_H) continue;
+      if (attr(tag, 'transform')) continue;
+      rects.push(tag);
+      boxes.push([x, y, x + w, y + h]);
+    }
+    if (!boxes.length) throw new Error('[silhouette] no node rects found in a roadmap map');
+    const x0 = Math.min(...boxes.map((b) => b[0]));
+    const y0 = Math.min(...boxes.map((b) => b[1]));
+    const x1 = Math.max(...boxes.map((b) => b[2]));
+    const y1 = Math.max(...boxes.map((b) => b[3]));
+    const inside = (xs, ys) => xs.length && ys.length
+      && Math.min(...xs) >= x0 - 2 && Math.max(...xs) <= x1 + 2
+      && Math.min(...ys) >= y0 - 2 && Math.max(...ys) <= y1 + 2;
+
+    const links = [];
+    for (const tag of svg.match(/<line[^>]*\/?>/g) || []) {
+      if (inside([fnum(tag, 'x1'), fnum(tag, 'x2')], [fnum(tag, 'y1'), fnum(tag, 'y2')])) links.push(tag);
+    }
+    for (const tag of svg.match(/<path[^>]*\/?>/g) || []) {
+      const d = attr(tag, 'd') || '';
+      if (/z/i.test(d) && d.length < 25) continue;   // the arrowhead out of <defs>
+      const { xs, ys } = pathPoints(d);
+      if (inside(xs, ys)) links.push(tag);
+    }
+    const thicken = (tag) => tag
+      .replace(/stroke-width="([\d.]+)"/, (_, v) => `stroke-width="${(Number(v) * STROKE_MUL).toFixed(2)}"`)
+      .replace(/stroke-dasharray="([^"]+)"/, (_, v) => `stroke-dasharray="${nums(v).map((n) => (n * STROKE_MUL).toFixed(1)).join(' ')}"`)
+      .replace(/\s*marker-end="[^"]*"/g, '');
+
+    const w = x1 - x0 + SIL_PAD * 2;
+    const h = y1 - y0 + SIL_PAD * 2;
+    // No paper rect. The map's own --map-paper is the page colour, and the card's
+    // face already has a surface behind it — painting the sheet inside it put a
+    // white rectangle in the middle of a grey box, letterboxed by whatever the
+    // aspect ratio left over. The box is the sheet; the silhouette is what is on it.
+    const body = [
+      ...links.map(thicken),   // connectors under the nodes
+      ...rects.map(thicken)
+    ];
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x0 - SIL_PAD} ${y0 - SIL_PAD} ${w} ${h}"`
+      + ` preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">${body.join('')}</svg>`;
+  };
+
+  const silCache = new Map();
+  eleventyConfig.addFilter('roadmapSilhouette', (roadmap) => {
+    if (!roadmap.mapSvg) {
+      throw new Error(`[silhouette] ${roadmap.slug} has no map SVG — the card cannot show a shape it does not have.`);
+    }
+    if (!silCache.has(roadmap.slug)) silCache.set(roadmap.slug, silhouette(roadmap.mapSvg));
+    return silCache.get(roadmap.slug);
+  });
+
   eleventyConfig.addFilter('roadmapMarkdown', (_content, roadmap) => renderRoadmap(roadmap).html);
   eleventyConfig.addFilter('roadmapToc', (roadmap) => renderRoadmap(roadmap).toc);
   // Feeds the statically reserved progress bar. NOT the registry's declared
