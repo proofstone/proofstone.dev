@@ -15,6 +15,7 @@ import { inspectReadme, inspectSvg, shapeOf } from './content-guard.mjs';
 import { inspectRenderedPage, inspectStylesheet, FONT_SIZE_FLOOR_REM } from './a11y-guard.mjs';
 import { inspectFlagships } from './star-guard.mjs';
 import { inspectPalette, inspectFonts } from './palette-guard.mjs';
+import { inspectMapType, readingColumnPx, EXEMPT } from './map-type-guard.mjs';
 import { roadmaps } from '../roadmaps.config.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -291,6 +292,74 @@ console.log(`\nTYPE FLOOR — a label under ${(FONT_SIZE_FLOOR_REM * 16).toFixed
 // a payload. The point of the guard is that the NEXT repaint cannot miss the
 // same places, so the demonstrations are the misses themselves.
 // ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// MAP TYPE FLOOR — the floor reaches the maps, and the exemption is declared.
+// The point of these cases is the pair at the end: a NEW small label fails, and
+// it stops failing only when someone writes down which class exempts it and why.
+// ─────────────────────────────────────────────────────────────────────────────
+console.log('\nMAP TYPE FLOOR — a map label under the floor must fail unless it declares an exemption');
+{
+  const COLUMN = 734;                       // reading column, as the site draws it
+  const map = (w, texts) =>
+    `<svg viewBox="0 0 ${w} 400" class="ps-map__svg">${texts}</svg>`;
+  // 800 wide in a 734 column → scale 0.9175 → a label needs 13.60 units.
+  const NAV = '<text font-size="14" fill="x">§0</text><text font-size="16">Orientation</text>';
+  const PLATE = '<text class="map-plate" font-size="9">FLAGSHIP</text>';
+
+  const mapReject = (name, svg, fragment) => {
+    const { problems } = inspectMapType(svg, { columnPx: COLUMN });
+    if (!problems.length) return bad(name, 'guard accepted a map it must refuse');
+    if (fragment && !problems.join('; ').includes(fragment))
+      return bad(name, `rejected, but for the wrong reason: ${problems.join('; ')}`);
+    ok(name, problems[0].slice(0, 86) + (problems[0].length > 86 ? '…' : ''));
+  };
+  const mapAccept = (name, svg) => {
+    const { problems } = inspectMapType(svg, { columnPx: COLUMN });
+    if (problems.length) return bad(name, `false positive: ${problems.join('; ')}`);
+    ok(name);
+  };
+
+  mapAccept('a healthy map', map(800, NAV + PLATE));
+  mapAccept('a declared plate stays exempt at 9 units', map(800, PLATE));
+
+  // THE CASE THIS GUARD EXISTS FOR: someone adds a caption at the size the map
+  // used to use everywhere, and nothing about it says "decorative".
+  mapReject('a NEW label at 13 units, no exemption', map(800, NAV + '<text font-size="13">a new caption</text>'),
+    'renders 11.93px in the reading column');
+  mapReject('the old 12-unit legend size', map(800, NAV + '<text font-size="12">depends on</text>'),
+    'a label at 12 units');
+  mapReject('9 units without the class', map(800, '<text font-size="9">FLAGSHIP</text>'),
+    'claims no exemption');
+  // A class that is not on the list is not an exemption — otherwise "exempt"
+  // would grow to mean "whatever someone typed".
+  mapReject('an undeclared class does not exempt', map(800, '<text class="small-caption" font-size="9">x</text>'),
+    'claims no exemption');
+
+  // Per-map requirement: the SAME size passes on one map and fails on a wider
+  // one, because a wider map is squeezed harder in the same column.
+  mapAccept('14 units on an 800-wide map', map(800, '<text font-size="14">ok here</text>'));
+  mapReject('14 units on an 880-wide map', map(880, '<text font-size="14">not ok here</text>'),
+    'needs 14.96 units');
+
+  // And the shipped maps, which is the case that actually matters.
+  {
+    const cssPath = join(siteRoot, 'assets', 'styles.css');
+    if (existsSync(cssPath)) {
+      const column = readingColumnPx(readFileSync(cssPath, 'utf8'));
+      for (const r of roadmaps.filter((x) => x.status === 'live')) {
+        const page = join(siteRoot, r.slug, 'index.html');
+        if (!existsSync(page)) continue;
+        const m = readFileSync(page, 'utf8').match(/<svg[^>]*class="ps-map__svg"[\s\S]*?<\/svg>/);
+        if (!m) { bad(`${r.slug}: inlined map found`, 'no .ps-map__svg on the page'); continue; }
+        const res = inspectMapType(m[0], { columnPx: column });
+        if (res.problems.length) bad(`the shipped ${r.slug} map passes`, res.problems[0]);
+        else ok(`the shipped ${r.slug} map passes`, `needs ${res.required.toFixed(2)} units, ${res.labels.filter((l) => l.exempt).length} exempt`);
+      }
+    } else console.warn('  … no _site (run: npm run build) — skipped');
+  }
+  ok('declared exemptions', Object.entries(EXEMPT).map(([k, v]) => `${k}: ${v}`).join(' · '));
+}
+
 console.log('\nPALETTE — a colour that escapes the token block must fail, and only that');
 {
   // A minimal but honest stylesheet: both theme blocks, a print block, and a

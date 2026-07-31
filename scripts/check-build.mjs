@@ -19,6 +19,7 @@ import { roadmaps } from '../roadmaps.config.mjs';
 import { inspectRenderedPage, inspectStylesheet, FONT_SIZE_FLOOR_REM } from './a11y-guard.mjs';
 import { inspectFlagships } from './star-guard.mjs';
 import { inspectPalette, inspectFonts, OG_MIRRORED } from './palette-guard.mjs';
+import { inspectMapType, readingColumnPx, EXEMPT } from './map-type-guard.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const site = join(root, '_site');
@@ -346,6 +347,30 @@ console.log(`\nTYPE FLOOR — no rule may set a label under ${(FONT_SIZE_FLOOR_R
     const { problems } = inspectStylesheet(css);
     if (problems.length) for (const p of problems) fail('styles.css', p);
     else pass('styles.css', `every font-size rule is at or above ${FONT_SIZE_FLOOR_REM}rem (em/% and @media print excluded by design)`);
+
+    // The same floor, applied to the maps — the one place on this site where it
+    // never reached, because the labels are attributes on a file produced in
+    // another repository. See scripts/map-type-guard.mjs for why the requirement
+    // is per-map and why some marks are exempt by declaration.
+    const columnPx = readingColumnPx(css);
+    if (!columnPx) fail('styles.css', 'cannot read --measure — the map floor has nothing to measure against');
+    else {
+      for (const r of roadmaps.filter((x) => x.status === 'live')) {
+        const page = join(site, r.slug, 'index.html');
+        if (!existsSync(page)) continue;
+        const html = readFileSync(page, 'utf8');
+        const m = html.match(/<svg[^>]*class="ps-map__svg"[\s\S]*?<\/svg>/);
+        if (!m) { fail(`${r.slug}: no inlined map`, 'cannot check its label sizes'); continue; }
+        const res = inspectMapType(m[0], { columnPx, floorPx: FONT_SIZE_FLOOR_REM * 16 });
+        if (res.problems.length) {
+          for (const p of [...new Set(res.problems)]) fail(`${r.slug} map`, p);
+        } else {
+          const ex = res.labels.filter((l) => l.exempt).length;
+          pass(`${r.slug} map`, `${res.vbWidth} units shown at ${columnPx}px (scale ${res.scale.toFixed(3)}) — `
+            + `every label is at or above ${res.required.toFixed(2)} units, ${ex} declared exempt`);
+        }
+      }
+    }
   }
 }
 
