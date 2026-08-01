@@ -18,14 +18,31 @@
 // site, check-guards runs them on poisoned payloads to prove they refuse.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Read a token out of a SPECIFIC block. The light and dark values differ only by
+// Read a token out of a SPECIFIC block. The two themes' values differ only by
 // which selector holds them, so a search over the whole file would happily
 // return the wrong theme's colour and call it a match.
+//
+// Since the graphite wave the DEFAULT theme is the dark one, and a default theme
+// has no attribute to hang a block on: its values live in :root, and the only
+// override in the file is the light theme a reader picks. So a dark read prefers
+// [data-theme="dark"] and falls back to :root when the stylesheet has no such
+// block. That is not a loosening — the values it then reads are the ones the
+// site actually paints in the dark, which is exactly what the mirrored files
+// (favicon, OG card) have to copy. The poisoned fixtures in check-guards.mjs do
+// carry both blocks, so the case that proves light and dark are not
+// interchangeable still fires against a file where the distinction exists.
 export function readToken(css, name, theme = 'light') {
-  const marker = theme === 'dark' ? '[data-theme="dark"] {' : ':root {';
-  const at = css.indexOf(marker);
+  // Print is cut off first. It repaints every token to pure black and white for
+  // paper, and it does so through a selector LIST that names both themes — so a
+  // search for a theme's block would find the print one and report that a
+  // mirrored file "is not" #fff. Neither the favicon nor the OG card is ever
+  // printed; screen is the only medium either of them can be in.
+  const screen = css.replace(/@media\s+print\s*\{[\s\S]*$/m, '');
+  const dark = '[data-theme="dark"] {';
+  const marker = theme === 'dark' && screen.includes(dark) ? dark : ':root {';
+  const at = screen.indexOf(marker);
   if (at < 0) return null;
-  const m = css.slice(at).match(new RegExp(`--${name}:\\s*(#[0-9a-fA-F]{3,8})`));
+  const m = screen.slice(at).match(new RegExp(`--${name}:\\s*(#[0-9a-fA-F]{3,8})`));
   return m ? m[1].toLowerCase() : null;
 }
 

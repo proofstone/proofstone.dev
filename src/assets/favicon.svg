@@ -6,13 +6,17 @@
        supply a variable, and a logo that repaints with the theme stops being a
        logo. (The mark IN the header is the opposite case and does go through the
        tokens: it sits on the page and has to stay legible in both themes.)
-       Measured: 6.66:1 between glyph and badge, and the badge itself reads on
-       both papers — 6.54:1 on white, 9.26:1 on graphite. That second number was
-       2.57:1 under the old sealing-wax paint, so the dark-theme tab icon stops
-       being a dark square on a dark bar.
+       Repainted for graphite: the badge is the site's accent and the glyph is
+       the site's page colour, which is the same pair the header mark uses.
+       Measured: 6.60:1 between glyph and badge, and the badge reads on both tab
+       bars — 6.60:1 on graphite, 3.19:1 on a white one, where the requirement is
+       the 3:1 of a graphical object rather than the 4.5:1 of text.
+       The values are asserted against --accent / --on-accent on every build
+       (scripts/palette-guard.mjs): a favicon cannot read a custom property, so
+       the copy is pinned rather than trusted.
        Same mark in the header, OG cards and the org avatar. -->
-  <rect width="32" height="32" rx="7" fill="#005ab8"/>
-  <path fill="#ffffff" fill-rule="evenodd"
+  <rect width="32" height="32" rx="7" fill="#5b9dff"/>
+  <path fill="#161717" fill-rule="evenodd"
         d="M8.5 9.3L10.3 7.5L21.7 7.5L23.5 9.3L23.5 15.7L21.7 17.5L13.5 17.5L13.5 22.8L11.7 24.5L10.3 24.5L8.5 22.8Z
            M13.5 10.6L20 10.6L21.3 11.9L21.3 13.1L20 14.4L13.5 14.4Z"/>
 </svg>

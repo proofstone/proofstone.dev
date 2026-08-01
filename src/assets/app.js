@@ -8,22 +8,24 @@
   /* ── Theme toggle ───────────────────────────────────────────────────────── */
   var toggle = document.querySelector('.theme-toggle');
   if (toggle) {
-    // The button's only state indicator was an aria-hidden CSS glyph, so its
-    // name read the same before and after pressing it. aria-pressed is set here
-    // rather than in the template: the head script runs before <body> exists,
-    // and a hardcoded value would be a lie for an OS-dark visitor with JS off.
-    var setPressed = function () {
-      var cur = root.getAttribute('data-theme');
-      if (!cur) cur = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      toggle.setAttribute('aria-pressed', String(cur === 'dark'));
-      return cur;
+    // Graphite is the default, so "no attribute" means dark and there is no OS
+    // query to consult any more. The button is an ACTION, not a state: its
+    // visible word and its accessible name say the theme it switches TO, and
+    // both are written here in one place so they cannot disagree (WCAG 2.5.3
+    // wants the visible label inside the accessible name — "light" inside
+    // "Switch to light theme").
+    var other = function () { return root.getAttribute('data-theme') === 'light' ? 'dark' : 'light'; };
+    var render = function () {
+      var next = other();
+      toggle.textContent = next;
+      toggle.setAttribute('aria-label', 'Switch to ' + next + ' theme');
     };
-    setPressed();
+    render();
     toggle.addEventListener('click', function () {
-      var next = setPressed() === 'dark' ? 'light' : 'dark';
+      var next = other();
       root.setAttribute('data-theme', next);
-      setPressed();
       try { localStorage.setItem('proofstone:theme', next); } catch (e) {}
+      render();
     });
   }
 

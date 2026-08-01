@@ -78,7 +78,8 @@ const STAMP_LEGEND =
   '\n<p class="stamp-legend">Every milestone carries one of three stamps: ' +
   '<span class="stamp-legend__k stamp-legend__k--proof">PROOF</span> — the finishing condition, stated in advance; ' +
   '<span class="stamp-legend__k stamp-legend__k--flag">FLAGSHIP PROOF</span> — the artifact is public and carries your name; ' +
-  '<span class="stamp-legend__k stamp-legend__k--art">ARTICULATION</span> — you can state and defend it, there is nothing to build.</p>\n';
+  '<span class="stamp-legend__k stamp-legend__k--art">ARTICULATION</span> — you can state and defend it, there is nothing to build. ' +
+  'Tick one off and it becomes <span class="stamp-legend__k stamp-legend__k--ok">PROVEN</span>, and a stone is laid in the course at the top of the page.</p>\n';
 
 function insertStampLegend(html) {
   const re = /<blockquote class="ps-criterion">(?:(?!<\/blockquote>)[\s\S])*<\/blockquote>/;
@@ -138,6 +139,15 @@ function enhanceHeadings(html) {
       const m = text.match(/^§(\d+)\s*[—–-]\s*(.*)$/);
       current = m ? { id, num: m[1], title: m[2].trim(), milestones: [] } : null;
       if (current) toc.push(current);
+      // A §-number in a heading is an ADDRESS, not a word, so it is set in mono
+      // like every other number on the site. Scoped to the leading token of a
+      // section heading: a "§4" mentioned inside a sentence stays prose.
+      if (current) {
+        return full.replace(
+          /(<h2 id="[^"]+">)(§\d+)/,
+          (_m, open, num) => `${open}<span class="ps-num">${num}</span>`
+        );
+      }
       return full;
     }
 
@@ -171,7 +181,14 @@ function enhanceHeadings(html) {
     //    the build if the number of is-star headings ever stops matching the
     //    number of starred milestone headings in the source markdown.
     const shown = isStar ? inner.replace(/[⭐★]\s*/g, '') : inner;
-    return `<h3 id="${id}" class="${cls.join(' ')}" data-ms="${ms[1]}">${shown}</h3>`;
+    // Two wrappers, both structural:
+    //  • the milestone id goes to mono for the same reason the §-number does;
+    //  • everything else goes into ONE span, because the heading is a flex row
+    //    (checkbox + text) and app.js inserts the checkbox as its first child.
+    //    Without the span the id, the dash and the title are three flex items
+    //    and wrap independently — at 390px the id sat alone on its own line.
+    const withNum = shown.replace(/^(\s*)(M\d+\.\d+)/, (_m, sp, num) => `${sp}<span class="ps-num">${num}</span>`);
+    return `<h3 id="${id}" class="${cls.join(' ')}" data-ms="${ms[1]}"><span class="ps-ms-h__t">${withNum}</span></h3>`;
   });
 
   // `milestones` counts exactly what app.js will find in the DOM (h3.ps-ms-h with
@@ -265,6 +282,59 @@ function buildInteractiveMap(svg, toc, altText) {
   };
 }
 
+// ── The criterion, as a terminal block ──────────────────────────────────────
+//
+// The home page shows one milestone and says "that is the whole format", so the
+// pages have to be made of the object it shows: a bar naming the milestone and
+// its stamp, the command that states the finishing condition, the condition
+// itself in prose, and the line the reader earns by ticking the box.
+//
+// Everything added here is CHROME around text this repo does not own — the
+// README's own paragraphs are passed through untouched, as $4.
+//
+// Three details are deliberate:
+//   • the command line is aria-hidden: it repeats the milestone id, which the
+//     heading right above it has already announced;
+//   • the stamp label is the milestone's own property (proof / flagship proof /
+//     articulation) and is NOT repainted when the box is ticked — the green is
+//     spent on the status line and the stone, which are what the reader did;
+//   • the status line ships in the HTML rather than being built by app.js on
+//     click. It is display:none until .is-done, so it costs bytes and not a
+//     layout event, and it survives printing.
+//
+// The pattern is tempered on both halves ((?:(?!…)[\s\S])*), for the reason
+// star-guard.mjs documents at length: a lazy [\s\S]*? backtracks past its own
+// closing tag and swallows the next milestone whole.
+const CRITERION_BLOCK_RE =
+  /(<h3 id="[^"]*" class="([^"]*)" data-ms="([^"]+)">(?:(?!<\/h3>)[\s\S])*<\/h3>\s*)<blockquote class="ps-criterion">((?:(?!<\/blockquote>)[\s\S])*)<\/blockquote>/g;
+
+function stampOf(cls) {
+  if (/is-star/.test(cls)) return 'flagship proof';
+  if (/is-articulation/.test(cls)) return 'articulation';
+  return 'proof';
+}
+
+function terminalise(html) {
+  return html.replace(CRITERION_BLOCK_RE, (_m, heading, cls, ms, body) => {
+    const kind = stampOf(cls);
+    const earned =
+      kind === 'articulation'
+        ? 'you can state it and defend it'
+        : 'the artifact exists — nothing here is finished by reading about it';
+    return (
+      heading +
+      '<blockquote class="ps-criterion">' +
+      `<div class="ps-crit__bar"><span class="ps-crit__id">${ms.toLowerCase()}</span>` +
+      `<span class="ps-crit__kind">${kind}</span></div>` +
+      '<div class="ps-crit__body">' +
+      `<p class="ps-crit__cmd" aria-hidden="true">$ done-when --milestone ${ms}</p>` +
+      body +
+      `<p class="ps-crit__status"><b>PROVEN ✓</b> · ${earned}</p>` +
+      '</div></blockquote>'
+    );
+  });
+}
+
 // The README embeds the same map as a plain <img>; drop it so the page shows the
 // interactive one once, near the top, instead of a dead copy in the middle.
 function extractAndRemoveMapImg(html) {
@@ -301,6 +371,9 @@ function renderRoadmap(roadmap) {
   html = wrapScrollables(html);
 
   const result = enhanceHeadings(html);
+  // After enhanceHeadings: the stamp a criterion shows is decided by its
+  // heading's classes, and those are assigned there.
+  result.html = terminalise(result.html);
   // After enhanceHeadings, so the legend can never sit between a flagship
   // heading and its criterion — that adjacency is what draws the gold stamp,
   // and star-guard fails the build if it breaks.
@@ -564,8 +637,22 @@ export default function (eleventyConfig) {
       ...links.map(thicken),   // connectors under the nodes
       ...rects.map(thicken)
     ];
+    // A silhouette is the one place on this site where the map's own tokens are
+    // the WRONG paint. --map-ink has to carry node labels at 4.5:1, so it is a
+    // near-white; here every label has been stripped out and what is left is a
+    // decorative shape, which at that brightness reads as the loudest object on
+    // the home page. So the shapes are re-pointed at --sil-*, which is the quiet
+    // pair the maps themselves cannot use. The var() fallbacks are left alone:
+    // they are what the same geometry uses on GitHub, where var() does not
+    // resolve, and nothing here is ever rendered without the stylesheet.
+    const quiet = (s) =>
+      s
+        .replace(/var\(--map-node-spine/g, 'var(--sil-node')
+        .replace(/var\(--map-node/g, 'var(--sil-node')
+        .replace(/var\(--map-ink/g, 'var(--sil-ink')
+        .replace(/var\(--map-line/g, 'var(--sil-ink');
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x0 - SIL_PAD} ${y0 - SIL_PAD} ${w} ${h}"`
-      + ` preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">${body.join('')}</svg>`;
+      + ` preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">${quiet(body.join(''))}</svg>`;
   };
 
   const silCache = new Map();
@@ -576,6 +663,14 @@ export default function (eleventyConfig) {
     if (!silCache.has(roadmap.slug)) silCache.set(roadmap.slug, silhouette(roadmap.mapSvg));
     return silCache.get(roadmap.slug);
   });
+
+  // Totals for the register's head line. A filter rather than arithmetic in the
+  // template: Nunjucks `set` does not survive a loop, and the alternative — a
+  // number typed into the markup — is the exact failure this project has had
+  // twice (27→33, 21→20).
+  eleventyConfig.addFilter('sumBy', (list, field) =>
+    (list || []).reduce((n, item) => n + (Number(item[field]) || 0), 0)
+  );
 
   eleventyConfig.addFilter('roadmapMarkdown', (_content, roadmap) => renderRoadmap(roadmap).html);
   eleventyConfig.addFilter('roadmapToc', (roadmap) => renderRoadmap(roadmap).toc);

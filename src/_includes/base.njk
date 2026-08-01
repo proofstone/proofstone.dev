@@ -65,12 +65,15 @@
   <link rel="preload" href="/assets/fonts/plex-mono-600.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/assets/styles.css">
   <script>
-    // Set theme before paint to avoid a flash. Honors saved choice, else OS.
+    // Graphite is the theme, so the default needs no attribute and no work: the
+    // stylesheet's :root IS the dark theme. Only a reader who has PICKED light
+    // (or picked dark back) carries an attribute, and it is applied before paint
+    // so their choice never flashes. With JS off the site is graphite, which is
+    // the same thing it is with JS on and nothing chosen.
     (function () {
       try {
         var t = localStorage.getItem('proofstone:theme');
-        if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        document.documentElement.setAttribute('data-theme', t);
+        if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
       } catch (e) {}
     })();
   </script>
@@ -98,26 +101,16 @@
         (breadcrumb, section outline, roadmap map, the rest of the series); an
         unnamed one is the confusing entry in a landmark list. #}
     <nav class="site-nav" aria-label="Main">
-      <a href="{{ site.org }}" rel="noopener">GitHub</a>
-      {#- Named for the state it reports, not for the act: app.js maintains
-          aria-pressed on it, so it announces "Dark theme, pressed" / "not
-          pressed". The name must then stay static or the two contradict. #}
-      {#- Drawn glyphs, not ☾/☀. An emoji is rasterised by the platform: it
-          arrives in a colour nobody chose, at a size nobody set, and on a warm
-          paper page the stock sun is a yellow blob from another design system.
-          Both are inlined and swapped by CSS so the toggle never waits on a
-          request, and both are aria-hidden — the button is named by its label. #}
-      <button type="button" class="theme-toggle" aria-label="Dark theme" title="Toggle theme">
-        <svg class="i-moon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-          <path fill="currentColor" d="M13.5 10.4A6 6 0 0 1 5.6 2.5a6 6 0 1 0 7.9 7.9z"/>
-        </svg>
-        <svg class="i-sun" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-          <circle cx="8" cy="8" r="3.4" fill="currentColor"/>
-          <g stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-            <path d="M8 1v1.8M8 13.2V15M1 8h1.8M13.2 8H15M3 3l1.3 1.3M11.7 11.7 13 13M13 3l-1.3 1.3M4.3 11.7 3 13"/>
-          </g>
-        </svg>
-      </button>
+      <a href="{{ site.org }}" rel="noopener">github</a>
+      {#- A word, not a glyph. The drawn sun/moon were an improvement on the
+          emoji they replaced, but on a page whose whole chrome is mono the word
+          IS the icon — and a word needs no decoding, no second SVG and no CSS
+          swap. It names the theme it switches TO, and the accessible name
+          contains that same word (WCAG 2.5.3, Label in Name): "light" inside
+          "Switch to light theme". app.js rewrites both together, so they cannot
+          drift apart. Shipped saying "light" because graphite is the default —
+          with JS off that is the true state, and the button is honestly inert. #}
+      <button type="button" class="theme-toggle" aria-label="Switch to light theme">light</button>
     </nav>
   </header>
 
@@ -135,11 +128,8 @@
         negative claims that survive are stated, the vendor is named so a reader
         can go and check rather than take our word, and "no tracking" is gone
         because counting visits is tracking, however anonymous. #}
-    <p>{{ site.name }} — engineering roadmaps. Static site. No cookies, no personal data — anonymous analytics via <a href="https://umami.is" rel="noopener">Umami</a>.</p>
-    <p>
-      Content licensed per each roadmap's repository ·
-      <a href="{{ site.org }}" rel="noopener">github.com/proofstone</a>
-    </p>
+    <p>{{ site.name }} — engineering roadmaps · static site · no cookies, no personal data — anonymous analytics via <a href="https://umami.is" rel="noopener">Umami</a></p>
+    <p>content licensed per each roadmap's repository · <a href="{{ site.org }}" rel="noopener">github.com/proofstone</a></p>
   </footer>
 
   <script src="/assets/app.js" defer></script>

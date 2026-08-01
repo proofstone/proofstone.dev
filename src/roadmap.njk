@@ -12,16 +12,28 @@ eleventyComputed:
   metaDescription: "{{ roadmap.metaDescription or roadmap.tagline }}"
 ---
 <div class="roadmap__bar">
+  {#- Mono, because a breadcrumb is a path and not a sentence. #}
   <nav class="breadcrumb" aria-label="Breadcrumb">
-    <a href="/">proofstone</a> <span aria-hidden="true">/</span> <span>{{ roadmap.title }}</span>
+    <a href="/">proofstone</a> <span aria-hidden="true">/</span> <span class="breadcrumb__here">{{ roadmap.title | replace(" Roadmap", "") }}</span>
   </nav>
+  {#- The three actions are the same outlined chip as the rest of the site, and
+      the first one is still a plain link to the repository — "star" names what
+      the reader goes there to do, and GitHub is where they land. Nothing here
+      touches the ⭐ in a milestone heading: that is data, it stays in the README,
+      and the STAR DISPLAY gate asserts it survives the render untouched. #}
   <div class="roadmap__actions">
-    <a class="btn btn--primary" href="https://github.com/{{ roadmap.repo }}" rel="noopener">Star on GitHub</a>
-    <a class="btn" href="https://github.com/{{ roadmap.repo }}/edit/{{ roadmap.branch }}/README.md" rel="noopener">Edit</a>
-    <a class="btn" href="https://github.com/{{ roadmap.repo }}/blob/{{ roadmap.branch }}/README.md" rel="noopener">View source</a>
+    {#- A DRAWN star, not "★". Measured: U+2605 is not in IBM Plex Mono, so the
+        character arrives from whatever the platform substitutes — a different
+        shape at a different width, inside a row whose whole point is that it is
+        monospaced. Same reasoning that replaced the arrow character and the
+        emoji toggle in the previous wave; this one costs 128 bytes and looks the
+        same everywhere. #}
+    <a class="btn btn--primary" href="https://github.com/{{ roadmap.repo }}" rel="noopener"><svg class="btn__star" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M6 .9 7.55 4.55 11.5 4.9 8.5 7.5 9.4 11.4 6 9.35 2.6 11.4 3.5 7.5 .5 4.9 4.45 4.55Z"/></svg>star on github</a>
+    <a class="btn" href="https://github.com/{{ roadmap.repo }}/edit/{{ roadmap.branch }}/README.md" rel="noopener">edit</a>
+    <a class="btn" href="https://github.com/{{ roadmap.repo }}/blob/{{ roadmap.branch }}/README.md" rel="noopener">source</a>
   </div>
   {%- if roadmap.updated %}
-  <p class="roadmap__updated">Source README updated <time datetime="{{ roadmap.updated }}">{{ roadmap.updated | isoDate }}</time></p>
+  <p class="roadmap__updated">source readme updated <time datetime="{{ roadmap.updated }}">{{ roadmap.updated | isoDate }}</time> · {{ roadmap.repo }}</p>
   {%- endif %}
 </div>
 
@@ -35,7 +47,7 @@ eleventyComputed:
         collapsed by script after first paint — which is what used to yank the
         article up ~340 px on mobile a couple of seconds into the read. #}
     <details class="toc__details">
-      <summary class="toc__summary">Sections</summary>
+      <summary class="toc__summary">sections</summary>
       <ol class="toc__list">
         {%- for s in roadmap | roadmapToc %}
         <li class="toc__item">
@@ -92,19 +104,27 @@ eleventyComputed:
         linked only back to home, never sideways. Note the class list — app.js
         binds the milestone machinery to the FIRST .prose on the page, so this
         block must never carry that class. #}
+    {#- The same register as the home page, so a reader who has seen one has
+        already read the other: name, tally, chip. #}
     <nav class="series" aria-labelledby="series-heading">
-      <h2 class="series__heading" id="series-heading">The rest of the series</h2>
+      <h2 class="series__heading" id="series-heading">the rest of the series</h2>
       <ul class="series__list">
         {%- for r in liveRoadmaps %}{% if r.slug != roadmap.slug %}
         <li class="series__item">
-          <a class="series__link" href="/{{ r.slug }}/">{{ r.title }}</a>
-          <span class="series__meta">{{ r.milestones }} milestones · {{ r | roadmapStars }} flagship</span>
+          <a class="series__link" href="/{{ r.slug }}/">{{ r.title | replace(" Roadmap", "") }}</a>
+          <span class="series__right">
+            <span class="series__meta"><span class="n">{{ r.milestones }}</span> milestones · <span class="n">{{ r | roadmapStars }}</span> flagship</span>
+            <span class="chip chip--live">live</span>
+          </span>
         </li>
         {%- endif %}{% endfor %}
         {%- for r in reviewRoadmaps %}
-        <li class="series__item series__item--review">
-          <span class="series__link series__link--plain">{{ r.title }}</span>
-          <span class="series__meta">In practitioner review — private until published</span>
+        <li class="series__item">
+          <span class="series__link series__link--plain">{{ r.title | replace(" Roadmap", "") }}</span>
+          <span class="series__right">
+            <span class="series__meta">private until published</span>
+            <span class="chip chip--review">in review</span>
+          </span>
         </li>
         {%- endfor %}
       </ul>

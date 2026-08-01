@@ -17,15 +17,17 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const outDir = join(root, 'src/assets/og');
 mkdirSync(outDir, { recursive: true });
 
-// Dark-theme tokens, copied as literals: this HTML is rendered standalone by a
-// headless browser, so it cannot read the stylesheet's custom properties. If a
-// token changes in styles.css it has to change here too — which is why there is
-// exactly ONE accent to keep in sync, and why check-build asserts these four
-// values against the stylesheet instead of trusting anyone to remember.
-const BG = '#101317';
-const TEXT = '#e3e8ee';
-const ACCENT = '#72bdff';
-const MUTED = '#a0a9b2';
+// The dark theme's tokens, copied as literals: this HTML is rendered standalone
+// by a headless browser, so it cannot read the stylesheet's custom properties.
+// Since the graphite wave the dark theme IS the site's theme, so these are the
+// site's own colours and the card is not a special dark variant of anything.
+// If a token changes in styles.css it has to change here too — which is why
+// check-build asserts these four values against the stylesheet instead of
+// trusting anyone to remember.
+const BG = '#161717';
+const TEXT = '#d5d7d9';
+const ACCENT = '#5b9dff';
+const MUTED = '#8b8f93';
 
 // Same rule the site uses: a milestone heading carrying a star marker. This
 // keeps reading ⭐ from the README — the star is data, and only its DISPLAY
@@ -44,13 +46,19 @@ const FACE = (family, weight, file) =>
 // to 700 because the axis in the file does (measured — 900 renders identically to
 // 700, so that is where it ends). Under the old pair this card carried a whole
 // second family for two headings.
+// Mono 600 is embedded here too now: the card's headline and wordmark are the
+// site speaking about itself, which is mono in this wave, and a 600 that is not
+// in the file would be synthesised by the renderer into a fake bold. This costs
+// the DEPLOY nothing — the cards are pre-rendered PNGs and this script never
+// ships.
 const FONTS =
   FACE('IBM Plex Sans', '400 700', 'plex-sans-var.woff2') +
-  FACE('IBM Plex Mono', 400, 'plex-mono-400.woff2');
+  FACE('IBM Plex Mono', 400, 'plex-mono-400.woff2') +
+  FACE('IBM Plex Mono', 600, 'plex-mono-600.woff2');
 
 const FONT = "'IBM Plex Sans',-apple-system,'Segoe UI',Arial,sans-serif";
-const DISPLAY = FONT;
 const MONO = "'IBM Plex Mono',ui-monospace,Consolas,monospace";
+const DISPLAY = MONO;
 
 // The proofstone mark (chiseled P), the same object as favicon.svg and the header
 // lockup. It is identical on every card — the series identity is the mark, and
@@ -73,16 +81,20 @@ function card({ title, meta }) {
     *{margin:0;padding:0;box-sizing:border-box}
     body{width:1200px;height:630px;background:${BG};color:${TEXT};font-family:${FONT};
          display:flex;overflow:hidden}
-    .stripe{width:18px;background:${ACCENT};flex:0 0 auto}
+    .stripe{width:10px;background:${ACCENT};flex:0 0 auto}
     .body{flex:1;padding:74px 82px;display:flex;flex-direction:column;justify-content:space-between}
     .brand{display:flex;align-items:center;gap:16px;font-family:${DISPLAY};
-           font-size:34px;font-weight:700;letter-spacing:-.01em}
+           font-size:32px;font-weight:600;letter-spacing:-.01em}
     .brand .mark{width:46px;height:46px;display:block;flex:0 0 auto}
     .brand .mark svg{width:100%;height:100%;display:block}
-    .brand .word span{color:${ACCENT}}
-    h1{font-family:${DISPLAY};font-weight:700;
-       font-size:${title.length > 34 ? 66 : 76}px;line-height:1.08;letter-spacing:-.02em}
-    .meta{font-family:${MONO};font-size:26px;color:${ACCENT};letter-spacing:.02em}
+    /* The tail of the wordmark is grey, as it is in the site header: the accent
+       means "you can operate this", and half a wordmark is not a control. */
+    .brand .word span{color:${MUTED};font-weight:400}
+    h1{font-family:${DISPLAY};font-weight:600;
+       font-size:${title.length > 34 ? 58 : 68}px;line-height:1.18;letter-spacing:-.01em}
+    /* A tally is a fact, not a live badge — the accent would say the wrong thing
+       about a number. Mono, quiet, like every other counter on the site. */
+    .meta{font-family:${MONO};font-size:26px;color:${MUTED};letter-spacing:.02em}
     .foot{font-size:27px;color:${MUTED}}
   </style></head><body>
     <div class="stripe"></div>
