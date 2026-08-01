@@ -33,10 +33,14 @@ const shots = [
 const browser = await chromium.launch({ channel: 'chrome' });
 for (const s of shots) {
   const ctx = await browser.newContext({
-    colorScheme: s.scheme,
     viewport: { width: s.vw, height: s.vh },
     deviceScaleFactor: s.mobile ? 2 : 1
   });
+  // The theme is picked the way a reader picks it — the stored choice the head
+  // script reads before paint. colorScheme is no longer the lever: since the
+  // graphite wave the site does not consult the OS at all, so asking for a
+  // "light" context would have produced graphite frames labelled light.
+  await ctx.addInitScript((t) => localStorage.setItem('proofstone:theme', t), s.scheme);
   const page = await ctx.newPage();
   await page.goto(base + s.url, { waitUntil: 'networkidle' });
   await page.waitForTimeout(400);
