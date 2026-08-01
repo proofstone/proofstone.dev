@@ -95,22 +95,28 @@ async function get(url, attempts = 3) {
 // on a file curl then served four times in a row. A launch-day instrument that
 // cries wolf gets ignored, which is the whole of its value.
 //
-// It retries what the NETWORK threw and never what the SERVER answered. A 404
-// is an answer: retrying it would only make a real defect slower to report, and
-// one of these checks (the deleted map copy) is asserting a 404 on purpose.
+// It retries what the NETWORK threw, and — since 2026-08-01 — the two answers
+// that are not verdicts either. A 404 IS a verdict: retrying it would only make
+// a real defect slower to report, and one of these checks (the deleted map copy)
+// asserts a 404 on purpose. A 5xx is the edge telling you to come back: the
+// graphite deploy printed "plex-mono-400.woff2 — HTTP 503" on a file that then
+// served 200 three times in a row, which is the same false alarm as the fetch
+// blip above, just answered instead of thrown.
+const RETRYABLE = new Set([429, 502, 503, 504]);
 async function probe(url, init = {}, attempts = 3) {
   let lastErr;
   for (let i = 1; i <= attempts; i++) {
     try {
-      return await fetch(url, {
+      const res = await fetch(url, {
         headers: { 'user-agent': 'proofstone-verify' },
         signal: AbortSignal.timeout(20000),
         ...init
       });
+      if (!RETRYABLE.has(res.status) || i === attempts) return res;
     } catch (e) {
       lastErr = e;
-      if (i < attempts) await new Promise((r) => setTimeout(r, 800 * i));
     }
+    await new Promise((r) => setTimeout(r, 800 * i));
   }
   throw lastErr;
 }
@@ -294,16 +300,31 @@ console.log('\nDEPLOYED REDESIGN');
       // still carried the old wave's colours — a half-applied deploy, a stale
       // CDN object, a bad merge — and the check would have gone green.
       const need = [
-        ['--bg: #fcfdfe', 'white paper'],
-        ['--accent: #005ab8', 'cobalt accent'],
+        ['--bg: #161717', 'the graphite page'],
+        ['--accent: #5b9dff', 'cobalt raised for a dark page'],
+        ['[data-theme="light"]', 'the second theme, served'],
         ['--map-ink', 'map tokens'],
         ['font-weight: 400 700', 'sans declared through to a real 700']
       ];
+      // Each retired marker is one wave's signature, kept because a stale CDN
+      // object or a half-applied deploy is exactly a stylesheet that carries the
+      // new markers AND an old one. The graphite line is the last three:
+      //   • #101317 / #72bdff were the previous wave's dark page and accent —
+      //     they are what this wave replaced, not what it renamed;
+      //   • the prefers-color-scheme branch is gone by construction, because the
+      //     dark theme IS :root now. Its return would mean the tokens are
+      //     duplicated again, which is how the print regression got in last time.
+      //     Matched with the "@media (" prefix on purpose: the palette comment
+      //     names the mechanism it removed, and a bare string would flag that.
       const forbid = [
         ['#9d3b1f', 'sealing wax'],
         ['#f7f3ea', 'warm paper'],
         ["'Zilla Slab'", 'the display serif'],
-        ['rgba(157, 59, 31', 'the map hover wash literal']
+        ['rgba(157, 59, 31', 'the map hover wash literal'],
+        ['#fcfdfe', 'white paper'],
+        ['#101317', "the previous wave's dark page"],
+        ['#72bdff', "the previous wave's dark accent"],
+        ['@media (prefers-color-scheme', 'the duplicated OS-theme branch']
       ];
       const missing = need.filter(([t]) => !body.includes(t));
       const lingering = forbid.filter(([t]) => body.includes(t));
