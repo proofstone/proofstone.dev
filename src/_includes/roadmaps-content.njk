@@ -1,0 +1,41 @@
+{#- The /roadmaps/ section page: the five maps as entry cards. LIVE cards link
+    to the (English-only) roadmap pages from every locale; in-review cards are
+    not links, because there is nothing to open. All counts are computed. #}
+{%- set T = i18n[lang or "en"] %}
+{%- set R = T.roadmapsPage %}
+<div class="home">
+
+<div class="page-head">
+  <p class="crumb"><a href="{{ T.paths.home }}">proofstone</a> / {{ R.crumb }}</p>
+  <h1>{{ R.h1 }}</h1>
+  <p class="page-head__intro">{{ R.intro }}</p>
+  <p class="page-head__counts">{{ R.countsHtml(roadmaps.length, roadmaps | sumBy("milestones"), liveRoadmaps.length, reviewRoadmaps.length) | safe }}</p>
+</div>
+
+<div class="mcards">
+  {%- for r in roadmaps %}
+  {%- set stars = r | roadmapStars %}
+  {%- set cardLine = R.cardLines[r.slug] if R.cardLines else r.cardLine %}
+  {%- set inner %}
+    <div class="mcard__top">
+      <span><span class="mcard__no">{% if r.order < 10 %}0{% endif %}{{ r.order }}</span><h2 class="mcard__title">{{ r.title | replace(" Roadmap", "") }}</h2></span>
+      {%- if r.status == "live" %}<span class="chip chip--live">{{ R.live }}</span>
+      {%- else %}<span class="chip chip--review">{{ R.review }}</span>{% endif %}
+    </div>
+    <p class="mcard__desc">{{ cardLine }}{% if r.status != "live" %} {{ R.privateNote }}{% endif %}</p>
+    {%- if r.lab %}
+    <p class="mcard__lab"><span class="lab-tag">{{ R.labWord }}</span>{% if R.labNotes %}{{ R.labNotes[r.slug] }}{% else %}<code>{{ r.lab.name }}</code> — {{ r.lab.note }}.{% endif %}</p>
+    {%- elif r.labNote %}
+    <p class="mcard__lab"><span class="lab-tag">{{ R.labWord }}</span>{% if R.labNotes %}{{ R.labNotes[r.slug] }}{% else %}{{ r.labNote }}.{% endif %}</p>
+    {%- endif %}
+    <p class="mcard__meta"><span class="n">{{ r.milestones }}</span> {{ R.milestonesWord(r.milestones) }} · <span class="n">{{ stars }}</span> {{ R.flagshipWord(stars) }}</p>
+  {%- endset %}
+  {%- if r.status == "live" %}
+  <a class="mcard" href="/{{ r.slug }}/">{{ inner | safe }}</a>
+  {%- else %}
+  <div class="mcard">{{ inner | safe }}</div>
+  {%- endif %}
+  {%- endfor %}
+</div>
+
+</div>

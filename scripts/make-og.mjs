@@ -24,10 +24,14 @@ mkdirSync(outDir, { recursive: true });
 // If a token changes in styles.css it has to change here too — which is why
 // check-build asserts these four values against the stylesheet instead of
 // trusting anyone to remember.
-const BG = '#161717';
-const TEXT = '#d5d7d9';
-const ACCENT = '#5b9dff';
-const MUTED = '#8b8f93';
+const BG = '#0b0b0c';
+const TEXT = '#e8e8ea';
+const ACCENT = '#f2efe6';
+// The mark's own pinned pair - see favicon.svg for the measurements. Asserted
+// identical to the favicon by palette-guard.
+const MARK_BADGE = '#8a8884';
+const MARK_INK = '#0b0b0c';
+const MUTED = '#9b9ba3';
 
 // Same rule the site uses: a milestone heading carrying a star marker. This
 // keeps reading ⭐ from the README — the star is data, and only its DISPLAY
@@ -72,8 +76,8 @@ const DISPLAY = MONO;
 // already asserts those two against the stylesheet.
 const MARK =
   '<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">' +
-  `<rect width="32" height="32" rx="7" fill="${ACCENT}"/>` +
-  `<path fill="${BG}" fill-rule="evenodd" d="M8.5 9.3L10.3 7.5L21.7 7.5L23.5 9.3L23.5 15.7L21.7 17.5L13.5 17.5L13.5 22.8L11.7 24.5L10.3 24.5L8.5 22.8Z M13.5 10.6L20 10.6L21.3 11.9L21.3 13.1L20 14.4L13.5 14.4Z"/></svg>`;
+  `<rect width="32" height="32" rx="7" fill="${MARK_BADGE}"/>` +
+  `<path fill="${MARK_INK}" fill-rule="evenodd" d="M8.5 9.3L10.3 7.5L21.7 7.5L23.5 9.3L23.5 15.7L21.7 17.5L13.5 17.5L13.5 22.8L11.7 24.5L10.3 24.5L8.5 22.8Z M13.5 10.6L20 10.6L21.3 11.9L21.3 13.1L20 14.4L13.5 14.4Z"/></svg>`;
 
 function card({ title, meta }) {
   return `<!doctype html><html><head><meta charset="utf-8"><style>

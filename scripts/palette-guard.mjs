@@ -89,6 +89,15 @@ export const OG_MIRRORED = [
   ['MUTED', 'muted']
 ];
 
+// The identity mark's own pinned pair — shared verbatim by favicon.svg and the
+// MARK_BADGE / MARK_INK constants in make-og.mjs. See favicon.svg for the
+// measured rationale (an ivory badge is invisible on a white tab bar).
+export const MARK = { badge: '#8a8884', ink: '#0b0b0c' };
+export const MARK_MIRRORED = [
+  ['MARK_BADGE', MARK.badge],
+  ['MARK_INK', MARK.ink]
+];
+
 // Fonts nobody asked for. Written because the Stone wave shipped exactly this
 // defect for one build: the display serif's @font-face and both <link rel=preload>
 // tags were removed, and the two 26 KB woff2 files stayed on disk. The whole
@@ -123,12 +132,17 @@ export function inspectPalette({ css, favicon, ogSource }) {
   for (const s of strayLiterals(css)) problems.push(`colour literal outside the token block — ${s}`);
 
   if (favicon !== undefined) {
-    if (!tokens.accent || !tokens.onAccent) problems.push('cannot read --accent / --on-accent from :root');
-    else {
-      const f = String(favicon).toLowerCase();
-      if (!f.includes(tokens.accent)) problems.push(`favicon.svg badge is not --accent ${tokens.accent}`);
-      if (!f.includes(tokens.onAccent)) problems.push(`favicon.svg glyph is not --on-accent ${tokens.onAccent}`);
-    }
+    // MONO wave: the mark pair is PINNED, no longer a mirror of --accent. The
+    // mono accent is ivory, and an ivory badge vanishes on a white tab bar
+    // (1.10:1 where a graphical object needs 3:1) — the favicon is the one copy
+    // of the identity that renders on backgrounds this site does not control.
+    // The guard's job moves to keeping the copies identical: favicon.svg and
+    // the MARK_BADGE / MARK_INK constants make-og.mjs paints the same mark
+    // with. Pinned both ways, just no longer to the accent. Measurements live
+    // as a comment inside favicon.svg.
+    const f = String(favicon).toLowerCase();
+    if (!f.includes(MARK.badge)) problems.push(`favicon.svg badge is not the pinned mark badge ${MARK.badge}`);
+    if (!f.includes(MARK.ink)) problems.push(`favicon.svg glyph is not the pinned mark ink ${MARK.ink}`);
   }
 
   if (ogSource !== undefined) {
@@ -138,6 +152,11 @@ export function inspectPalette({ css, favicon, ogSource }) {
       if (!want) problems.push(`cannot read --${tokenName} from the dark block`);
       else if (!m) problems.push(`make-og.mjs has no ${constName} literal to compare`);
       else if (m[1].toLowerCase() !== want) problems.push(`make-og.mjs ${constName} is ${m[1]}, --${tokenName} (dark) is ${want}`);
+    }
+    for (const [constName, want] of MARK_MIRRORED) {
+      const m = String(ogSource).match(new RegExp(`const ${constName} = '(#[0-9a-fA-F]{3,8})'`));
+      if (!m) problems.push(`make-og.mjs has no ${constName} literal to compare`);
+      else if (m[1].toLowerCase() !== want) problems.push(`make-og.mjs ${constName} is ${m[1]}, the pinned mark value is ${want}`);
     }
   }
 

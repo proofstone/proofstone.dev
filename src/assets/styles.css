@@ -98,51 +98,55 @@
    tokens any more, and the only override is the light theme a reader picks.
    ────────────────────────────────────────────────────────────────────────── */
 :root {
-  /* Charcoal steps. Not #000: a black page makes every hairline a glare edge. */
-  --bg: #161717;
-  --surface: #1d1e1f;          /* a sheet on the sheet: terminal blocks, code */
-  --surface-2: #232425;        /* pressed in: the map's spine, table headers */
-  --text: #d5d7d9;             /* 12.45:1 on --bg, 11.57:1 on --surface */
-  --muted: #8b8f93;            /*  5.52:1 on --bg,  5.13:1 on --surface */
+  /* Near-black steps, slightly warm. Not #000: a black page makes every
+     hairline a glare edge. (MONO wave: the charcoal ramp moved down a step —
+     the page is quieter so the warm-white accent can be the brightest thing.) */
+  --bg: #0b0b0c;
+  --surface: #151516;          /* a sheet on the sheet: cards, terminal blocks */
+  --surface-2: #1d1d1f;        /* pressed in: the map's spine, table headers */
+  --text: #e8e8ea;             /* contrast measured by tools/contrast-g.mjs */
+  --muted: #9b9ba3;
   /* Hairline dividers may be quiet; the boundary of a CONTROL may not — WCAG
      1.4.11 wants 3:1 for it, and the progress course is a graphic that carries
      information, so it is on the same token. */
-  --border: #2d2e2e;
-  --border-soft: #242525;
-  --control-border: #6e7276;   /*  3.71:1 on --bg, 3.44:1 on --surface */
+  --border: #29292b;
+  --border-soft: #1d1d1f;
+  --control-border: #77777c;
 
-  /* Colour = meaning. Four of them, and none is decorative.
-     Cobalt is the brand blue opened up for a dark page: live maps, links, and
-     anything a reader can operate. */
-  --accent: #5b9dff;           /*  6.60:1 on --bg, 6.13:1 on --surface */
-  --on-accent: #161717;        /*  6.60:1 on --accent */
+  /* MONO: colour = meaning, and the brand carries NO hue at all. The accent is
+     warm paper-white — links, the live chip, the star button, the focus ring.
+     Content links are additionally underlined (see .prose a): on a page whose
+     text is already near-white, warmth alone is not a signal. */
+  --accent: #f2efe6;
+  --on-accent: #171614;        /* dark ink on the ivory button */
+  --accent-2: #c9c3b2;         /* the darker stop of the H1 gradient */
   /* Green is ONLY what the reader earned: the PROVEN stamp, a laid stone, and
      the `$` of the command line the format is built on. Nothing else may take
      it — a green "live" badge is what made three stamps the loudest thing on
      the old home page. */
-  --ok: #3fb950;               /*  7.07:1 on --bg */
-  --on-ok: #161717;
+  --ok: #3fb950;
+  --on-ok: #0b0b0c;
   /* Amber is a state, not an achievement: in practitioner review. */
-  --review: #d2a13a;           /*  7.61:1 on --bg */
+  --review: #d2a13a;
   /* FLAGSHIP is the brightest grey, not a fifth colour — three registers of one
      scale (muted / text / accent) instead of three hues. The token stays because
      the map SVGs, produced in three other repositories, paint their FLAGSHIP
      plates from var(--gold, …) and this is the only place to repaint them. */
-  --gold: #d5d7d9;             /* 12.45:1 on --bg */
-  --on-gold: #161717;
-  --code-bg: #1d1e1f;
+  --gold: #e8e8ea;
+  --on-gold: #0b0b0c;
+  --code-bg: #151516;
 
   /* Map tokens. The same SVG has to live on this site (where it inherits these)
      and standalone on GitHub (where var() does not resolve and the literal baked
      into the attribute wins), so one file serves both themes and both places.
      --map-ink is NOT the silhouette grey it looks like: on a live map it paints
      the node LABELS, so it is held to 4.5:1 against the node fill. */
-  --map-paper: #161717;
-  --map-node: #1d1e1f;
-  --map-node-spine: #232425;
-  --map-ink: #c3c7ca;          /*  9.81:1 on --map-node, 9.14:1 on the spine */
-  --map-line: #8b8f93;         /*  5.52:1 on --map-paper */
-  --map-ring: #5b9dff;         /* focus ring on a node */
+  --map-paper: #0b0b0c;
+  --map-node: #151516;
+  --map-node-spine: #1d1d1f;
+  --map-ink: #c9ccce;
+  --map-line: #9b9ba3;
+  --map-ring: #f2efe6;         /* focus ring on a node */
 
   /* The home page's silhouettes are the opposite case: derived from the same
      maps, but with every label stripped out. Nothing there is read, so they take
@@ -156,10 +160,10 @@
   --font-display: 'IBM Plex Sans', 'Text Fallback', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --mono: 'IBM Plex Mono', 'Mono Fallback', ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 
-  /* Square, not rounded: a terminal register has no capsules. Kept as a token
-     because the checkbox and the code chips still ask for a radius by name. */
-  --r-sm: 0px;
-  --r-md: 0px;
+  /* MONO wave: the register squared everything; the manifesto rounds it back.
+     Cards are 12px, chips and buttons are full capsules where they say so. */
+  --r-sm: 7px;
+  --r-md: 12px;
 
   --measure: 46rem;            /* the reading column — 70ch, never stretched */
   --shell: 66rem;              /* the home page's one left edge */
@@ -175,30 +179,34 @@
    cobalt and green are the values wave A measured on white and they still hold,
    amber had to be darkened to 5.73:1 to say "in review" on a light sheet. */
 [data-theme="light"] {
-  --bg: #fbfbfb;
-  --surface: #f3f3f3;
-  --surface-2: #ebebeb;
-  --text: #1b1c1d;             /* 16.49:1 on --bg */
-  --muted: #5c5f62;            /*  6.21:1 on --bg,  5.79:1 on --surface */
-  --border: #dadada;
-  --border-soft: #e7e7e7;
-  --control-border: #898c8f;   /*  3.27:1 on --bg,  3.05:1 on --surface */
-  --accent: #005ab8;           /*  6.43:1 on --bg,  6.00:1 on --surface */
-  --on-accent: #fbfbfb;        /*  6.43:1 on --accent */
-  --ok: #1f6b3c;               /*  6.29:1 on --bg */
-  --on-ok: #fbfbfb;
-  --review: #8a5a00;           /*  5.73:1 on --bg */
-  --gold: #1b1c1d;             /* 16.49:1 on --bg */
-  --on-gold: #fbfbfb;
-  --code-bg: #f3f3f3;
-  --map-paper: #fbfbfb;
-  --map-node: #f3f3f3;
-  --map-node-spine: #ebebeb;
-  --map-ink: #33363a;          /* 10.94:1 on --map-node */
-  --map-line: #5c5f62;         /*  6.21:1 on --map-paper */
-  --map-ring: #005ab8;
-  --sil-ink: #6b6f73;
-  --sil-node: #b9bdc1;
+  /* MONO light: warm paper, the dark theme inverted rather than a second
+     palette. The accent flips to warm near-black ink; ok/review keep the
+     wave-A values that were measured on a light sheet. */
+  --bg: #faf9f6;
+  --surface: #ffffff;
+  --surface-2: #f1efe9;
+  --text: #2b2a28;
+  --muted: #63615c;
+  --border: #dbd8d1;
+  --border-soft: #e9e6df;
+  --control-border: #8b887f;
+  --accent: #201f1c;
+  --on-accent: #f5f3ee;
+  --accent-2: #5a564c;
+  --ok: #1f6b3c;
+  --on-ok: #faf9f6;
+  --review: #8a5a00;
+  --gold: #2b2a28;
+  --on-gold: #faf9f6;
+  --code-bg: #f1efe9;
+  --map-paper: #faf9f6;
+  --map-node: #ffffff;
+  --map-node-spine: #f1efe9;
+  --map-ink: #33322f;
+  --map-line: #63615c;
+  --map-ring: #201f1c;
+  --sil-ink: #6b6963;
+  --sil-node: #c4c1b8;
 
   color-scheme: light;
 }
@@ -274,11 +282,62 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .brand__word span { color: var(--muted); font-weight: 400; }
 .brand:hover { text-decoration: none; }
 .site-nav {
-  display: flex; align-items: baseline; gap: 1.6rem;
+  display: flex; align-items: center; gap: 1.2rem;
   font-family: var(--mono); font-size: 0.85rem;
 }
 .site-nav a { color: var(--muted); }
 .site-nav a:hover { color: var(--text); text-decoration: none; }
+
+/* The section links sit beside the brand and speak Sans — they are the page's
+   own words, not chrome codes. The current section is bold, said twice:
+   aria-current for the reader who listens, the weight for the one who looks. */
+.site-links {
+  display: flex; align-items: baseline; gap: 1.5rem;
+  font-family: var(--font); font-size: 0.95rem; margin-left: 1.2rem;
+}
+.site-links a { color: var(--text); }
+.site-links a:hover { color: var(--accent); text-decoration: none; }
+.site-links a[aria-current="page"] { font-weight: 600; }
+.site-header__spacer { flex: 1; }
+
+/* The one filled control on the page: the ivory capsule. It is a link dressed
+   as a button because it IS the site's single call — the org, where the work
+   lives. --on-accent is measured against --accent in both themes. */
+.btn-star {
+  font-family: var(--font); font-weight: 600; font-size: 0.85rem;
+  color: var(--on-accent); background: var(--accent);
+  border-radius: 999px; padding: .48rem 1.05rem; white-space: nowrap;
+}
+.btn-star:hover { text-decoration: none; filter: brightness(.94); }
+
+/* The language switcher: a flag capsule opening a listbox. SVG flags, not emoji
+   — Windows renders flag emoji as bare letter pairs. Progressive enhancement:
+   with JS off the <details> still opens and the entries are plain links. */
+.lang { position: relative; }
+.lang summary { list-style: none; cursor: pointer; }
+.lang summary::-webkit-details-marker { display: none; }
+.lang-btn {
+  display: flex; align-items: center; gap: .5rem;
+  font-family: var(--mono); font-size: 0.78rem; letter-spacing: .06em;
+  color: var(--muted); border: 1px solid var(--border); border-radius: 999px;
+  padding: .34rem .75rem;
+}
+.lang summary:hover .lang-btn { color: var(--text); border-color: var(--control-border); }
+.lang-flag { width: 18px; height: 13px; border-radius: 2px; display: block; }
+.lang-caret { font-size: .6em; }
+.lang-menu {
+  position: absolute; top: calc(100% + 8px); right: 0; min-width: 10rem;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md);
+  padding: .35rem; display: flex; flex-direction: column; gap: .1rem; z-index: 30;
+  margin: 0; list-style: none;
+}
+.lang-menu a {
+  display: flex; align-items: center; gap: .6rem;
+  font-family: var(--font); font-size: 0.9rem;
+  color: var(--text); border-radius: var(--r-sm); padding: .45rem .6rem;
+}
+.lang-menu a:hover { background: var(--surface-2); text-decoration: none; }
+.lang-menu a[aria-current="true"] { background: var(--surface-2); font-weight: 600; }
 
 /* A word, not a glyph. The button says the theme it switches TO, which is what
    its accessible name says too — an icon that has to be decoded is a worse
@@ -304,151 +363,108 @@ main:focus { outline: none; }
 .site-footer a { color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
 .site-footer a:hover { color: var(--text); }
 
-/* ── Home ─────────────────────────────────────────────────────────────────── */
-/* One column for the whole page, so every block shares a left edge. The blocks
-   inside it keep their own measures; nothing is centred independently. */
+/* ── Home: the manifesto ───────────────────────────────────────────────────────── */
+/* One column for the whole page, so every block shares a left edge. */
 .home { max-width: var(--shell); margin: 0 auto; }
 
-.hero { padding: 3.5rem 0 3rem; }
+/* The hero is the manifesto: a centred claim, then the argument in two
+   paragraphs. The H1 is the site's largest Sans with "Hello World" set as the
+   code it names — mono inside the gradient. */
+.hero { text-align: center; padding: 4.6rem 0 4.2rem; }
 .hero__title {
-  font-family: var(--mono); font-weight: 600;
-  font-size: clamp(1.75rem, 4vw, 2.6rem); line-height: 1.25; letter-spacing: -.01em;
-  margin: 1.1rem 0 1rem; max-width: 21ch;
+  font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(2.3rem, 5vw, 3.8rem); line-height: 1.12; letter-spacing: -.02em;
+  margin: 0; color: var(--accent);
 }
-/* The one word the page is about. Not bold, not underlined — the accent, which
-   on every other line of this site means "live". */
-.hero__title em { font-style: normal; color: var(--accent); }
-.hero__sub { color: var(--muted); max-width: 52ch; font-size: 1.05rem; margin: 0; }
-/* The prompt line. This is the format's own sentence, so it is set as a command:
-   the `$` in earned-green, the rest in the quiet grey. */
-.hero__prompt {
-  margin: 2rem 0 0; font-family: var(--mono); font-size: 0.88rem; color: var(--muted);
+/* Gradient text only where the engine supports clipping it; the fallback is the
+   flat accent, which is the same ink the gradient starts from. Print gets the
+   flat ink too — transparent text on paper is no text (see the print block). */
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .hero__title {
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
 }
-.hero__prompt b { color: var(--ok); font-weight: 600; }
+.hero__title .hw {
+  font-family: var(--mono); font-weight: 600; font-size: .92em; letter-spacing: -.03em;
+}
+.manifest {
+  max-width: 62ch; margin: 1.8rem auto 0; color: var(--muted);
+  font-size: 1.05rem; line-height: 1.7;
+}
+.manifest b { color: var(--text); font-weight: 600; }
 
-/* A section head is a ruled line with a kicker on it — the same object on the
-   home page and on a roadmap. */
-.sec-head {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 1rem;
-  padding-bottom: .8rem; border-bottom: 1px solid var(--border);
-  margin: 3.5rem 0 0;
+/* ── The section cards ────────────────────────────────────────────────────── */
+/* Six doors, honestly labelled: a live card is a link, a PLANNED or IDEA card
+   is a <div> — no page exists, so nothing pretends to be one (the same rule
+   that keeps in-review roadmaps unlinked). */
+.cards { border-top: 1px solid var(--border-soft); margin-top: 1.2rem; padding: 3rem 0 0; }
+.cards > .kicker { display: block; text-align: center; }
+.card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-top: 2.1rem; }
+.card {
+  border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface);
+  padding: 1.4rem 1.35rem; display: flex; flex-direction: column; gap: .55rem;
+  color: var(--text); min-width: 0;
 }
-.sec-head__aside { font-family: var(--mono); font-size: 0.78rem; color: var(--muted); }
+a.card:hover { border-color: var(--control-border); text-decoration: none; }
+.card__top { display: flex; justify-content: space-between; align-items: baseline; gap: .8rem; }
+.card__title { font-family: var(--font-display); font-weight: 700; font-size: 1.08rem; letter-spacing: -.01em; margin: 0; }
+.card__desc { color: var(--muted); font-size: 0.92rem; line-height: 1.6; margin: 0; }
 
-/* ── The registry ─────────────────────────────────────────────────────────── */
-/* Rows, not a card grid. A card carries a silhouette, a stamp, a tally and a
-   tagline in a box 19rem wide, and five of them are five boxes to compare. A
-   register is read in one pass down the numbers, and the shapes get their own
-   section below where they are large enough to be shapes. */
-.registry { list-style: none; margin: 0; padding: 0; }
-/* minmax(0, 1fr), not 1fr: the tally is one nowrap mono line, so an `auto`
-   minimum lets its min-content width set the column and the whole grid grows
-   past the viewport — measured at 396px inside a 320px screen. */
-.registry__item {
-  display: grid; grid-template-columns: 3.5ch minmax(0, 1fr) auto;
-  gap: 0 1.4rem; align-items: baseline;
-  padding: 1.3rem 0; border-bottom: 1px solid var(--border-soft);
+/* ── Section pages: /roadmaps/, /projects/ ─────────────────────────────── */
+.page-head { padding: 1.6rem 0 0; }
+.crumb { font-family: var(--mono); font-size: 0.82rem; color: var(--muted); margin: 0; }
+.crumb a { color: var(--muted); }
+.crumb a:hover { color: var(--text); text-decoration: none; }
+.page-head h1 {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(1.9rem, 3.4vw, 2.6rem); letter-spacing: -.02em; margin: .8rem 0 .5rem;
 }
-/* No fill on hover — a wash across a row at 8% is a lift, and a register does
-   not lift. The title takes the accent instead, which is the thing you click. */
-.registry__no { font-family: var(--mono); font-size: 0.82rem; color: var(--muted); }
-.registry__title { font-family: var(--mono); font-weight: 600; font-size: 1.02rem; }
-.registry__title a { color: var(--text); }
-.registry__title a:hover { color: var(--accent); text-decoration: none; }
-.registry__desc {
-  grid-column: 2; color: var(--muted); font-size: 0.92rem; margin: .25rem 0 0; max-width: 56ch;
+.page-head__intro { color: var(--muted); max-width: 60ch; font-size: 1rem; margin: 0; }
+.page-head__counts { margin: 1rem 0 0; font-family: var(--mono); font-size: 0.82rem; color: var(--muted); }
+.page-head__counts b { color: var(--text); font-weight: 600; }
+
+/* The entry cards of a section page: the same object as the home cards, with a
+   number, a repo path where the artifact lives, and the tally on the floor. */
+.mcards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; margin: 2.1rem 0 0; }
+.mcard {
+  border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface);
+  padding: 1.4rem 1.35rem; display: flex; flex-direction: column; gap: .55rem;
+  color: var(--text); min-width: 0;
 }
-.registry__meta {
-  font-family: var(--mono); font-size: 0.82rem; color: var(--muted);
-  display: flex; gap: 1.1rem; align-items: baseline; white-space: nowrap;
-}
-.registry__meta .n { color: var(--text); font-weight: 600; }
-/* The lab line is a footnote to a row, not a row of its own. */
-.registry__lab {
-  grid-column: 2; margin: .5rem 0 0; font-size: 0.85rem; color: var(--muted);
-}
-.registry__lab-tag {
-  font-family: var(--mono); font-size: 0.78rem; letter-spacing: .14em; text-transform: uppercase;
-  color: var(--muted); border: 1px solid var(--border); padding: .1rem .35rem; margin-right: .45rem;
+a.mcard:hover { border-color: var(--control-border); text-decoration: none; }
+a.mcard:hover .mcard__title { color: var(--accent-2); }
+.mcard__top { display: flex; justify-content: space-between; align-items: baseline; gap: .8rem; }
+.mcard__no { font-family: var(--mono); font-size: 0.78rem; color: var(--muted); margin-right: .6rem; }
+.mcard__title { font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; letter-spacing: -.01em; margin: 0; display: inline; }
+.mcard__name { font-family: var(--mono); font-size: 0.82rem; color: var(--muted); overflow-wrap: anywhere; }
+.mcard__desc { color: var(--muted); font-size: 0.92rem; line-height: 1.6; margin: 0; }
+.mcard__meta { margin-top: auto; padding-top: .5rem; font-family: var(--mono); font-size: 0.82rem; color: var(--muted); }
+.mcard__meta .n { color: var(--text); font-weight: 600; }
+.mcard__lab { font-family: var(--mono); font-size: 0.82rem; color: var(--muted); margin: 0; }
+.mcard__lab .lab-tag {
+  color: var(--accent); border: 1px solid var(--border); border-radius: 999px;
+  padding: .05rem .5rem; font-size: 0.78rem; letter-spacing: .14em; text-transform: uppercase; margin-right: .5rem;
 }
 
-/* ── Chips: LIVE / IN REVIEW ──────────────────────────────────────────────── */
-/* Outlined, never filled. A filled chip is the loudest object on a graphite page
-   and "live" is a fact about a map, not an award. Dashed is this site's existing
-   word for "not live", and it survives a printer and a colour-blind reader. */
+/* ── Chips: LIVE / IN REVIEW / PLANNED / IDEA ─────────────────────────── */
+/* Outlined, never filled; capsules now — the manifesto rounded the register.
+   Dashed stays this site's word for "not yet", and it survives a printer and a
+   colour-blind reader. PLANNED and IDEA exist because the home cards emit them. */
 .chip {
   font-family: var(--mono); font-size: 0.78rem; font-weight: 600;
   letter-spacing: .14em; text-transform: uppercase;
-  padding: .16rem .45rem .1rem; border: 1px solid; border-radius: var(--r-sm);
+  padding: .16rem .55rem .1rem; border: 1px solid; border-radius: 999px;
   white-space: nowrap;
 }
 .chip--live { color: var(--accent); border-color: var(--accent); }
 .chip--review { color: var(--review); border-color: var(--review); border-style: dashed; }
-/* No --ok or --gold variant here. Nothing emits one, and a colour rule nobody
-   uses is exactly what makes the next repaint miss a spot — the same reason
-   .badge--flag was deleted in the previous wave rather than repainted. */
+.chip--planned { color: var(--muted); border-color: var(--border); }
+.chip--idea { color: var(--muted); border-color: var(--border); border-style: dashed; }
 
-/* ── The maps showcase ────────────────────────────────────────────────────── */
-/* Three silhouettes, monochrome and static. Derived from the same assets/roadmap.svg
-   the roadmap page inlines — one source of geometry, so a card can never show a
-   shape the map does not have — and repainted through --sil-* on the way out. */
-.maps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.6rem; padding: 1.9rem 0 0; }
-.map-card { min-width: 0; }
-.map-card__frame {
-  border: 1px solid var(--border-soft); background: var(--surface);
-  padding: 1rem; height: 11.5rem; display: grid; place-items: center; overflow: hidden;
-}
-.map-card__frame svg { width: 100%; height: 100%; display: block; }
-.map-card a:hover .map-card__frame { border-color: var(--control-border); }
-.map-card__cap { margin: .7rem 0 0; }
-.map-card__no {
-  font-family: var(--mono); font-size: 0.78rem; letter-spacing: .18em;
-  text-transform: uppercase; color: var(--muted);
-}
-.map-card__name {
-  font-family: var(--mono); font-weight: 600; font-size: 0.85rem;
-  margin-top: .2rem; color: var(--muted);
-}
-.map-card a:hover .map-card__name { color: var(--text); text-decoration: none; }
-
-/* ── How it works ─────────────────────────────────────────────────────────── */
-.how { list-style: none; margin: 0; padding: 1.6rem 0 0; max-width: 44rem; }
-.how li { display: grid; grid-template-columns: 3.5ch minmax(0, 1fr); gap: 0 1.4rem; padding: .5rem 0; }
-.how__n { font-family: var(--mono); font-size: 0.82rem; color: var(--muted); padding-top: .2rem; }
-.how p { margin: 0; color: var(--muted); font-size: 0.95rem; }
-.how p b { color: var(--text); font-weight: 600; }
-
-/* ── Companion projects ───────────────────────────────────────────────────── */
-/* One line in the register's own language, not a card: there is one companion,
-   and a bordered box for it read as a sixth roadmap that had lost its numbers. */
-.companion { display: grid; grid-template-columns: 3.5ch minmax(0, 1fr); gap: 0 1.4rem; padding: 1.3rem 0 0; }
-.companion__tag { font-family: var(--mono); font-size: 0.78rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
-.companion__name { font-family: var(--mono); font-weight: 600; font-size: 0.95rem; margin: 0; }
-.companion__name a { color: var(--text); }
-.companion__name a:hover { color: var(--accent); text-decoration: none; }
-.companion__note { margin: .35rem 0 0; color: var(--muted); font-size: 0.92rem; max-width: 62ch; }
-/* The site's own footnote about itself, at the foot of the register. */
-.home__note {
-  margin: 2.2rem 0 0; padding-top: 1.1rem; border-top: 1px solid var(--border-soft);
-  color: var(--muted); font-size: 0.92rem; max-width: 62ch;
-}
-
-/* ── The live milestone sample ────────────────────────────────────────────── */
-/* One real milestone, rendered from a real README by the same pipeline as the
-   roadmap page — which is the point: the home page shows the format rather than
-   describing it, and it cannot show a format the pages do not use. */
-/* .prose centres itself in the reading column, which is right inside an article
-   and wrong here: the sample has to start at the same left edge as every other
-   block on the home page. Two classes, not one — `.prose { margin: 0 auto }` is
-   declared later in this file, so at equal specificity source order would put
-   the milestone 240px to the right of everything else. */
-.home .sample__block { max-width: var(--measure); margin: 1.9rem auto 0 0; }
-.sample__block .ps-ms-h { margin-top: 0; }
-/* The specimen shows the whole vocabulary, including the state a reader has not
-   reached yet: here the PROVEN line is displayed on purpose. On a roadmap page
-   it stays hidden until the box is ticked. */
-.sample__block .ps-crit__status { display: block; }
-.sample__note { margin: 1rem 0 0; color: var(--muted); font-size: 0.92rem; }
+@media (max-width: 980px) { .card-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 760px) { .mcards { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .card-grid { grid-template-columns: 1fr; } }
 
 /* ── Roadmap page: top bar ────────────────────────────────────────────────── */
 /* The breadcrumb is mono because it is a path, not a sentence. The actions are
@@ -586,8 +602,7 @@ main:focus { outline: none; }
    of a roadmap, so they keep a permanent underline; chrome links are identified
    by shape and position and are left alone. */
 .prose a:not(.ps-anchor),
-.site-footer p a,
-.companion__note a {
+.site-footer p a {
   color: var(--accent);
   text-decoration: underline;
   text-underline-offset: .16em;
@@ -595,8 +610,7 @@ main:focus { outline: none; }
   text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
 }
 .prose a:not(.ps-anchor):hover,
-.site-footer p a:hover,
-.companion__note a:hover { text-decoration-color: currentColor; }
+.site-footer p a:hover { text-decoration-color: currentColor; }
 
 /* Ordinary callouts stay quiet — the surface and the frame are reserved for the
    proof criterion, which is the one element the whole format turns on. */
@@ -828,10 +842,6 @@ main:focus { outline: none; }
 }
 
 /* ── Small screens ────────────────────────────────────────────────────────── */
-@media (max-width: 60rem) {
-  .maps { grid-template-columns: 1fr; gap: 2rem; }
-  .map-card__frame { height: 13rem; }
-}
 @media (max-width: 40rem) {
   body { font-size: 16.5px; }
   .site-header { padding: .8rem 1.1rem; }
@@ -839,11 +849,6 @@ main:focus { outline: none; }
   .site-footer { padding: 1.2rem 1.1rem 2rem; }
   .hero { padding: 2.2rem 0 2rem; }
   .roadmap__bar { align-items: flex-start; }
-  .registry__item { grid-template-columns: 3.5ch minmax(0, 1fr); }
-  /* The tally drops under the title and stops being one unbreakable line: at
-     320px "33 milestones · 3 flagship" plus a chip does not fit beside a number
-     column, and nowrap there is what pushed the whole grid off-screen. */
-  .registry__meta { grid-column: 2; margin-top: .5rem; white-space: normal; flex-wrap: wrap; row-gap: .4rem; }
   .series__meta { white-space: normal; }
   .prose h2 { font-size: 1.28rem; }
 }
@@ -920,9 +925,9 @@ main:focus { outline: none; }
   .ps-check:checked::after { color: #000; }
   .stone { border-color: #000; height: 9px; }
   .stone.is-laid { background: #000; }
-  /* A silhouette is a preview standing in for a link, and paper cannot be
-     clicked. The map itself prints in full on the roadmap page. */
-  .map-card__frame { display: none; }
+  /* Gradient-clipped text is transparent ink — on paper that is no text at
+     all, so the H1 prints in the flat token the gradient starts from. */
+  .hero__title { background: none; -webkit-background-clip: initial; background-clip: initial; color: var(--text); }
 
   /* A paper reference with no addresses is not a reference. In-page anchors are
      excluded — "(#2--evals)" on paper is noise, not information. */

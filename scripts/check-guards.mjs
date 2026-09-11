@@ -382,8 +382,10 @@ console.log('\nPALETTE — a colour that escapes the token block must fail, and 
   // Deliberately packed onto one line: the formatting-independence case.
   const ONE_LINER = ':root { --accent: #005ab8; --on-accent: #ffffff; }\n'
     + '[data-theme="dark"] { --bg: #101317; --text: #e3e8ee; --accent: #72bdff; --muted: #a0a9b2; }';
-  const FAVICON = '<svg><rect fill="#005ab8"/><path fill="#ffffff"/></svg>';
-  const OG = "const BG = '#101317';\nconst TEXT = '#e3e8ee';\nconst ACCENT = '#72bdff';\nconst MUTED = '#a0a9b2';";
+  // MANIFESTO wave: the favicon carries the PINNED mark pair, not --accent —
+  // see palette-guard.mjs MARK for why (ivory vanishes on a white tab bar).
+  const FAVICON = '<svg><rect fill="#8a8884"/><path fill="#0b0b0c"/></svg>';
+  const OG = "const BG = '#101317';\nconst TEXT = '#e3e8ee';\nconst ACCENT = '#72bdff';\nconst MUTED = '#a0a9b2';\nconst MARK_BADGE = '#8a8884';\nconst MARK_INK = '#0b0b0c';";
 
   const reject = (name, payload, fragment) => {
     const { problems } = inspectPalette(payload);
@@ -416,7 +418,12 @@ console.log('\nPALETTE — a colour that escapes the token block must fail, and 
   // Repaint half done: stylesheet moved, the two mirrors did not.
   reject('favicon left on the old accent',
     { css: PALETTE_CSS, favicon: '<svg><rect fill="#9d3b1f"/><path fill="#f7f3ea"/></svg>' },
-    'favicon.svg badge is not --accent');
+    'favicon.svg badge is not the pinned mark badge');
+  // The mark's OTHER copy: the OG generator's pinned constants must not drift
+  // from the favicon — that is the whole mirror after the MONO adaptation.
+  reject('OG mark constant drifted from the pinned pair',
+    { css: PALETTE_CSS, ogSource: OG.replace("const MARK_BADGE = '#8a8884'", "const MARK_BADGE = '#5b9dff'") },
+    'the pinned mark value is');
   reject('OG generator left on the old dark palette',
     { css: PALETTE_CSS, ogSource: "const BG = '#14110d';\nconst TEXT = '#ece5d6';\nconst ACCENT = '#e08b62';\nconst MUTED = '#a89d8a';" },
     'make-og.mjs BG is #14110d');

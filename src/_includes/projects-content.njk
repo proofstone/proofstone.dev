@@ -1,0 +1,27 @@
+{#- The /projects/ section page: the labs. Every card is a link — all three
+    live in public repositories (URLs verified before they were written down).
+    The kind chip (index / lab / tool) stays a code-word in every locale. #}
+{%- set T = i18n[lang or "en"] %}
+{%- set P = T.projectsPage %}
+<div class="home">
+
+<div class="page-head">
+  <p class="crumb"><a href="{{ T.paths.home }}">proofstone</a> / {{ P.crumb }}</p>
+  <h1>{{ P.h1 }}</h1>
+  <p class="page-head__intro">{{ P.intro }}</p>
+  <p class="page-head__counts">{{ P.countsHtml(projects.length) | safe }}</p>
+</div>
+
+<div class="mcards">
+  {%- for p in projects %}
+  {%- set L = p.i18n[lang or "en"] %}
+  <a class="mcard" href="{{ p.url }}" rel="noopener">
+    <div class="mcard__top"><h2 class="mcard__title">{{ L.title }}</h2><span class="chip chip--live">{{ p.kind }}</span></div>
+    <p class="mcard__name">{{ p.repoPath }}</p>
+    <p class="mcard__desc">{{ L.desc }}</p>
+    <p class="mcard__meta">{{ L.metaHtml | safe }}</p>
+  </a>
+  {%- endfor %}
+</div>
+
+</div>

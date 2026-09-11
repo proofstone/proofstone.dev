@@ -1,12 +1,16 @@
+{%- set T = i18n[lang or "en"] %}
+{%- set metaT = T[pageKey] if pageKey else null %}
+{%- set pageTitle = title or (metaT.title if metaT) or (site.name + " — engineering roadmaps") %}
+{%- set pageDescription = description or (metaT.description if metaT) or site.tagline %}
 <!doctype html>
-<html lang="en">
+<html lang="{{ lang or "en" }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ title or (site.name + " — engineering roadmaps") }}</title>
+  <title>{{ pageTitle }}</title>
   {#- Search snippets clamp around 155 chars; social cards are roomier. Only the
       SERP description is shortened, so the card keeps the full thesis line. #}
-  <meta name="description" content="{{ metaDescription or description or site.tagline }}">
+  <meta name="description" content="{{ metaDescription or pageDescription }}">
   {#- The error page is not a page: it must never claim canonical status (every
       real 404 response is served with this body, so a self-canonical here points
       crawlers at an indexable 200 URL) and its noindex must not depend on the
@@ -15,14 +19,22 @@
   {%- if not isErrorPage %}
   <link rel="canonical" href="{{ site.url }}{{ page.url }}">
   {%- endif %}
+  {%- if i18nSlug %}
+  {#- The locales point at each other and x-default points at English — the
+      source-of-truth locale. Only chrome pages carry a pair; roadmap content
+      pages are English-only because their source is each repo's README. #}
+  <link rel="alternate" hreflang="en" href="{{ site.url }}{{ i18n.en.paths[i18nSlug] }}">
+  <link rel="alternate" hreflang="ru" href="{{ site.url }}{{ i18n.ru.paths[i18nSlug] }}">
+  <link rel="alternate" hreflang="x-default" href="{{ site.url }}{{ i18n.en.paths[i18nSlug] }}">
+  {%- endif %}
   {% if site.noindex or isErrorPage %}<meta name="robots" content="noindex, nofollow">{% endif %}
 
   {%- set ogSlug = roadmap.slug if roadmap else "default" %}
   {%- set ogImage = site.url + "/assets/og/" + ogSlug + ".png" %}
   <meta property="og:type" content="{{ "article" if roadmap else "website" }}">
   <meta property="og:site_name" content="{{ site.name }}">
-  <meta property="og:title" content="{{ title or (site.name + " — engineering roadmaps") }}">
-  <meta property="og:description" content="{{ description or site.tagline }}">
+  <meta property="og:title" content="{{ pageTitle }}">
+  <meta property="og:description" content="{{ pageDescription }}">
   {%- if not isErrorPage %}
   <meta property="og:url" content="{{ site.url }}{{ page.url }}">
   {%- endif %}
@@ -35,12 +47,12 @@
   {%- set ogAlt = (roadmap.title if roadmap else site.name) + " — " + site.tagline %}
   <meta property="og:image:alt" content="{{ ogAlt }}">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{{ title or (site.name + " — engineering roadmaps") }}">
-  <meta name="twitter:description" content="{{ description or site.tagline }}">
+  <meta name="twitter:title" content="{{ pageTitle }}">
+  <meta name="twitter:description" content="{{ pageDescription }}">
   <meta name="twitter:image" content="{{ ogImage }}">
   <meta name="twitter:image:alt" content="{{ ogAlt }}">
 
-  {%- set sd = { pageType: pageType, roadmap: roadmap, site: site, pageUrl: page.url } | structuredData %}
+  {%- set sd = { pageType: pageType, roadmap: roadmap, site: site, pageUrl: page.url, lang: lang or "en", title: pageTitle, description: pageDescription, homePath: T.paths.home } | structuredData %}
   {%- if sd %}
   <script type="application/ld+json">{{ sd | jsonLd | safe }}</script>
   {%- endif %}
@@ -65,10 +77,10 @@
   <link rel="preload" href="/assets/fonts/plex-mono-600.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/assets/styles.css">
   <script>
-    // Graphite is the theme, so the default needs no attribute and no work: the
+    // Dark mono is the theme, so the default needs no attribute and no work: the
     // stylesheet's :root IS the dark theme. Only a reader who has PICKED light
     // (or picked dark back) carries an attribute, and it is applied before paint
-    // so their choice never flashes. With JS off the site is graphite, which is
+    // so their choice never flashes. With JS off the site is dark, which is
     // the same thing it is with JS on and nothing chosen.
     (function () {
       try {
@@ -85,32 +97,52 @@
         and carries the same chiseled-P as the favicon/OG/avatar so the identity
         is one object everywhere. aria-hidden + the link's aria-label keep it a
         single named landmark, not a second focus target announcing nothing.
-        The fills go through the TOKENS. They used to be literal hex here, which
-        meant the mark was the one element on the page a palette change could not
-        reach: repainting the stylesheet left a sealing-wax square in the header of
-        a blue site, and no guard would have caught it because no guard reads an
-        inline SVG's presentation attributes. #}
-    <a class="brand" href="/" aria-label="proofstone — home">
+        The fills go through the TOKENS — a literal hex here is the one element
+        a palette change could not reach. #}
+    <a class="brand" href="{{ T.paths.home }}" aria-label="proofstone — home">
       <svg class="brand__mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
         <rect width="32" height="32" rx="7" fill="var(--accent)"/>
         <path fill="var(--bg)" fill-rule="evenodd" d="M8.5 9.3L10.3 7.5L21.7 7.5L23.5 9.3L23.5 15.7L21.7 17.5L13.5 17.5L13.5 22.8L11.7 24.5L10.3 24.5L8.5 22.8Z M13.5 10.6L20 10.6L21.3 11.9L21.3 13.1L20 14.4L13.5 14.4Z"/>
       </svg>
       <span class="brand__word">proof<span>stone</span></span>
     </a>
-    {#- Labelled because a roadmap page carries four other navigation landmarks
-        (breadcrumb, section outline, roadmap map, the rest of the series); an
-        unnamed one is the confusing entry in a landmark list. #}
+    {#- The sections. Community is deliberately absent: no page exists yet, and a
+        nav entry without a page is a promise the site does not keep — the same
+        honesty rule that leaves PLANNED cards unlinked. #}
+    <nav class="site-links" aria-label="Sections">
+      <a href="{{ T.paths.roadmaps }}"{% if page.url == i18n.en.paths.roadmaps or page.url == i18n.ru.paths.roadmaps %} aria-current="page"{% endif %}>{{ T.nav.roadmaps }}</a>
+      <a href="{{ T.paths.projects }}"{% if page.url == i18n.en.paths.projects or page.url == i18n.ru.paths.projects %} aria-current="page"{% endif %}>{{ T.nav.projects }}</a>
+    </nav>
+    <span class="site-header__spacer"></span>
     <nav class="site-nav" aria-label="Main">
-      <a href="{{ site.org }}" rel="noopener">github</a>
-      {#- A word, not a glyph. The drawn sun/moon were an improvement on the
-          emoji they replaced, but on a page whose whole chrome is mono the word
-          IS the icon — and a word needs no decoding, no second SVG and no CSS
-          swap. It names the theme it switches TO, and the accessible name
-          contains that same word (WCAG 2.5.3, Label in Name): "light" inside
-          "Switch to light theme". app.js rewrites both together, so they cannot
-          drift apart. Shipped saying "light" because graphite is the default —
-          with JS off that is the true state, and the button is honestly inert. #}
+      {%- if i18nSlug %}
+      {#- <details>, not a JS dropdown: with JS off it still opens, and the
+          entries are ordinary links between the static locale pages. SVG flags,
+          not emoji — Windows renders flag emoji as bare letter pairs. #}
+      <details class="lang">
+        <summary aria-label="Language: {{ T.label }}">
+          <span class="lang-btn">
+            {%- if lang == "ru" %}
+            <svg class="lang-flag" viewBox="0 0 18 13" aria-hidden="true" focusable="false"><rect width="18" height="13" fill="#fff"/><rect y="4.33" width="18" height="8.67" fill="#0039a6"/><rect y="8.67" width="18" height="4.33" fill="#d52b1e"/></svg>
+            {%- else %}
+            <svg class="lang-flag" viewBox="0 0 18 13" aria-hidden="true" focusable="false"><rect width="18" height="13" fill="#1a3775"/><path d="M0 0l18 13M18 0L0 13" stroke="#fff" stroke-width="2.6"/><path d="M0 0l18 13M18 0L0 13" stroke="#c8102e" stroke-width="1.1"/><path d="M9 0v13M0 6.5h18" stroke="#fff" stroke-width="4.3"/><path d="M9 0v13M0 6.5h18" stroke="#c8102e" stroke-width="2.6"/></svg>
+            {%- endif %}
+            <span>{{ (lang or "en") | upper }}</span><span class="lang-caret" aria-hidden="true">▾</span>
+          </span>
+        </summary>
+        <ul class="lang-menu">
+          <li><a href="{{ i18n.en.paths[i18nSlug] }}"{% if lang != "ru" %} aria-current="true"{% endif %}><svg class="lang-flag" viewBox="0 0 18 13" aria-hidden="true" focusable="false"><rect width="18" height="13" fill="#1a3775"/><path d="M0 0l18 13M18 0L0 13" stroke="#fff" stroke-width="2.6"/><path d="M0 0l18 13M18 0L0 13" stroke="#c8102e" stroke-width="1.1"/><path d="M9 0v13M0 6.5h18" stroke="#fff" stroke-width="4.3"/><path d="M9 0v13M0 6.5h18" stroke="#c8102e" stroke-width="2.6"/></svg>English</a></li>
+          <li><a href="{{ i18n.ru.paths[i18nSlug] }}"{% if lang == "ru" %} aria-current="true"{% endif %}><svg class="lang-flag" viewBox="0 0 18 13" aria-hidden="true" focusable="false"><rect width="18" height="13" fill="#fff"/><rect y="4.33" width="18" height="8.67" fill="#0039a6"/><rect y="8.67" width="18" height="4.33" fill="#d52b1e"/></svg>Русский</a></li>
+        </ul>
+      </details>
+      {%- endif %}
+      {#- A word, not a glyph. It names the theme it switches TO, and the
+          accessible name contains that same word (WCAG 2.5.3, Label in Name).
+          app.js rewrites both together. Shipped saying "light" because dark is
+          the default — with JS off that is the true state, and the button is
+          honestly inert. #}
       <button type="button" class="theme-toggle" aria-label="Switch to light theme">light</button>
+      <a class="btn-star" href="{{ site.org }}" rel="noopener">{{ T.nav.star }}</a>
     </nav>
   </header>
 
@@ -123,13 +155,11 @@
   </main>
 
   <footer class="site-footer">
-    {#- This line is a promise, so it tracks what the site actually does. It read
-        "No tracking, no cookies" until 2026-07-26, when a counter was added: the
+    {#- This line is a promise, so it tracks what the site actually does: the
         negative claims that survive are stated, the vendor is named so a reader
-        can go and check rather than take our word, and "no tracking" is gone
-        because counting visits is tracking, however anonymous. #}
-    <p>{{ site.name }} — engineering roadmaps · static site · no cookies, no personal data — anonymous analytics via <a href="https://umami.is" rel="noopener">Umami</a></p>
-    <p>content licensed per each roadmap's repository · <a href="{{ site.org }}" rel="noopener">github.com/proofstone</a></p>
+        can go and check rather than take our word. #}
+    <p>{{ T.footer.line1Html | safe }}</p>
+    <p>{{ T.footer.line2Html | safe }}</p>
   </footer>
 
   <script src="/assets/app.js" defer></script>

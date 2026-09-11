@@ -703,10 +703,38 @@ export default function (eleventyConfig) {
   // provider offering instruction — there is no instructor or enrolment here, so
   // claiming it would be misleading markup).
   eleventyConfig.addFilter('structuredData', (ctx) => {
-    const { pageType, roadmap, site, pageUrl } = ctx;
+    const { pageType, roadmap, site, pageUrl, lang, title, description, homePath } = ctx;
     const org = `${site.url}/#org`;
     const website = `${site.url}/#website`;
     const canonical = `${site.url}${pageUrl}`;
+
+    // Section pages (/roadmaps/, /projects/, and their /ru/ mirrors): a
+    // collection with a breadcrumb. CollectionPage, not LearningResource — a
+    // list of maps teaches nothing by itself.
+    if (pageType === 'section') {
+      return {
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'BreadcrumbList',
+            '@id': `${canonical}#crumbs`,
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: site.name, item: `${site.url}${homePath || '/'}` },
+              { '@type': 'ListItem', position: 2, name: title, item: canonical }
+            ]
+          },
+          {
+            '@type': 'CollectionPage',
+            '@id': `${canonical}#page`,
+            name: title,
+            url: canonical,
+            description: description,
+            inLanguage: lang || 'en',
+            isPartOf: { '@id': website }
+          }
+        ]
+      };
+    }
 
     if (pageType === 'home') {
       return {
@@ -726,7 +754,7 @@ export default function (eleventyConfig) {
             url: `${site.url}/`,
             name: site.name,
             description: site.tagline,
-            inLanguage: 'en',
+            inLanguage: lang || 'en',
             publisher: { '@id': org }
           }
         ]

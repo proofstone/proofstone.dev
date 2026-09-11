@@ -246,15 +246,36 @@ for (const r of roadmaps.filter((x) => x.status === 'live')) {
   else pass(`${r.slug}`, `${starred} flagship(s), emoji stripped, all stamped`);
 }
 
-// ── 4. The home page actually shows a milestone ──────────────────────────────
-console.log('\nPROOF SAMPLE — the landing page must demonstrate the format, not promise it');
-{
-  const html = readFileSync(join(site, 'index.html'), 'utf8');
-  const block = html.match(/<div class="prose sample__block">([\s\S]*?)<\/div>/);
-  const body = block ? block[1].trim() : '';
-  if (!body) fail('home page sample block is empty', 'the "What a milestone looks like" section promises a sample and shows nothing');
-  else if (!/ps-criterion/.test(body)) fail('home page sample has no proof block', 'sample rendered without its "You\'re done when" criterion');
-  else pass('home page shows a real milestone', `${body.length} bytes incl. proof block`);
+// ── 4. The home page states the manifesto and opens only real doors ──────────
+// MANIFESTO wave: the home no longer carries a milestone sample — the format
+// demo lives on the roadmap pages. What the home promises instead is checked
+// here: the claim (H1 naming Hello World), the two-paragraph manifesto, and six
+// doors of which EXACTLY the live ones are links. A PLANNED or IDEA card that
+// becomes an <a> is a page the site does not have — the same honesty rule that
+// keeps in-review roadmaps unlinked.
+console.log('\nMANIFESTO — the landing page states the claim and opens only real doors');
+for (const homeRel of ['index.html', 'ru/index.html']) {
+  const homePath = join(site, homeRel);
+  if (!existsSync(homePath)) { fail(`${homeRel} missing`, 'cannot check the manifesto'); continue; }
+  const html = readFileSync(homePath, 'utf8');
+  const problems = [];
+  if (!/<h1 class="hero__title">[\s\S]*?Hello World[\s\S]*?<\/h1>/.test(html)) problems.push('H1 does not name Hello World');
+  const manifests = (html.match(/class="manifest"/g) || []).length;
+  if (manifests !== 2) problems.push(`manifesto has ${manifests} paragraphs, expected 2`);
+  const grid = html.match(/<div class="card-grid">([\s\S]*?)<\/div>\s*<\/section>/);
+  const gridHtml = grid ? grid[1] : '';
+  const linkCards = (gridHtml.match(/<a class="card"/g) || []).length;
+  const staticCards = (gridHtml.match(/<div class="card">/g) || []).length;
+  if (linkCards !== 2) problems.push(`${linkCards} linked cards, expected exactly 2 (roadmaps, projects)`);
+  if (staticCards !== 4) problems.push(`${staticCards} unlinked cards, expected exactly 4 (planned + idea)`);
+  const sectionPaths = homeRel.startsWith('ru/') ? ['/ru/roadmaps/', '/ru/projects/'] : ['/roadmaps/', '/projects/'];
+  for (const p of sectionPaths) {
+    if (!gridHtml.includes(`href="${p}"`)) problems.push(`no card links to ${p}`);
+    const target = join(site, p.replace(/^\//, ''), 'index.html');
+    if (!existsSync(target)) problems.push(`${p} card points at a page the build did not produce`);
+  }
+  if (problems.length) fail(`${homeRel}: ${problems[0]}`, problems.slice(1).join('; ') || 'see title');
+  else pass(homeRel, `manifesto + 6 doors, ${linkCards} open / ${staticCards} honestly shut`);
 }
 
 // ── 4a. Structured data ──────────────────────────────────────────────────────
@@ -288,7 +309,14 @@ for (const file of pages) {
     continue;
   }
   const types = (parsed['@graph'] || [parsed]).map((n) => n['@type']);
-  const wanted = rel === 'index.html' ? ['Organization', 'WebSite'] : ['BreadcrumbList', 'LearningResource'];
+  // Three page kinds, three shapes: a home (either locale) is the site itself;
+  // a section page is a collection with a breadcrumb; a roadmap page is a
+  // learning resource with a breadcrumb.
+  const isHome = rel === 'index.html' || rel === 'ru/index.html';
+  const isSection = /^(ru\/)?(roadmaps|projects)\/index\.html$/.test(rel);
+  const wanted = isHome ? ['Organization', 'WebSite']
+    : isSection ? ['BreadcrumbList', 'CollectionPage']
+    : ['BreadcrumbList', 'LearningResource'];
   const missing = wanted.filter((t) => !types.includes(t));
   if (missing.length) fail(`${rel}: structured data missing types`, missing.join(', '));
   else pass(`${rel}`, types.join(' + '));
