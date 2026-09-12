@@ -263,8 +263,11 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
    where the page scrolls under it, and one hairline says the same thing. */
 .site-header {
   position: sticky; top: 0; z-index: 20;
-  display: flex; align-items: baseline; justify-content: space-between;
-  gap: 1rem; padding: .95rem 2rem;
+  /* center, not baseline: the brand is a flex row whose first box is an SVG,
+     and a box with no text gives the row its BOTTOM EDGE as a baseline — the
+     wordmark then rides high while every link aligns to the mark's foot. */
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem; padding: .8rem 2rem;
   background: var(--bg);
   border-bottom: 1px solid var(--border-soft);
 }
