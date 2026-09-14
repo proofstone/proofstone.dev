@@ -16,19 +16,13 @@ eleventyComputed:
   <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="/">proofstone</a> <span aria-hidden="true">/</span> <span class="breadcrumb__here">{{ roadmap.title | replace(" Roadmap", "") }}</span>
   </nav>
-  {#- The three actions are the same outlined chip as the rest of the site, and
-      the first one is still a plain link to the repository — "star" names what
-      the reader goes there to do, and GitHub is where they land. Nothing here
-      touches the ⭐ in a milestone heading: that is data, it stays in the README,
-      and the STAR DISPLAY gate asserts it survives the render untouched. #}
+  {#- Two actions, both contextual to THIS repository. The star chip that used
+      to lead them is gone (owner's call, manifesto wave): the header already
+      carries the one star capsule on every page, and two star buttons in one
+      viewport read as a plea. Nothing here touches the ⭐ in a milestone
+      heading: that is data, it stays in the README, and the STAR DISPLAY gate
+      asserts it survives the render untouched. #}
   <div class="roadmap__actions">
-    {#- A DRAWN star, not "★". Measured: U+2605 is not in IBM Plex Mono, so the
-        character arrives from whatever the platform substitutes — a different
-        shape at a different width, inside a row whose whole point is that it is
-        monospaced. Same reasoning that replaced the arrow character and the
-        emoji toggle in the previous wave; this one costs 128 bytes and looks the
-        same everywhere. #}
-    <a class="btn btn--primary" href="https://github.com/{{ roadmap.repo }}" rel="noopener"><svg class="btn__star" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M6 .9 7.55 4.55 11.5 4.9 8.5 7.5 9.4 11.4 6 9.35 2.6 11.4 3.5 7.5 .5 4.9 4.45 4.55Z"/></svg>star on github</a>
     <a class="btn" href="https://github.com/{{ roadmap.repo }}/edit/{{ roadmap.branch }}/README.md" rel="noopener">edit</a>
     <a class="btn" href="https://github.com/{{ roadmap.repo }}/blob/{{ roadmap.branch }}/README.md" rel="noopener">source</a>
   </div>

@@ -498,9 +498,6 @@ a.mcard:hover .mcard__title { color: var(--accent-2); }
   border-radius: var(--r-sm); background: none; color: var(--muted);
 }
 .btn:hover { color: var(--text); border-color: var(--muted); text-decoration: none; }
-.btn__star { width: .72rem; height: .72rem; fill: currentColor; vertical-align: -.06em; margin-right: .4em; }
-.btn--primary { color: var(--accent); border-color: var(--accent); }
-.btn--primary:hover { color: var(--accent); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
 .roadmap__updated {
   flex-basis: 100%; margin: .6rem 0 0;
   font-family: var(--mono); font-size: 0.82rem; color: var(--muted);
