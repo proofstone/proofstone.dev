@@ -311,7 +311,14 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
   color: var(--on-accent); background: var(--accent);
   border-radius: 999px; padding: .48rem 1.05rem; white-space: nowrap;
 }
-.btn-star:hover { text-decoration: none; filter: brightness(.94); }
+/* Doubled selector on purpose: the button lives inside .site-nav, whose own
+   `a:hover -> --text` rule is more specific than a bare class — on hover the
+   ink went near-white on the ivory fill and the label vanished. The button's
+   ink is not a link colour; it must survive every chrome hover rule. */
+.site-nav .btn-star, .site-nav .btn-star:hover {
+  color: var(--on-accent); text-decoration: none;
+}
+.btn-star:hover { filter: brightness(.94); }
 
 /* The language switcher: a flag capsule opening a listbox. SVG flags, not emoji
    — Windows renders flag emoji as bare letter pairs. Progressive enhancement:
