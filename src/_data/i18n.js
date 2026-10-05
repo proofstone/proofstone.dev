@@ -31,6 +31,7 @@ export default {
       h1Html: 'We won’t say goodbye<br>to <span class="hw">"Hello World"</span>.',
       p1Html: 'AI is growing fast — and becoming a real engineer is getting harder, not easier. Code is written by hand less and less. The small moments at the keyboard are disappearing: the <b>"Aha!"</b> when you understand, the <b>"Wow, it works!"</b> when it runs. It is sad to say — soon, maybe nobody will write their own Hello World.',
       p2Html: '<b>Proofstone</b> is a community for people who don’t want to lose the craft. Roadmaps, projects, and people — so you become an engineer in this era, <b>side by side with AI</b>, not behind it.',
+      p3Html: 'And one hard question. If AI is down tomorrow — for a day, for a month — are you still an engineer, or were you its operator? Here the answer is proven, not claimed: <b>a milestone closed by an AI’s hands was never yours.</b>',
       cardsKicker: 'what’s inside',
       cards: {
         roadmaps: { title: 'Roadmaps', desc: 'Engineering maps where every milestone states, in advance, the artifact that closes it. No keyword lists.', tag: 'maps' },
@@ -80,6 +81,7 @@ export default {
       h1Html: 'Мы не попрощаемся<br>с <span class="hw">"Hello World"</span>.',
       p1Html: 'ИИ развивается молниеносно — а стать настоящим инженером всё сложнее, не проще. Код всё реже пишут руками. Исчезают те самые моменты за клавиатурой: <b>«Ага!»</b>, когда понял, и <b>«Вау, работает!»</b>, когда получилось. Грустно признать — возможно, скоро никто не напишет свой Hello World.',
       p2Html: '<b>Proofstone</b> — сообщество тех, кто не хочет терять ремесло. Роадмапы, проекты и люди — чтобы ты стал инженером в эту эпоху и шёл <b>бок о бок с ИИ</b>, а не позади него.',
+      p3Html: 'И один жёсткий вопрос. Если завтра ИИ недоступен — на день, на месяц — ты всё ещё инженер или был его оператором? Здесь ответ доказывается, а не заявляется: <b>веха, закрытая руками ИИ, никогда не была твоей.</b>',
       cardsKicker: 'что внутри',
       cards: {
         roadmaps: { title: 'Роадмапы', desc: 'Инженерные карты, где каждая веха заранее называет артефакт, который её закрывает. Никаких списков ключевых слов.', tag: 'карт' },

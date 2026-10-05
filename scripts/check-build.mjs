@@ -261,7 +261,9 @@ for (const homeRel of ['index.html', 'ru/index.html']) {
   const problems = [];
   if (!/<h1 class="hero__title">[\s\S]*?Hello World[\s\S]*?<\/h1>/.test(html)) problems.push('H1 does not name Hello World');
   const manifests = (html.match(/class="manifest"/g) || []).length;
-  if (manifests !== 2) problems.push(`manifesto has ${manifests} paragraphs, expected 2`);
+  // Three paragraphs since 2026-10-05: grief -> answer -> the hard question
+  // (resilience: are you an engineer, or the AI's operator).
+  if (manifests !== 3) problems.push(`manifesto has ${manifests} paragraphs, expected 3`);
   const grid = html.match(/<div class="card-grid">([\s\S]*?)<\/div>\s*<\/section>/);
   const gridHtml = grid ? grid[1] : '';
   const linkCards = (gridHtml.match(/<a class="card"/g) || []).length;
