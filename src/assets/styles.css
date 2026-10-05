@@ -1,10 +1,11 @@
 /* ============================================================================
-   proofstone — graphite: a dark terminal register.
-   Two typefaces with two jobs — Plex Mono is STRUCTURE (numbers, meters, stamps,
-   the chrome's own headings), Plex Sans is PROSE. Colour is never decoration:
-   green is only what a reader has earned, amber is "in review", cobalt is live /
-   links / interactive, red is only an error. Everything else is a grey.
-   Dark is the theme; light is the second one. Print is light, always.
+   proofstone — mono: the manifesto's page.
+   Two typefaces with two jobs — Plex Sans is PROSE and the site's own voice
+   (the manifesto, headings), Plex Mono is STRUCTURE (numbers, meters, stamps,
+   kickers). Colour is never decoration: the accent is warm paper-white — the
+   brand carries no hue — green is only what a reader has earned, amber is
+   "in review", red is only an error. Everything else is a grey.
+   Dark is the theme; light is warm paper, the second one. Print is light, always.
    ============================================================================ */
 
 /* ── Fonts: self-hosted, no CDN (ARCHITECTURE §7) ─────────────────────────── */

@@ -300,8 +300,8 @@ console.log('\nDEPLOYED REDESIGN');
       // still carried the old wave's colours — a half-applied deploy, a stale
       // CDN object, a bad merge — and the check would have gone green.
       const need = [
-        ['--bg: #161717', 'the graphite page'],
-        ['--accent: #5b9dff', 'cobalt raised for a dark page'],
+        ['--bg: #0b0b0c', 'the mono near-black page'],
+        ['--accent: #f2efe6', 'the warm paper-white accent'],
         ['[data-theme="light"]', 'the second theme, served'],
         ['--map-ink', 'map tokens'],
         ['font-weight: 400 700', 'sans declared through to a real 700']
@@ -322,8 +322,10 @@ console.log('\nDEPLOYED REDESIGN');
         ["'Zilla Slab'", 'the display serif'],
         ['rgba(157, 59, 31', 'the map hover wash literal'],
         ['#fcfdfe', 'white paper'],
-        ['#101317', "the previous wave's dark page"],
-        ['#72bdff', "the previous wave's dark accent"],
+        ['#101317', "the stone wave's dark page"],
+        ['#72bdff', "the stone wave's dark accent"],
+        ['--bg: #161717', "the graphite wave's page"],
+        ['#5b9dff', "the graphite wave's cobalt"],
         ['@media (prefers-color-scheme', 'the duplicated OS-theme branch']
       ];
       const missing = need.filter(([t]) => !body.includes(t));
