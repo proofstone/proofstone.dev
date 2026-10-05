@@ -109,7 +109,7 @@
     {#- The sections. Community is deliberately absent: no page exists yet, and a
         nav entry without a page is a promise the site does not keep — the same
         honesty rule that leaves PLANNED cards unlinked. #}
-    <nav class="site-links" aria-label="Sections">
+    <nav class="site-links" aria-label="Site sections">
       <a href="{{ T.paths.roadmaps }}"{% if page.url == i18n.en.paths.roadmaps or page.url == i18n.ru.paths.roadmaps %} aria-current="page"{% endif %}>{{ T.nav.roadmaps }}</a>
       <a href="{{ T.paths.projects }}"{% if page.url == i18n.en.paths.projects or page.url == i18n.ru.paths.projects %} aria-current="page"{% endif %}>{{ T.nav.projects }}</a>
     </nav>
