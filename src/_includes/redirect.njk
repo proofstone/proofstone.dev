@@ -1,0 +1,21 @@
+{#- A retired address (the become wave, 2026-10-06: /roadmaps/ became /become/,
+    and the Russian mirror was withdrawn). GitHub Pages sends no HTTP redirects,
+    so the old URL keeps a page that sends the reader on: a meta refresh for
+    browsers, a canonical for crawlers pointing at where the content lives now,
+    noindex so the stub itself never ranks, and a plain link for any browser
+    that refuses to refresh. scripts/check-build.mjs proves every stub lands on a
+    page the build produced. #}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Moved — {{ site.name }}</title>
+  <meta name="robots" content="noindex">
+  <link rel="canonical" href="{{ site.url }}{{ redirectTo }}">
+  <meta http-equiv="refresh" content="0; url={{ redirectTo }}">
+</head>
+<body>
+  <p>This page has moved: <a href="{{ redirectTo }}">{{ site.url }}{{ redirectTo }}</a></p>
+</body>
+</html>

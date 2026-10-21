@@ -1,0 +1,56 @@
+{#- The /become/ section page: professions as maps, in ONE list — no split into
+    "beginners" and "engineers" (owner's decision 2026-10-06). Instead every
+    card states, up front, what you need before you start. Order: live, then
+    planned, then in review (the becomeCards filter). LIVE cards link to the
+    roadmap pages; planned and in-review cards are not links, because there is
+    nothing to open. All counts are computed. #}
+{%- set T = i18n[lang or "en"] %}
+{%- set B = T.becomePage %}
+<div class="home">
+
+<div class="page-head">
+  <p class="crumb"><a href="{{ T.paths.home }}">proofstone</a> / {{ B.crumb }}</p>
+  <h1>{{ B.h1 }}</h1>
+  <p class="page-head__intro">{{ B.intro }}</p>
+  <p class="page-head__counts">{{ B.countsHtml(roadmaps.length + professions.length, liveRoadmaps.length, professions.length, reviewRoadmaps.length) | safe }}</p>
+</div>
+
+<div class="mcards">
+  {%- for c in roadmaps | becomeCards(professions) %}
+  {%- set inner %}
+    <div class="mcard__top">
+      <span><span class="mcard__no">{{ c.no }}</span><h2 class="mcard__title">{{ (c.r.title | replace(" Roadmap", "")) if c.r else c.p.title }}</h2></span>
+      {%- if c.status == "live" %}<span class="chip chip--live">{{ B.live }}</span>
+      {%- elif c.status == "review" %}<span class="chip chip--review">{{ B.review }}</span>
+      {%- else %}<span class="chip chip--planned">{{ B.planned }}</span>{% endif %}
+    </div>
+    {%- if c.r %}
+    <p class="mcard__desc">{{ c.r.cardLine }}{% if c.status != "live" %} {{ B.privateNote }}{% endif %}</p>
+    {%- if c.r.lab %}
+    <p class="mcard__lab"><span class="lab-tag">{{ B.labWord }}</span><code>{{ c.r.lab.name }}</code> — {{ c.r.lab.note }}.</p>
+    {%- elif c.r.labNote %}
+    <p class="mcard__lab"><span class="lab-tag">{{ B.labWord }}</span>{{ c.r.labNote }}.</p>
+    {%- endif %}
+    {%- else %}
+    <p class="mcard__desc">{{ c.p.desc }}</p>
+    <p class="mcard__path">{{ c.p.path | join(" → ") }}</p>
+    {%- endif %}
+    {#- The entry condition. A profession with no prerequisites says "from zero";
+        a roadmap whose README is still private says it is not stated yet rather
+        than inventing one. #}
+    {%- set req = c.r.requires if c.r else c.p.requires %}
+    <p class="mcard__req"><span class="mcard__req-k">{{ B.requiresWord }}</span> {% if req %}{{ req }}{% elif c.p %}{{ B.fromZero }}{% else %}{{ B.requiresPending }}{% endif %}</p>
+    {%- if c.r %}
+    {%- set stars = c.r | roadmapStars %}
+    <p class="mcard__meta"><span class="n">{{ c.r.milestones }}</span> {{ B.milestonesWord(c.r.milestones) }} · <span class="n">{{ stars }}</span> {{ B.flagshipWord(stars) }}</p>
+    {%- endif %}
+  {%- endset %}
+  {%- if c.status == "live" %}
+  <a class="mcard" href="/{{ c.r.slug }}/">{{ inner | safe }}</a>
+  {%- else %}
+  <div class="mcard">{{ inner | safe }}</div>
+  {%- endif %}
+  {%- endfor %}
+</div>
+
+</div>

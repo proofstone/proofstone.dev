@@ -1,26 +1,26 @@
-// Chrome strings, one dictionary per locale. English is the source of truth;
-// a new language is one more entry here plus a flag in base.njk — that is the
-// whole contribution surface. Roadmap CONTENT pages are English-only (their
-// source of truth is each repository's README), so these strings cover only
-// the chrome pages: home, /roadmaps/, /projects/.
+// Chrome strings, one dictionary per locale. English is the source of truth,
+// and since the become wave (2026-10-06) it is the only locale shipped: the site
+// speaks English until a reader brings their own language. Adding one is still
+// the same small surface — one more entry here, a `/<code>/` copy of each chrome
+// page in src/, and the language switcher back in base.njk (it was removed with
+// the Russian mirror; see git history of base.njk, styles.css and check-build).
+// Roadmap CONTENT pages are English-only regardless (their source of truth is
+// each repository's README), so these strings cover only the chrome pages:
+// home, /become/, /projects/.
 //
 // Values ending in `Html` are trusted markup written in this file, not user
 // input — they pass through `| safe` in the templates.
-
-// Russian plural: 1 веха / 2 вехи / 5 вех. Works for any [one, few, many] triple.
-function ruPlural(n, forms) {
-  const mod10 = n % 10, mod100 = n % 100;
-  if (mod10 === 1 && mod100 !== 11) return forms[0];
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return forms[1];
-  return forms[2];
-}
 
 export default {
   en: {
     code: 'en',
     label: 'English',
-    paths: { home: '/', roadmaps: '/roadmaps/', projects: '/projects/' },
-    nav: { roadmaps: 'Roadmaps', projects: 'Projects', star: 'Star on GitHub' },
+    paths: { home: '/', become: '/become/', projects: '/projects/' },
+    // No "Learn" entry: /learn/ appears together with its first course. A nav
+    // link without a page is the same broken promise as a linked PLANNED card.
+    // starShort must be the first word(s) of star: it is what the narrowest
+    // phones show, and the accessible name (star) has to contain it.
+    nav: { become: 'Become', projects: 'Projects', star: 'Star on GitHub', starShort: 'Star' },
     footer: {
       line1Html: 'proofstone — a community that keeps the craft · static site · no cookies, no personal data — anonymous analytics via <a href="https://umami.is" rel="noopener">Umami</a>',
       line2Html: 'content licensed per each roadmap’s repository · <a href="https://github.com/proofstone" rel="noopener">github.com/proofstone</a>',
@@ -33,28 +33,35 @@ export default {
       p2Html: '<b>Proofstone</b> is a community for people who don’t want to lose the craft. Roadmaps, projects, and people — so you become an engineer in this era, <b>side by side with AI</b>, not behind it.',
       p3Html: 'And one hard question. If AI is down tomorrow — for a day, for a month — are you still an engineer, or were you its operator? Here the answer is proven, not claimed: <b>a milestone closed by an AI’s hands was never yours.</b>',
       cardsKicker: 'what’s inside',
+      // Six equal doors (owner's decision 2026-10-06). The first two are the two
+      // ways in: by profession and by language or technology.
       cards: {
-        roadmaps: { title: 'Roadmaps', desc: 'Engineering maps where every milestone states, in advance, the artifact that closes it. No keyword lists.', tag: 'maps' },
+        become: { title: 'What do you want to become?', desc: 'AI safety, distributed systems, cryptography — and next, Frontend from zero. Pick a profession and follow its map.', tag: 'maps' },
+        learn: { title: 'What do you want to learn?', desc: 'Pick a language or a technology and learn it lesson by lesson, with tasks your browser checks. HTML and CSS come first.', tag: 'planned' },
         projects: { title: 'Projects', desc: 'Build-your-own labs: an agent, a SWIM test suite, an eval scorer validator. Written by hand, from scratch.', tag: 'labs' },
         foundations: { title: 'Foundations', desc: 'The bedrock: algorithms, networks, operating systems — the parts AI can’t feel for you.', tag: 'planned' },
-        courses: { title: 'Courses', desc: 'Sequential courses with theory and checked tasks, from first principles up.', tag: 'planned' },
         challenges: { title: 'Challenges', desc: 'Break it, build it, prove it: hands-on challenges with a definite finish line.', tag: 'idea' },
         museum: { title: 'The Hello World Museum', desc: 'The first words of every language, kept alive — because someone should.', tag: 'idea' },
       },
     },
-    roadmapsPage: {
-      title: 'Roadmaps — proofstone',
-      description: 'Five engineering maps. Every milestone states, in advance, the artifact that closes it — you are done when the artifact exists, not when the reading does.',
-      crumb: 'roadmaps',
-      h1: 'Roadmaps',
-      intro: 'Five engineering maps. Every milestone states, in advance, the artifact that closes it — you are done when the artifact exists, not when the reading does.',
+    becomePage: {
+      title: 'What do you want to become? — proofstone',
+      description: 'Professions as maps you walk node by node. Every card says, up front, what you need before you start; every milestone states the artifact that closes it.',
+      crumb: 'become',
+      h1: 'What do you want to become?',
+      intro: 'Pick a profession. Each one is a map you walk node by node, and every milestone states, in advance, the artifact that closes it. Every card says, up front, what you need before you start.',
       privateNote: 'Private until published.',
-      live: 'live', review: 'in review',
+      live: 'live', review: 'in review', planned: 'planned',
       milestonesWord: () => 'milestones',
       flagshipWord: () => 'flagship',
-      countsHtml: (maps, milestones, live, review) =>
-        `<b>${maps}</b> maps · <b>${milestones}</b> milestones · <b>${live}</b> live · <b>${review}</b> in practitioner review`,
+      countsHtml: (professions, live, planned, review) =>
+        `<b>${professions}</b> professions · <b>${live}</b> live · <b>${planned}</b> planned · <b>${review}</b> in practitioner review`,
       labWord: 'lab',
+      // The entry condition, stated before the first step — the same idea as
+      // "you're done when", at the other end of the map.
+      requiresWord: 'before you start:',
+      fromZero: 'nothing — start from zero',
+      requiresPending: 'named when the map is published',
     },
     projectsPage: {
       title: 'Projects — proofstone',
@@ -63,69 +70,6 @@ export default {
       h1: 'Projects',
       intro: 'Understand it by building it — from scratch, by hand. Each lab states what you build and how it is checked: a grading suite, a running program, a test set. No lab is finished by reading about it.',
       countsHtml: (labs) => `<b>${labs}</b> labs · <b>${labs}</b> live · checked by machines, not opinions`,
-    },
-  },
-
-  ru: {
-    code: 'ru',
-    label: 'Русский',
-    paths: { home: '/ru/', roadmaps: '/ru/roadmaps/', projects: '/ru/projects/' },
-    nav: { roadmaps: 'Роадмапы', projects: 'Проекты', star: 'Звезда на GitHub' },
-    footer: {
-      line1Html: 'proofstone — сообщество, которое хранит ремесло · статический сайт · без cookies и персональных данных — анонимная аналитика через <a href="https://umami.is" rel="noopener">Umami</a>',
-      line2Html: 'лицензия контента — в репозитории каждого роадмапа · <a href="https://github.com/proofstone" rel="noopener">github.com/proofstone</a>',
-    },
-    home: {
-      title: 'proofstone — сообщество, которое хранит ремесло',
-      description: 'ИИ развивается молниеносно — а те самые моменты за клавиатурой исчезают. Proofstone — сообщество тех, кто не хочет терять ремесло: роадмапы, проекты и люди, бок о бок с ИИ.',
-      h1Html: 'Мы не попрощаемся<br>с <span class="hw">"Hello World"</span>.',
-      p1Html: 'ИИ развивается молниеносно — а стать настоящим инженером всё сложнее, не проще. Код всё реже пишут руками. Исчезают те самые моменты за клавиатурой: <b>«Ага!»</b>, когда понял, и <b>«Вау, работает!»</b>, когда получилось. Грустно признать — возможно, скоро никто не напишет свой Hello World.',
-      p2Html: '<b>Proofstone</b> — сообщество тех, кто не хочет терять ремесло. Роадмапы, проекты и люди — чтобы ты стал инженером в эту эпоху и шёл <b>бок о бок с ИИ</b>, а не позади него.',
-      p3Html: 'И один жёсткий вопрос. Если завтра ИИ недоступен — на день, на месяц — ты всё ещё инженер или был его оператором? Здесь ответ доказывается, а не заявляется: <b>веха, закрытая руками ИИ, никогда не была твоей.</b>',
-      cardsKicker: 'что внутри',
-      cards: {
-        roadmaps: { title: 'Роадмапы', desc: 'Инженерные карты, где каждая веха заранее называет артефакт, который её закрывает. Никаких списков ключевых слов.', tag: 'карт' },
-        projects: { title: 'Проекты', desc: 'Лабы build-your-own: агент, тест-суита SWIM, валидатор eval-скорера. Руками, с нуля.', tag: 'лабы' },
-        foundations: { title: 'Основы', desc: 'Фундамент: алгоритмы, сети, операционные системы — то, что ИИ не почувствует за тебя.', tag: 'план' },
-        courses: { title: 'Курсы', desc: 'Последовательные курсы с теорией и проверяемыми задачами — от первых принципов вверх.', tag: 'план' },
-        challenges: { title: 'Челленджи', desc: 'Сломай, собери, докажи: практические испытания с чётким финишем.', tag: 'идея' },
-        museum: { title: 'Музей Hello World', desc: 'Первые слова каждого языка программирования — сохраним их живыми.', tag: 'идея' },
-      },
-    },
-    roadmapsPage: {
-      title: 'Роадмапы — proofstone',
-      description: 'Пять инженерных карт. Каждая веха заранее называет артефакт, который её закрывает: готово — когда артефакт существует, а не когда дочитал.',
-      crumb: 'роадмапы',
-      h1: 'Роадмапы',
-      intro: 'Пять инженерных карт. Каждая веха заранее называет артефакт, который её закрывает: готово — когда артефакт существует, а не когда дочитал.',
-      privateNote: 'Приватно до публикации.',
-      live: 'live', review: 'на ревью',
-      milestonesWord: (n) => ruPlural(n, ['веха', 'вехи', 'вех']),
-      flagshipWord: (n) => ruPlural(n, ['флагманская', 'флагманские', 'флагманских']),
-      countsHtml: (maps, milestones, live, review) =>
-        `<b>${maps}</b> карт · <b>${milestones}</b> ${ruPlural(milestones, ['веха', 'вехи', 'вех'])} · <b>${live}</b> живые · <b>${review}</b> на ревью у практиков`,
-      labWord: 'лаба',
-      // Карточные строки роадмапов: EN живёт в roadmaps.config (источник),
-      // русский — здесь, по слагу. Новый роадмап без строки здесь падает на
-      // сборке /ru/ — это желаемое поведение, а не пропуск.
-      cardLines: {
-        'ai-safety-engineer': 'Эвалы, ред-тиминг, гардрейлы, безопасность агентов.',
-        'distributed-systems-engineer': 'Консенсус, репликация, детекция отказов.',
-        'applied-cryptography': 'Сломай в Cryptopals и CryptoHack, потом сделай правильно.',
-        'robotics-software-engineer': 'Перенеси то, что уже умеешь; уважай то, что действительно другое.',
-        'pcb-design': 'Карта для платы, а не для прошивки на ней.',
-      },
-      labNotes: {
-        'distributed-systems-engineer': 'swim-lab — веха §4.1, ставшая исполняемой: ты реализуешь SWIM, детерминированная суита оценивает.',
-      },
-    },
-    projectsPage: {
-      title: 'Проекты — proofstone',
-      description: 'Лабы build-your-own: пойми, построив с нуля, руками. Каждая лаба говорит, что ты строишь и как это проверяется.',
-      crumb: 'проекты',
-      h1: 'Проекты',
-      intro: 'Пойми, построив — с нуля, руками. Каждая лаба говорит, что ты строишь и как это проверяется: оценивающая суита, работающая программа, набор тестов. Ни одна лаба не закрывается чтением.',
-      countsHtml: (labs) => `<b>${labs}</b> лабы · <b>${labs}</b> живые · проверяют машины, а не мнения`,
     },
   },
 };

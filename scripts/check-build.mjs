@@ -50,6 +50,9 @@ function htmlFiles(dir) {
 const pages = htmlFiles(site);
 console.log(`\nchecking ${pages.length} page(s) in _site\n`);
 
+// A retired address: a page whose only job is to forward (src/_includes/redirect.njk).
+const isRedirectStub = (html) => /<meta http-equiv="refresh"/.test(html);
+
 // ── 1. In-page anchors resolve ───────────────────────────────────────────────
 // lychee and friends do not verify fragments, and this project has already been
 // bitten by anchor drift, so it is checked explicitly.
@@ -253,8 +256,12 @@ for (const r of roadmaps.filter((x) => x.status === 'live')) {
 // doors of which EXACTLY the live ones are links. A PLANNED or IDEA card that
 // becomes an <a> is a page the site does not have — the same honesty rule that
 // keeps in-review roadmaps unlinked.
+// BECOME wave (2026-10-06): the six doors stay, two of them change meaning —
+// "What do you want to become?" opens /become/ (the old /roadmaps/), and "What
+// do you want to learn?" stays shut until /learn/ has its first course. The
+// Russian mirror was withdrawn, so there is one home to check.
 console.log('\nMANIFESTO — the landing page states the claim and opens only real doors');
-for (const homeRel of ['index.html', 'ru/index.html']) {
+for (const homeRel of ['index.html']) {
   const homePath = join(site, homeRel);
   if (!existsSync(homePath)) { fail(`${homeRel} missing`, 'cannot check the manifesto'); continue; }
   const html = readFileSync(homePath, 'utf8');
@@ -268,9 +275,10 @@ for (const homeRel of ['index.html', 'ru/index.html']) {
   const gridHtml = grid ? grid[1] : '';
   const linkCards = (gridHtml.match(/<a class="card"/g) || []).length;
   const staticCards = (gridHtml.match(/<div class="card">/g) || []).length;
-  if (linkCards !== 2) problems.push(`${linkCards} linked cards, expected exactly 2 (roadmaps, projects)`);
-  if (staticCards !== 4) problems.push(`${staticCards} unlinked cards, expected exactly 4 (planned + idea)`);
-  const sectionPaths = homeRel.startsWith('ru/') ? ['/ru/roadmaps/', '/ru/projects/'] : ['/roadmaps/', '/projects/'];
+  if (linkCards !== 2) problems.push(`${linkCards} linked cards, expected exactly 2 (become, projects)`);
+  if (staticCards !== 4) problems.push(`${staticCards} unlinked cards, expected exactly 4 (learn, foundations, challenges, museum)`);
+  if (/<a class="card"[^>]*href="\/learn\/"/.test(gridHtml)) problems.push('the learn door is a link — /learn/ opens with its first course, not before');
+  const sectionPaths = ['/become/', '/projects/'];
   for (const p of sectionPaths) {
     if (!gridHtml.includes(`href="${p}"`)) problems.push(`no card links to ${p}`);
     const target = join(site, p.replace(/^\//, ''), 'index.html');
@@ -295,6 +303,12 @@ for (const file of pages) {
     else pass('404.html', 'no structured data, as intended');
     continue;
   }
+  // A retired address is not a page either: it forwards (see REDIRECTS below).
+  if (isRedirectStub(html)) {
+    if (blocks.length) fail(`${rel}: a redirect stub carries structured data`, 'a stub must not describe itself as a thing');
+    else pass(`${rel}`, 'redirect stub, no structured data, as intended');
+    continue;
+  }
   if (!blocks.length) {
     fail(`${rel}: no structured data`, 'expected a JSON-LD block');
     continue;
@@ -314,8 +328,8 @@ for (const file of pages) {
   // Three page kinds, three shapes: a home (either locale) is the site itself;
   // a section page is a collection with a breadcrumb; a roadmap page is a
   // learning resource with a breadcrumb.
-  const isHome = rel === 'index.html' || rel === 'ru/index.html';
-  const isSection = /^(ru\/)?(roadmaps|projects)\/index\.html$/.test(rel);
+  const isHome = rel === 'index.html';
+  const isSection = /^(become|projects)\/index\.html$/.test(rel);
   const wanted = isHome ? ['Organization', 'WebSite']
     : isSection ? ['BreadcrumbList', 'CollectionPage']
     : ['BreadcrumbList', 'LearningResource'];
@@ -342,6 +356,46 @@ console.log('\nXML — sitemap must be well-formed (prolog first, tags balanced)
       else pass('sitemap.xml well-formed', `${(xml.match(/<loc>/g) || []).length} urls, ${(xml.match(/<lastmod>/g) || []).length} with lastmod`);
     }
   }
+}
+
+// ── 4b'. Retired addresses forward to real pages ─────────────────────────────
+// The become wave retired /roadmaps/ (now /become/) and the Russian mirror.
+// Their URLs live on in search indexes and old posts, so each keeps a stub that
+// forwards. A stub is only honest if it lands somewhere: the target must be a
+// page this build produced, and the stub must say noindex and point its
+// canonical at the target, or the old URL keeps competing with the new one.
+const RETIRED = {
+  'roadmaps/index.html': '/become/',
+  'ru/index.html': '/',
+  'ru/roadmaps/index.html': '/become/',
+  'ru/projects/index.html': '/projects/'
+};
+console.log('\nREDIRECTS — every retired address forwards to a page the build produced');
+for (const [rel, to] of Object.entries(RETIRED)) {
+  const file = join(site, rel);
+  if (!existsSync(file)) {
+    fail(`${rel} missing`, `the retired address would 404 instead of forwarding to ${to}`);
+    continue;
+  }
+  const html = readFileSync(file, 'utf8');
+  const refresh = html.match(/<meta http-equiv="refresh" content="0; url=([^"]+)">/);
+  const canon = html.match(/<link rel="canonical" href="([^"]+)">/);
+  const problems = [];
+  if (!refresh) problems.push('no meta refresh');
+  else if (refresh[1] !== to) problems.push(`refreshes to ${refresh[1]}, expected ${to}`);
+  if (!/<meta name="robots" content="noindex/.test(html)) problems.push('no noindex — the stub would compete with its target');
+  if (!canon || !canon[1].endsWith(to)) problems.push(`canonical ${canon ? canon[1] : 'missing'}, expected …${to}`);
+  if (!html.includes(`href="${to}"`)) problems.push('no plain link for a browser that refuses to refresh');
+  const target = join(site, to.replace(/^\//, ''), 'index.html');
+  if (!existsSync(target)) problems.push(`target ${to} was not produced by the build`);
+  else if (isRedirectStub(readFileSync(target, 'utf8'))) problems.push(`target ${to} is itself a stub — a chain, not a page`);
+  if (problems.length) fail(`${rel}: ${problems[0]}`, problems.slice(1).join('; ') || 'see title');
+  else pass(rel, `forwards to ${to}`);
+}
+// And nothing else is a stub: a page that quietly became one is a page lost.
+for (const file of pages) {
+  const rel = relative(site, file).replace(/\\/g, '/');
+  if (!(rel in RETIRED) && isRedirectStub(readFileSync(file, 'utf8'))) fail(`${rel}: an unexpected redirect stub`, 'only retired addresses may forward');
 }
 
 // ── 4c. Accessibility invariants ─────────────────────────────────────────────

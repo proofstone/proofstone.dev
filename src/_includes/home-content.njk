@@ -1,6 +1,6 @@
-{#- The home page is the manifesto: one claim, two paragraphs, six doors.
-    Shared by every locale — all words come from i18n[lang], all numbers are
-    computed (hardcoding counts is how this project burned twice). #}
+{#- The home page is the manifesto: one claim, three paragraphs, six doors.
+    All words come from i18n[lang], all numbers are computed (hardcoding counts
+    is how this project burned twice). #}
 {%- set T = i18n[lang or "en"] %}
 <div class="home">
 
@@ -11,16 +11,22 @@
   <p class="manifest">{{ T.home.p3Html | safe }}</p>
 </section>
 
-{#- Six doors, honestly labelled. A live card is a link; a PLANNED or IDEA card
-    is a <div> — no page exists, so nothing pretends to be one. The page appears
-    together with its content, not before it. #}
+{#- Six equal doors, honestly labelled. The first two are the two ways in — by
+    profession and by language or technology (the become wave, 2026-10-06). A
+    live card is a link; a PLANNED or IDEA card is a <div> — no page exists, so
+    nothing pretends to be one. The page appears together with its content, not
+    before it: /learn/ opens with its first course. #}
 <section class="cards" aria-labelledby="cards-heading">
   <h2 class="kicker" id="cards-heading">{{ T.home.cardsKicker }}</h2>
   <div class="card-grid">
-    <a class="card" href="{{ T.paths.roadmaps }}">
-      <div class="card__top"><h3 class="card__title">{{ T.home.cards.roadmaps.title }}</h3><span class="chip chip--live">{{ roadmaps.length }} {{ T.home.cards.roadmaps.tag }}</span></div>
-      <p class="card__desc">{{ T.home.cards.roadmaps.desc }}</p>
+    <a class="card" href="{{ T.paths.become }}">
+      <div class="card__top"><h3 class="card__title">{{ T.home.cards.become.title }}</h3><span class="chip chip--live">{{ roadmaps.length }} {{ T.home.cards.become.tag }}</span></div>
+      <p class="card__desc">{{ T.home.cards.become.desc }}</p>
     </a>
+    <div class="card">
+      <div class="card__top"><h3 class="card__title">{{ T.home.cards.learn.title }}</h3><span class="chip chip--planned">{{ T.home.cards.learn.tag }}</span></div>
+      <p class="card__desc">{{ T.home.cards.learn.desc }}</p>
+    </div>
     <a class="card" href="{{ T.paths.projects }}">
       <div class="card__top"><h3 class="card__title">{{ T.home.cards.projects.title }}</h3><span class="chip chip--live">{{ projects.length }} {{ T.home.cards.projects.tag }}</span></div>
       <p class="card__desc">{{ T.home.cards.projects.desc }}</p>
@@ -28,10 +34,6 @@
     <div class="card">
       <div class="card__top"><h3 class="card__title">{{ T.home.cards.foundations.title }}</h3><span class="chip chip--planned">{{ T.home.cards.foundations.tag }}</span></div>
       <p class="card__desc">{{ T.home.cards.foundations.desc }}</p>
-    </div>
-    <div class="card">
-      <div class="card__top"><h3 class="card__title">{{ T.home.cards.courses.title }}</h3><span class="chip chip--planned">{{ T.home.cards.courses.tag }}</span></div>
-      <p class="card__desc">{{ T.home.cards.courses.desc }}</p>
     </div>
     <div class="card">
       <div class="card__top"><h3 class="card__title">{{ T.home.cards.challenges.title }}</h3><span class="chip chip--idea">{{ T.home.cards.challenges.tag }}</span></div>

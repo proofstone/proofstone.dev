@@ -227,6 +227,23 @@ console.log('\nSOCIAL CARDS');
   }
 }
 
+// ── Retired addresses forward, as the origin serves them ─────────────────────
+// The become wave moved /roadmaps/ to /become/ and withdrew the Russian mirror.
+// check-build proves the stubs are built; this proves the origin serves them —
+// a deploy that dropped a stub turns an indexed URL into a 404.
+console.log('\nRETIRED ADDRESSES');
+for (const [from, to] of [['/roadmaps/', '/become/'], ['/ru/', '/'], ['/ru/roadmaps/', '/become/'], ['/ru/projects/', '/projects/']]) {
+  try {
+    const { status, body } = await get(`${BASE}${from}`);
+    const m = body.match(/<meta http-equiv="refresh" content="0; url=([^"]+)">/);
+    if (status !== 200) fail(from, `HTTP ${status} — the retired address no longer forwards to ${to}`);
+    else if (!m || m[1] !== to) fail(from, `does not forward to ${to}${m ? ` (forwards to ${m[1]})` : ''}`);
+    else pass(from, `forwards to ${to}`);
+  } catch (e) {
+    fail(from, e.message);
+  }
+}
+
 // ── The redesign, as the origin actually serves it ───────────────────────────
 console.log('\nDEPLOYED REDESIGN');
 {
@@ -326,7 +343,11 @@ console.log('\nDEPLOYED REDESIGN');
         ['#72bdff', "the stone wave's dark accent"],
         ['--bg: #161717', "the graphite wave's page"],
         ['#5b9dff', "the graphite wave's cobalt"],
-        ['@media (prefers-color-scheme', 'the duplicated OS-theme branch']
+        ['@media (prefers-color-scheme', 'the duplicated OS-theme branch'],
+        // The become wave (2026-10-06) withdrew the Russian mirror and with it
+        // the language switcher; its styles in a served stylesheet mean the
+        // deploy is stale.
+        ['.lang-menu', 'the language switcher, withdrawn with the Russian mirror']
       ];
       const missing = need.filter(([t]) => !body.includes(t));
       const lingering = forbid.filter(([t]) => body.includes(t));

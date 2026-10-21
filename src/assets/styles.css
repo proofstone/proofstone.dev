@@ -321,35 +321,6 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 }
 .btn-star:hover { filter: brightness(.94); }
 
-/* The language switcher: a flag capsule opening a listbox. SVG flags, not emoji
-   — Windows renders flag emoji as bare letter pairs. Progressive enhancement:
-   with JS off the <details> still opens and the entries are plain links. */
-.lang { position: relative; }
-.lang summary { list-style: none; cursor: pointer; }
-.lang summary::-webkit-details-marker { display: none; }
-.lang-btn {
-  display: flex; align-items: center; gap: .5rem;
-  font-family: var(--mono); font-size: 0.78rem; letter-spacing: .06em;
-  color: var(--muted); border: 1px solid var(--border); border-radius: 999px;
-  padding: .34rem .75rem;
-}
-.lang summary:hover .lang-btn { color: var(--text); border-color: var(--control-border); }
-.lang-flag { width: 18px; height: 13px; border-radius: 2px; display: block; }
-.lang-caret { font-size: .6em; }
-.lang-menu {
-  position: absolute; top: calc(100% + 8px); right: 0; min-width: 10rem;
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md);
-  padding: .35rem; display: flex; flex-direction: column; gap: .1rem; z-index: 30;
-  margin: 0; list-style: none;
-}
-.lang-menu a {
-  display: flex; align-items: center; gap: .6rem;
-  font-family: var(--font); font-size: 0.9rem;
-  color: var(--text); border-radius: var(--r-sm); padding: .45rem .6rem;
-}
-.lang-menu a:hover { background: var(--surface-2); text-decoration: none; }
-.lang-menu a[aria-current="true"] { background: var(--surface-2); font-weight: 600; }
-
 /* A word, not a glyph. The button says the theme it switches TO, which is what
    its accessible name says too — an icon that has to be decoded is a worse
    affordance than the word itself, and it costs no SVG. */
@@ -457,6 +428,13 @@ a.mcard:hover .mcard__title { color: var(--accent-2); }
   color: var(--accent); border: 1px solid var(--border); border-radius: 999px;
   padding: .05rem .5rem; font-size: 0.78rem; letter-spacing: .14em; text-transform: uppercase; margin-right: .5rem;
 }
+/* /become/: the courses a planned map is assembled from, and the entry condition
+   every card states before the first step. The path is structure (Mono); the
+   condition is prose (Sans) with a Mono label — a whole sentence set in Mono
+   falls back to another face wherever the subset has no glyphs for it. */
+.mcard__path { font-family: var(--mono); font-size: 0.82rem; color: var(--text); margin: 0; }
+.mcard__req { font-size: 0.92rem; line-height: 1.55; color: var(--text); margin: 0; }
+.mcard__req-k { font-family: var(--mono); font-size: 0.82rem; color: var(--muted); margin-right: .35rem; }
 
 /* ── Chips: LIVE / IN REVIEW / PLANNED / IDEA ─────────────────────────── */
 /* Outlined, never filled; capsules now — the manifesto rounded the register.
@@ -849,16 +827,29 @@ a.mcard:hover .mcard__title { color: var(--accent-2); }
   .roadmap-main .prose pre { width: max-content; min-width: 100%; max-width: var(--spread); }
 }
 
+.btn-star__short { display: none; }
+
 /* ── Small screens ────────────────────────────────────────────────────────── */
 @media (max-width: 40rem) {
   body { font-size: 16.5px; }
   .site-header { padding: .8rem 1.1rem; }
+  /* One row does not fit a phone: brand, sections, theme and the star measured
+     540px at a 320px viewport (658 with the old language switcher) and every
+     page scrolled sideways. The sections drop to their own row under the brand. */
+  .site-header { flex-wrap: wrap; row-gap: .55rem; }
+  .site-links { order: 3; flex-basis: 100%; margin-left: 0; }
   main { padding: 1.6rem 1.1rem 2.5rem; }
   .site-footer { padding: 1.2rem 1.1rem 2rem; }
   .hero { padding: 2.2rem 0 2rem; }
   .roadmap__bar { align-items: flex-start; }
   .series__meta { white-space: normal; }
   .prose h2 { font-size: 1.28rem; }
+}
+/* Below ~384px the brand and the full "Star on GitHub" capsule do not share a
+   row; the capsule keeps its first word (its accessible name stays whole). */
+@media (max-width: 24rem) {
+  .btn-star__full { display: none; }
+  .btn-star__short { display: inline; }
 }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }

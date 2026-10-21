@@ -672,6 +672,20 @@ export default function (eleventyConfig) {
     (list || []).reduce((n, item) => n + (Number(item[field]) || 0), 0)
   );
 
+  // /become/ is one list (owner's decision 2026-10-06): live roadmaps, then the
+  // professions being built (src/_data/professions.js), then roadmaps in review.
+  // Ordered and numbered here, not in the template — a Nunjucks `set` does not
+  // survive a loop, and three loops would each restart the count.
+  eleventyConfig.addFilter('becomeCards', (roadmaps, professions) => {
+    const live = (roadmaps || []).filter((r) => r.status === 'live');
+    const review = (roadmaps || []).filter((r) => r.status === 'review');
+    return [
+      ...live.map((r) => ({ status: 'live', r })),
+      ...(professions || []).map((p) => ({ status: p.status, p })),
+      ...review.map((r) => ({ status: 'review', r }))
+    ].map((c, i) => ({ ...c, no: String(i + 1).padStart(2, '0') }));
+  });
+
   eleventyConfig.addFilter('roadmapMarkdown', (_content, roadmap) => renderRoadmap(roadmap).html);
   eleventyConfig.addFilter('roadmapToc', (roadmap) => renderRoadmap(roadmap).toc);
   // Feeds the statically reserved progress bar. NOT the registry's declared
@@ -708,9 +722,9 @@ export default function (eleventyConfig) {
     const website = `${site.url}/#website`;
     const canonical = `${site.url}${pageUrl}`;
 
-    // Section pages (/roadmaps/, /projects/, and their /ru/ mirrors): a
-    // collection with a breadcrumb. CollectionPage, not LearningResource — a
-    // list of maps teaches nothing by itself.
+    // Section pages (/become/, /projects/): a collection with a breadcrumb.
+    // CollectionPage, not LearningResource — a list of maps teaches nothing by
+    // itself.
     if (pageType === 'section') {
       return {
         '@context': 'https://schema.org',

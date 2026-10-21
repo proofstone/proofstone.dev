@@ -32,6 +32,11 @@ export const roadmaps = [
     // carries the page description, og:description and the SERP snippet; this is
     // an additional field, not a shortened one.
     cardLine: 'Evals, red-teaming, guardrails, agent security.',
+    // The entry condition on the /become/ card. Like every line a surface shows
+    // about a roadmap, it comes from that roadmap's own README, never from a
+    // neighbour: "It is built for a working software, ML, or infrastructure
+    // engineer who wants to move into AI safety engineering".
+    requires: 'you work as a software, ML or infrastructure engineer',
     milestones: 33,   // fallback only; real count is computed from the README at build
     order: 1,
     status: 'live',                       // "live" | "teaser" | "review"
@@ -53,6 +58,9 @@ export const roadmaps = [
     metaDescription:
       'Moving into distributed systems: consensus, replication, failure detection — every node is a test that passes or fails, not a keyword you nod at.',
     cardLine: 'Consensus, replication, failure detection.',
+    // README: "built for a backend or infrastructure engineer who ships
+    // services, is comfortable with concurrency and one language".
+    requires: 'you ship backend or infrastructure services, and are comfortable with concurrency and one language',
     milestones: 29,   // fallback only; real count computed from the README at build
     order: 2,
     status: 'live',
@@ -71,6 +79,9 @@ export const roadmaps = [
     title: 'Applied Cryptography Roadmap',
     tagline: 'For engineers who ship cryptography and cannot afford to get it wrong: break it in Cryptopals and CryptoHack, then ship it right.',
     cardLine: 'Break it in Cryptopals and CryptoHack, then ship it right.',
+    // README, the two tracks: Cryptopals is best "if you already code fluently";
+    // CryptoHack gives "a gentler ramp with the math named before you meet it".
+    requires: 'you already write code; the math is introduced as you go',
     milestones: 18,
     order: 3,
     status: 'live',
@@ -81,6 +92,8 @@ export const roadmaps = [
     title: 'Robotics Software Engineer Roadmap',
     tagline: 'You already ship software. Robotics does not need you to start over — it needs you to port what you know and respect what is genuinely different.',
     cardLine: 'Port what you already know; respect what is genuinely different.',
+    // The tagline's own words: "You already ship software."
+    requires: 'you already ship software',
     // Counts cannot be derived at build while the repo is private, so they are
     // declared — but taken by counting the README itself on 2026-07-20, not copied
     // from a summary. They become automatic the moment status flips to 'live'.
@@ -94,6 +107,8 @@ export const roadmaps = [
     title: 'PCB Design Roadmap',
     tagline: 'Embedded roadmaps teach you to write the firmware and say plainly that the board is not their topic. This is the map for the board.',
     cardLine: 'The map for the board, not for the firmware on it.',
+    // No `requires`: the README is private and nothing public states its entry
+    // condition yet. The card says so instead of inventing one.
     milestones: 22,   // counted from the README 2026-07-20 (see note above)
     stars: 3,
     order: 5,
