@@ -82,6 +82,9 @@ export default {
         : '<span class="chip chip--none">no map yet</span>',
       directionsWord: 'directions',
       professionsWord: 'professions',
+      // A planned profession without a course path yet names its technologies.
+      stackWord: 'stack:',
+      moreWord: (n) => `+${n} more`,
       directionsPending: 'named with the second map',
       noneYet: 'none yet — this card opens with the first map',
       open: 'open →',

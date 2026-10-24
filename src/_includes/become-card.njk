@@ -24,7 +24,11 @@
   {%- endif %}
   {%- else %}
   <p class="mcard__desc">{{ c.p.desc }}</p>
+  {%- if c.p.path %}
   <p class="mcard__path">{{ c.p.path | join(" → ") }}</p>
+  {%- elif c.p.stack %}
+  <p class="mcard__path"><span class="mcard__req-k">{{ B.stackWord }}</span> {{ c.p.stack | join(" · ") }}</p>
+  {%- endif %}
   {%- endif %}
   {%- set req = c.r.requires if c.r else c.p.requires %}
   <p class="mcard__req"><span class="mcard__req-k">{{ B.requiresWord }}</span> {% if req %}{{ req }}{% elif c.p %}{{ B.fromZero }}{% else %}{{ B.requiresPending }}{% endif %}</p>

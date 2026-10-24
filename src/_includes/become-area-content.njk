@@ -26,7 +26,10 @@
     <p class="mcard__desc">{{ d.desc }}</p>
     <p class="mcard__who"><span class="mcard__who-k">{{ B.professionsWord }}:</span>
       {%- if d.open %}
-      {%- for c in d.cards %}<span>{{ (c.r.title | replace(" Roadmap", "")) if c.r else c.p.title }}</span>{% if not loop.last %} · {% endif %}{% endfor %}
+      {#- The first few names; a long shelf says how many more, and the page
+          behind the card lists them all. #}
+      {%- for c in d.cards %}{% if loop.index <= 4 %}<span>{{ (c.r.title | replace(" Roadmap", "")) if c.r else c.p.title }}</span>{% if not loop.last and loop.index < 4 %} · {% endif %}{% endif %}{% endfor %}
+      {%- if d.cards.length > 4 %} · <span class="mcard__who-none">{{ B.moreWord(d.cards.length - 4) }}</span>{% endif %}
       {%- else %}<span class="mcard__who-none">{{ B.noneYet }}</span>{% endif %}</p>
     {%- if d.open %}
     <p class="mcard__meta mcard__meta--row"><span>{{ B.tallyHtml(d.tally) | safe }}</span><span class="mcard__go">{{ B.open }}</span></p>

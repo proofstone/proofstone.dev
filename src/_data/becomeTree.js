@@ -11,9 +11,9 @@ import areas from './areas.js';
 import professions from './professions.js';
 import { loadRoadmaps } from '../../roadmaps.config.mjs';
 
-// Best status first: a shelf holding a live map outranks one holding only a
-// plan, which outranks one still in review; an empty shelf comes last.
-const RANK = { live: 0, planned: 1, review: 2, none: 3 };
+// Directions keep the order they are declared in (areas.js is the editorial
+// order — owner's call, 2026-10-24); only an empty shelf falls to the end, so
+// the page opens on real content. Within a shelf: live → planned → review.
 const pad = (n) => String(n).padStart(2, '0');
 
 const tally = (cards) => ({
@@ -51,9 +51,9 @@ export default function () {
     const dirs = a.directions
       .map((d, i) => {
         const dc = own.filter((c) => c.direction === d.slug);
-        return { ...d, area: a.slug, areaTitle: a.title, cards: dc, open: dc.length > 0, tally: tally(dc), best: best(dc), taxonomyOrder: i };
+        return { ...d, area: a.slug, areaTitle: a.title, cards: dc, open: dc.length > 0, tally: tally(dc), best: best(dc), declaredOrder: i };
       })
-      .sort((x, y) => RANK[x.best] - RANK[y.best] || x.taxonomyOrder - y.taxonomyOrder);
+      .sort((x, y) => Number(y.open) - Number(x.open) || x.declaredOrder - y.declaredOrder);
     // Card numbers run through the whole area in the order the reader meets
     // them; direction numbers run through the area's shelf list.
     let n = 0;
