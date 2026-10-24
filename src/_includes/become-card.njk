@@ -1,0 +1,40 @@
+{#- One profession card of the /become/ tree — the same object the section
+    page showed before the areas wave (2026-10-23), now on the direction floor
+    (or directly on an area that has no directions yet). Expects `c` in the
+    context: { status, no, r | p }. A LIVE card is a link to the roadmap page;
+    planned and in-review cards are not links, because there is nothing to open.
+    The entry condition comes only from the map's own README (c.r.requires);
+    a profession from zero says so; a private README says "not stated yet"
+    rather than inventing one. #}
+{%- set T = i18n[lang or "en"] %}
+{%- set B = T.becomePage %}
+{%- set inner %}
+  <div class="mcard__top">
+    <span><span class="mcard__no">{{ c.no }}</span><h2 class="mcard__title">{{ (c.r.title | replace(" Roadmap", "")) if c.r else c.p.title }}</h2></span>
+    {%- if c.status == "live" %}<span class="chip chip--live">{{ B.live }}</span>
+    {%- elif c.status == "review" %}<span class="chip chip--review">{{ B.review }}</span>
+    {%- else %}<span class="chip chip--planned">{{ B.planned }}</span>{% endif %}
+  </div>
+  {%- if c.r %}
+  <p class="mcard__desc">{{ c.r.cardLine }}{% if c.status != "live" %} {{ B.privateNote }}{% endif %}</p>
+  {%- if c.r.lab %}
+  <p class="mcard__lab"><span class="lab-tag">{{ B.labWord }}</span><code>{{ c.r.lab.name }}</code> — {{ c.r.lab.note }}.</p>
+  {%- elif c.r.labNote %}
+  <p class="mcard__lab"><span class="lab-tag">{{ B.labWord }}</span>{{ c.r.labNote }}.</p>
+  {%- endif %}
+  {%- else %}
+  <p class="mcard__desc">{{ c.p.desc }}</p>
+  <p class="mcard__path">{{ c.p.path | join(" → ") }}</p>
+  {%- endif %}
+  {%- set req = c.r.requires if c.r else c.p.requires %}
+  <p class="mcard__req"><span class="mcard__req-k">{{ B.requiresWord }}</span> {% if req %}{{ req }}{% elif c.p %}{{ B.fromZero }}{% else %}{{ B.requiresPending }}{% endif %}</p>
+  {%- if c.r %}
+  {%- set stars = c.r | roadmapStars %}
+  <p class="mcard__meta"><span class="n">{{ c.r.milestones }}</span> {{ B.milestonesWord(c.r.milestones) }} · <span class="n">{{ stars }}</span> {{ B.flagshipWord(stars) }}</p>
+  {%- endif %}
+{%- endset %}
+{%- if c.status == "live" %}
+<a class="mcard" href="/{{ c.r.slug }}/">{{ inner | safe }}</a>
+{%- else %}
+<div class="mcard">{{ inner | safe }}</div>
+{%- endif %}

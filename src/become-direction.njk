@@ -1,0 +1,15 @@
+---
+layout: base.njk
+pagination:
+  data: becomeTree.directionPages
+  size: 1
+  alias: dir
+permalink: "/become/{{ dir.area }}/{{ dir.slug }}/"
+pageType: section
+pageKey: becomePage
+lang: en
+eleventyComputed:
+  title: "{{ dir.title }} — {{ dir.areaTitle }} — proofstone"
+  description: "{{ dir.desc }}"
+---
+{% include "become-direction-content.njk" %}

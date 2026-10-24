@@ -672,19 +672,8 @@ export default function (eleventyConfig) {
     (list || []).reduce((n, item) => n + (Number(item[field]) || 0), 0)
   );
 
-  // /become/ is one list (owner's decision 2026-10-06): live roadmaps, then the
-  // professions being built (src/_data/professions.js), then roadmaps in review.
-  // Ordered and numbered here, not in the template — a Nunjucks `set` does not
-  // survive a loop, and three loops would each restart the count.
-  eleventyConfig.addFilter('becomeCards', (roadmaps, professions) => {
-    const live = (roadmaps || []).filter((r) => r.status === 'live');
-    const review = (roadmaps || []).filter((r) => r.status === 'review');
-    return [
-      ...live.map((r) => ({ status: 'live', r })),
-      ...(professions || []).map((p) => ({ status: p.status, p })),
-      ...review.map((r) => ({ status: 'review', r }))
-    ].map((c, i) => ({ ...c, no: String(i + 1).padStart(2, '0') }));
-  });
+  // The /become/ tree (areas → directions → professions) is built, ordered and
+  // numbered in src/_data/becomeTree.js, not in a filter and not in a template.
 
   eleventyConfig.addFilter('roadmapMarkdown', (_content, roadmap) => renderRoadmap(roadmap).html);
   eleventyConfig.addFilter('roadmapToc', (roadmap) => renderRoadmap(roadmap).toc);
@@ -717,15 +706,17 @@ export default function (eleventyConfig) {
   // provider offering instruction — there is no instructor or enrolment here, so
   // claiming it would be misleading markup).
   eleventyConfig.addFilter('structuredData', (ctx) => {
-    const { pageType, roadmap, site, pageUrl, lang, title, description, homePath } = ctx;
+    const { pageType, roadmap, site, pageUrl, lang, title, description, homePath, crumbs } = ctx;
     const org = `${site.url}/#org`;
     const website = `${site.url}/#website`;
     const canonical = `${site.url}${pageUrl}`;
 
-    // Section pages (/become/, /projects/): a collection with a breadcrumb.
-    // CollectionPage, not LearningResource — a list of maps teaches nothing by
-    // itself.
+    // Section pages (/become/, its area and direction floors, /projects/): a
+    // collection with a breadcrumb. CollectionPage, not LearningResource — a
+    // list of maps teaches nothing by itself. `crumbs` are the floors between
+    // home and this page (an area page has one, a direction page two).
     if (pageType === 'section') {
+      const between = (crumbs || []).map((c, i) => ({ '@type': 'ListItem', position: i + 2, name: c.name, item: `${site.url}${c.url}` }));
       return {
         '@context': 'https://schema.org',
         '@graph': [
@@ -734,7 +725,8 @@ export default function (eleventyConfig) {
             '@id': `${canonical}#crumbs`,
             itemListElement: [
               { '@type': 'ListItem', position: 1, name: site.name, item: `${site.url}${homePath || '/'}` },
-              { '@type': 'ListItem', position: 2, name: title, item: canonical }
+              ...between,
+              { '@type': 'ListItem', position: between.length + 2, name: title, item: canonical }
             ]
           },
           {

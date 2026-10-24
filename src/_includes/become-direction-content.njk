@@ -1,0 +1,29 @@
+{#- A direction page, third floor of the /become/ tree: the PROFESSIONS as
+    cards — the same card the section page showed before the areas wave.
+    Below the cards, the sibling directions of the same area that have a map,
+    so a reader moves sideways without climbing back up. Expects `dir` (a
+    becomeTree direction) in the context. #}
+{%- set T = i18n[lang or "en"] %}
+{%- set B = T.becomePage %}
+<div class="home">
+
+<div class="page-head">
+  <p class="crumb"><a href="{{ T.paths.home }}">proofstone</a> / <a href="{{ T.paths.become }}">{{ B.crumb }}</a> / <a href="{{ T.paths.become }}{{ dir.area }}/">{{ dir.areaTitle | lower }}</a> / {{ dir.title | lower }}</p>
+  <h1>{{ dir.title }}</h1>
+  <p class="page-head__intro">{{ B.directionIntro(dir.desc) }}</p>
+  <p class="page-head__counts">{{ B.directionCountsHtml(dir.tally) | safe }}</p>
+</div>
+
+<div class="mcards">
+  {%- for c in dir.cards %}
+  {%- include "become-card.njk" %}
+  {%- endfor %}
+</div>
+
+<nav class="siblings" aria-label="{{ B.otherDirectionsLabel }}">
+  <span>{{ B.otherDirections }}</span>
+  {%- for d in dir.siblings %}{% if d.open and d.slug != dir.slug %}<a href="{{ T.paths.become }}{{ dir.area }}/{{ d.slug }}/">{{ d.title | lower }}</a><span aria-hidden="true">·</span>{% endif %}{% endfor %}
+  <a href="{{ T.paths.become }}{{ dir.area }}/">{{ B.allDirections(dir.directionsTotal) }}</a>
+</nav>
+
+</div>

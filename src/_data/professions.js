@@ -6,6 +6,9 @@ export default [
   {
     slug: 'frontend-developer',
     title: 'Frontend developer',
+    // Its shelf on /become/ (src/_data/areas.js); a card without one fails the build.
+    area: 'software-engineering',
+    direction: 'web',
     desc: 'The part of the web people see and touch: pages, layouts, interfaces.',
     // The courses this map is assembled from, in order (phase 2 of the plan:
     // proofstone/proofstone.dev#1). Each becomes a link when its course is live.

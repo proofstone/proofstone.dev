@@ -35,8 +35,12 @@ npm run build        # SITE_NOINDEX defaults to "true" (pre-launch)
 ## Connect a new roadmap (target: a few minutes)
 
 1. Add one entry to [`roadmaps.config.mjs`](roadmaps.config.mjs) — `slug`, `repo`,
-   `branch`, `title`, `tagline`, `status: 'live'`. (`slug` = repo name without the
-   `-roadmap` suffix. Milestone count is read from the README automatically.)
+   `branch`, `title`, `tagline`, `status: 'live'`, and its shelf on `/become/`:
+   `area` plus `direction` (the slugs declared in
+   [`src/_data/areas.js`](src/_data/areas.js); an area that has not named its
+   directions takes `area` alone). A map without a shelf fails the build.
+   (`slug` = repo name without the `-roadmap` suffix. Milestone count is read
+   from the README automatically.)
 2. Nothing else to write — the fetch step is generic.
 3. In the roadmap's repo, add [`docs/notify-site.yml.tmpl`](docs/notify-site.yml.tmpl)
    as `.github/workflows/notify-site.yml` so content edits trigger a site rebuild.

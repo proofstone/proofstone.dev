@@ -1,0 +1,15 @@
+---
+layout: base.njk
+pagination:
+  data: becomeTree.areaPages
+  size: 1
+  alias: area
+permalink: "/become/{{ area.slug }}/"
+pageType: section
+pageKey: becomePage
+lang: en
+eleventyComputed:
+  title: "{{ area.title }} — proofstone"
+  description: "{{ area.desc }}"
+---
+{% include "become-area-content.njk" %}

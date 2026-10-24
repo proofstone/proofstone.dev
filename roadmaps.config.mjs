@@ -38,6 +38,10 @@ export const roadmaps = [
     // engineer who wants to move into AI safety engineering".
     requires: 'you work as a software, ML or infrastructure engineer',
     milestones: 33,   // fallback only; real count is computed from the README at build
+    // The shelf on /become/ (src/_data/areas.js): the site's classification of
+    // the map, not a line from its README. A card without a shelf fails the build.
+    area: 'software-engineering',
+    direction: 'data-ai',
     order: 1,
     status: 'live',                       // "live" | "teaser" | "review"
     star: true,
@@ -62,6 +66,8 @@ export const roadmaps = [
     // services, is comfortable with concurrency and one language".
     requires: 'you ship backend or infrastructure services, and are comfortable with concurrency and one language',
     milestones: 29,   // fallback only; real count computed from the README at build
+    area: 'software-engineering',
+    direction: 'infrastructure',
     order: 2,
     status: 'live',
     star: true,
@@ -83,6 +89,8 @@ export const roadmaps = [
     // CryptoHack gives "a gentler ramp with the math named before you meet it".
     requires: 'you already write code; the math is introduced as you go',
     milestones: 18,
+    area: 'software-engineering',
+    direction: 'security',
     order: 3,
     status: 'live',
     star: true
@@ -99,6 +107,8 @@ export const roadmaps = [
     // from a summary. They become automatic the moment status flips to 'live'.
     milestones: 20,
     stars: 3,
+    area: 'software-engineering',
+    direction: 'embedded',
     order: 4,
     status: 'review'
   },
@@ -111,6 +121,9 @@ export const roadmaps = [
     // condition yet. The card says so instead of inventing one.
     milestones: 22,   // counted from the README 2026-07-20 (see note above)
     stars: 3,
+    // Hardware has not named its directions yet (one map is not a landscape),
+    // so the card sits on the area itself; a direction here would fail the build.
+    area: 'hardware-electronics',
     order: 5,
     status: 'review',
     // Its own reference board is designed but not yet fabricated — mentioned, not linked.

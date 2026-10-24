@@ -1,0 +1,48 @@
+{#- An area page, second floor of the /become/ tree: the DIRECTIONS as cards.
+    A direction with a map is a link to /become/<area>/<direction>/; an empty
+    one is a static card that says "no map yet" (class chip--none — the guard
+    keys on it). An area that has not named its directions yet shows its
+    profession cards directly, the same object as the third floor. Expects
+    `area` (a becomeTree area) in the context. #}
+{%- set T = i18n[lang or "en"] %}
+{%- set B = T.becomePage %}
+<div class="home">
+
+<div class="page-head">
+  <p class="crumb"><a href="{{ T.paths.home }}">proofstone</a> / <a href="{{ T.paths.become }}">{{ B.crumb }}</a> / {{ area.title | lower }}</p>
+  <h1>{{ area.title }}</h1>
+  <p class="page-head__intro">{{ area.intro }}</p>
+  <p class="page-head__counts">{{ B.areaCountsHtml(area.tally, area.directions.length) | safe }}</p>
+</div>
+
+<div class="mcards">
+  {%- if area.directions.length %}
+  {%- for d in area.directions %}
+  {%- set inner %}
+    <div class="mcard__top">
+      <span><span class="mcard__no">{{ d.no }}</span><h2 class="mcard__title">{{ d.title }}</h2></span>
+      {{ B.shelfChipHtml(d.best, d.tally) | safe }}
+    </div>
+    <p class="mcard__desc">{{ d.desc }}</p>
+    <p class="mcard__who"><span class="mcard__who-k">{{ B.professionsWord }}:</span>
+      {%- if d.open %}
+      {%- for c in d.cards %}<span>{{ (c.r.title | replace(" Roadmap", "")) if c.r else c.p.title }}</span>{% if not loop.last %} · {% endif %}{% endfor %}
+      {%- else %}<span class="mcard__who-none">{{ B.noneYet }}</span>{% endif %}</p>
+    {%- if d.open %}
+    <p class="mcard__meta mcard__meta--row"><span>{{ B.tallyHtml(d.tally) | safe }}</span><span class="mcard__go">{{ B.open }}</span></p>
+    {%- endif %}
+  {%- endset %}
+  {%- if d.open %}
+  <a class="mcard" href="{{ T.paths.become }}{{ area.slug }}/{{ d.slug }}/">{{ inner | safe }}</a>
+  {%- else %}
+  <div class="mcard mcard--shut">{{ inner | safe }}</div>
+  {%- endif %}
+  {%- endfor %}
+  {%- else %}
+  {%- for c in area.cards %}
+  {%- include "become-card.njk" %}
+  {%- endfor %}
+  {%- endif %}
+</div>
+
+</div>

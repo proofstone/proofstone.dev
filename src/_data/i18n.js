@@ -11,6 +11,14 @@
 // Values ending in `Html` are trusted markup written in this file, not user
 // input — they pass through `| safe` in the templates.
 
+// " · 3 live · 1 planned · 1 in review" — only the parts that are not zero, so
+// a shelf with one live map does not announce "0 planned · 0 in review".
+const tallyTail = (t) =>
+  [['live', 'live'], ['planned', 'planned'], ['review', 'in review']]
+    .filter(([k]) => t[k])
+    .map(([k, word]) => ` · <b>${t[k]}</b> ${word}`)
+    .join('');
+
 export default {
   en: {
     code: 'en',
@@ -49,13 +57,38 @@ export default {
       description: 'Professions as maps you walk node by node. Every card says, up front, what you need before you start; every milestone states the artifact that closes it.',
       crumb: 'become',
       h1: 'What do you want to become?',
-      intro: 'Pick a profession. Each one is a map you walk node by node, and every milestone states, in advance, the artifact that closes it. Every card says, up front, what you need before you start.',
+      // Three floors since the areas wave (2026-10-23): area → direction → profession.
+      intro: 'Pick an area, then a direction inside it, then a profession. Each profession is a map you walk node by node, and every milestone states, in advance, the artifact that closes it. Every card says, up front, what you need before you start.',
       privateNote: 'Private until published.',
       live: 'live', review: 'in review', planned: 'planned',
       milestonesWord: () => 'milestones',
       flagshipWord: () => 'flagship',
-      countsHtml: (professions, live, planned, review) =>
-        `<b>${professions}</b> professions · <b>${live}</b> live · <b>${planned}</b> planned · <b>${review}</b> in practitioner review`,
+      // Every count is a becomeTree tally: { maps, live, planned, review }.
+      countsHtml: (t) =>
+        `<b>${t.areas}</b> areas · <b>${t.maps}</b> professions · <b>${t.live}</b> live · <b>${t.planned}</b> planned · <b>${t.review}</b> in practitioner review`,
+      areaCountsHtml: (t, directions) =>
+        (directions ? `<b>${directions}</b> directions · ` : '') + `<b>${t.maps}</b> ${t.maps === 1 ? 'map' : 'maps'}` + tallyTail(t),
+      directionCountsHtml: (t) =>
+        `<b>${t.maps}</b> ${t.maps === 1 ? 'profession' : 'professions'}` + tallyTail(t),
+      // The floor line of an area or direction card.
+      tallyHtml: (t, directions) =>
+        (directions ? `<b>${directions}</b> directions · ` : '') + `<b>${t.maps}</b> ${t.maps === 1 ? 'map' : 'maps'}` + tallyTail(t),
+      // The chip of a shelf: its best content. chip--none is what the become
+      // guard keys on — a linked card must never carry it.
+      shelfChipHtml: (best, t) =>
+        best === 'live' ? `<span class="chip chip--live">${t.live} live</span>`
+        : best === 'planned' ? '<span class="chip chip--planned">planned</span>'
+        : best === 'review' ? '<span class="chip chip--review">in review</span>'
+        : '<span class="chip chip--none">no map yet</span>',
+      directionsWord: 'directions',
+      professionsWord: 'professions',
+      directionsPending: 'named with the second map',
+      noneYet: 'none yet — this card opens with the first map',
+      open: 'open →',
+      directionIntro: (desc) => `${desc} Pick a profession: each one is a map you walk node by node, and every card says, up front, what you need before you start.`,
+      otherDirections: 'other directions:',
+      otherDirectionsLabel: 'Other directions',
+      allDirections: (n) => `all ${n} →`,
       labWord: 'lab',
       // The entry condition, stated before the first step — the same idea as
       // "you're done when", at the other end of the map.

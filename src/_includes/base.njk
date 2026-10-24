@@ -47,7 +47,12 @@
   <meta name="twitter:image" content="{{ ogImage }}">
   <meta name="twitter:image:alt" content="{{ ogAlt }}">
 
-  {%- set sd = { pageType: pageType, roadmap: roadmap, site: site, pageUrl: page.url, lang: lang or "en", title: pageTitle, description: pageDescription, homePath: T.paths.home } | structuredData %}
+  {#- The floors between home and this page, for the breadcrumb list: an area
+      page sits under /become/, a direction page under its area. #}
+  {%- set sdCrumbs = [] %}
+  {%- if area %}{% set sdCrumbs = [{ "name": T.becomePage.h1, "url": T.paths.become }] %}{% endif %}
+  {%- if dir %}{% set sdCrumbs = [{ "name": T.becomePage.h1, "url": T.paths.become }, { "name": dir.areaTitle, "url": T.paths.become + dir.area + "/" }] %}{% endif %}
+  {%- set sd = { pageType: pageType, roadmap: roadmap, site: site, pageUrl: page.url, lang: lang or "en", title: pageTitle, description: pageDescription, homePath: T.paths.home, crumbs: sdCrumbs } | structuredData %}
   {%- if sd %}
   <script type="application/ld+json">{{ sd | jsonLd | safe }}</script>
   {%- endif %}

@@ -20,6 +20,7 @@ import { inspectRenderedPage, inspectStylesheet, FONT_SIZE_FLOOR_REM } from './a
 import { inspectFlagships } from './star-guard.mjs';
 import { inspectPalette, inspectFonts, OG_MIRRORED } from './palette-guard.mjs';
 import { inspectMapType, readingColumnPx, EXEMPT } from './map-type-guard.mjs';
+import { inspectBecomeCards, inspectBecomeReach } from './become-guard.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const site = join(root, '_site');
@@ -288,6 +289,31 @@ for (const homeRel of ['index.html']) {
   else pass(homeRel, `manifesto + 6 doors, ${linkCards} open / ${staticCards} honestly shut`);
 }
 
+// ── 4′. The /become/ tree opens only real doors ──────────────────────────────
+// AREAS wave (2026-10-23): /become/ is three floors of the same card — areas,
+// directions, professions. The honesty rule of the home doors, one floor down:
+// a card is a link only when a page exists behind it (a shelf with no map says
+// "no map yet" and is not a link), and a page exists only when the floor above
+// links to it (an unreachable direction page is a page the site should not
+// have built). The rule lives in scripts/become-guard.mjs so check-guards can
+// prove it fires.
+console.log('\nBECOME TREE — a card is a link only when a page is behind it, and every page is reachable');
+{
+  const tree = {};
+  for (const file of pages) {
+    const rel = relative(site, file).replace(/\\/g, '/');
+    if (rel === 'become/index.html' || /^become\/[a-z0-9-]+\/(?:[a-z0-9-]+\/)?index\.html$/.test(rel)) tree[rel] = readFileSync(file, 'utf8');
+  }
+  for (const rel of Object.keys(tree).sort()) {
+    const { linked, statics, problems } = inspectBecomeCards(tree[rel]);
+    if (problems.length) fail(`${rel}: ${problems[0]}`, problems.slice(1).join('; ') || 'see title');
+    else pass(rel, `${linked} linked card(s), ${statics} honestly shut`);
+  }
+  const reach = inspectBecomeReach(tree);
+  if (reach.problems.length) fail(`become tree: ${reach.problems[0]}`, reach.problems.slice(1).join('; ') || 'see title');
+  else pass('become tree', `${Object.keys(tree).length - 1} floor page(s) below /become/, every one reachable and non-empty`);
+}
+
 // ── 4a. Structured data ──────────────────────────────────────────────────────
 // Built as data and serialized with escaping, so the failure mode to guard is a
 // template regression producing invalid JSON or leaking markup that ends the
@@ -329,7 +355,8 @@ for (const file of pages) {
   // a section page is a collection with a breadcrumb; a roadmap page is a
   // learning resource with a breadcrumb.
   const isHome = rel === 'index.html';
-  const isSection = /^(become|projects)\/index\.html$/.test(rel);
+  // Section pages: /become/ and its area and direction floors, and /projects/.
+  const isSection = /^(become|projects)\/index\.html$/.test(rel) || /^become\/[a-z0-9-]+\/(?:[a-z0-9-]+\/)?index\.html$/.test(rel);
   const wanted = isHome ? ['Organization', 'WebSite']
     : isSection ? ['BreadcrumbList', 'CollectionPage']
     : ['BreadcrumbList', 'LearningResource'];

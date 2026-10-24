@@ -16,6 +16,7 @@ import { inspectRenderedPage, inspectStylesheet, FONT_SIZE_FLOOR_REM } from './a
 import { inspectFlagships } from './star-guard.mjs';
 import { inspectPalette, inspectFonts } from './palette-guard.mjs';
 import { inspectMapType, readingColumnPx, EXEMPT } from './map-type-guard.mjs';
+import { inspectBecomeCards, inspectBecomeReach } from './become-guard.mjs';
 import { roadmaps } from '../roadmaps.config.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -515,6 +516,40 @@ if (!existsSync(siteRoot)) {
     if (problems.length) bad(`${rel} passes the a11y guard`, problems.join('; '));
     else ok(`${rel} passes`);
   }
+}
+
+console.log('\nBECOME TREE — a card that lies about what is behind it must be refused');
+{
+  const chipNone = '<span class="chip chip--none">no map yet</span>';
+  const openCard = '<a class="mcard" href="/become/x/web/"><div class="mcard__top"><span class="chip chip--live">1 live</span></div></a>';
+  const shutCard = `<div class="mcard mcard--shut"><div class="mcard__top">${chipNone}</div></div>`;
+  const healthy = inspectBecomeCards(openCard + shutCard);
+  if (healthy.problems.length) bad('a healthy floor', `false positive: ${healthy.problems.join('; ')}`);
+  else ok('a healthy floor', `${healthy.linked} linked · ${healthy.statics} shut`);
+  const lying = inspectBecomeCards(`<a class="mcard" href="/become/x/games/"><div class="mcard__top">${chipNone}</div></a>`);
+  if (!lying.problems.length) bad('a "no map yet" card that is a link', 'guard accepted a card that lies');
+  else ok('a "no map yet" card that is a link', lying.problems[0]);
+  const hrefOnStatic = inspectBecomeCards(`<div class="mcard mcard--shut" href="/become/x/games/"><div class="mcard__top">${chipNone}</div></div>`);
+  if (!hrefOnStatic.problems.length) bad('a static card carrying an href', 'guard accepted it');
+  else ok('a static card carrying an href', hrefOnStatic.problems[0]);
+
+  const pages = {
+    'become/index.html': '<a class="mcard mcard--area" href="/become/x/">area</a>',
+    'become/x/index.html': '<a class="mcard" href="/become/x/web/">direction</a>',
+    'become/x/web/index.html': '<a class="mcard" href="/frontend/">profession</a>'
+  };
+  const reachOk = inspectBecomeReach(pages);
+  if (reachOk.problems.length) bad('a healthy tree', `false positive: ${reachOk.problems.join('; ')}`);
+  else ok('a healthy tree');
+  const orphanDir = inspectBecomeReach({ ...pages, 'become/x/games/index.html': '<div class="mcard">profession</div>' });
+  if (!orphanDir.problems.some((p) => p.includes('does not link to it'))) bad('a direction page its area does not link to', orphanDir.problems.join('; ') || 'accepted');
+  else ok('a direction page its area does not link to', orphanDir.problems[0]);
+  const orphanArea = inspectBecomeReach({ ...pages, 'become/y/index.html': '<div class="mcard">direction</div>' });
+  if (!orphanArea.problems.some((p) => p.includes('/become/ does not link to it'))) bad('an area page /become/ does not link to', orphanArea.problems.join('; ') || 'accepted');
+  else ok('an area page /become/ does not link to', orphanArea.problems[0]);
+  const emptyDir = inspectBecomeReach({ ...pages, 'become/x/web/index.html': '<p>nothing here</p>' });
+  if (!emptyDir.problems.some((p) => p.includes('holds no profession card'))) bad('a direction page with no card', emptyDir.problems.join('; ') || 'accepted');
+  else ok('a direction page with no card', emptyDir.problems[0]);
 }
 
 console.log('\nREAL CONTENT — the live READMEs must pass exactly as they are');
