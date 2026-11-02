@@ -27,9 +27,13 @@ mkdirSync(outDir, { recursive: true });
 const BG = '#0b0b0c';
 const TEXT = '#e8e8ea';
 const ACCENT = '#f2efe6';
-// The mark's own pinned pair - see favicon.svg for the measurements. Asserted
-// identical to the favicon by palette-guard.
-const MARK_BADGE = '#8a8884';
+// The mark as the header paints it (owner's call, 2026-11-02: one mark
+// everywhere the page colour is under our control): the ivory badge is
+// --accent, the P is cut out in --bg. The card stands on the site's own dark
+// field, so the pair reads here the way it reads in the header. favicon.svg is
+// the one copy that does NOT follow — it sits on a tab bar we do not paint and
+// keeps its pinned neutral pair. palette-guard asserts both rules.
+const MARK_BADGE = '#f2efe6';
 const MARK_INK = '#0b0b0c';
 const MUTED = '#9b9ba3';
 

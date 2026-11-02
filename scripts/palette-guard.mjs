@@ -89,13 +89,17 @@ export const OG_MIRRORED = [
   ['MUTED', 'muted']
 ];
 
-// The identity mark's own pinned pair — shared verbatim by favicon.svg and the
-// MARK_BADGE / MARK_INK constants in make-og.mjs. See favicon.svg for the
-// measured rationale (an ivory badge is invisible on a white tab bar).
+// The identity mark has two homes with two rules (owner's call, 2026-11-02):
+//   • favicon.svg sits on a tab bar this site does not paint, so it keeps its
+//     own measured neutral pair — an ivory badge is invisible on a white tab
+//     bar (see favicon.svg for the numbers);
+//   • the OG card stands on the site's own dark field, so it paints the mark
+//     the way the header does — the badge is --accent, the glyph is --bg, both
+//     read from the dark block like the card's other literals.
 export const MARK = { badge: '#8a8884', ink: '#0b0b0c' };
-export const MARK_MIRRORED = [
-  ['MARK_BADGE', MARK.badge],
-  ['MARK_INK', MARK.ink]
+export const OG_MARK_MIRRORED = [
+  ['MARK_BADGE', 'accent'],
+  ['MARK_INK', 'bg']
 ];
 
 // Fonts nobody asked for. Written because the Stone wave shipped exactly this
@@ -153,10 +157,12 @@ export function inspectPalette({ css, favicon, ogSource }) {
       else if (!m) problems.push(`make-og.mjs has no ${constName} literal to compare`);
       else if (m[1].toLowerCase() !== want) problems.push(`make-og.mjs ${constName} is ${m[1]}, --${tokenName} (dark) is ${want}`);
     }
-    for (const [constName, want] of MARK_MIRRORED) {
+    for (const [constName, tokenName] of OG_MARK_MIRRORED) {
       const m = String(ogSource).match(new RegExp(`const ${constName} = '(#[0-9a-fA-F]{3,8})'`));
-      if (!m) problems.push(`make-og.mjs has no ${constName} literal to compare`);
-      else if (m[1].toLowerCase() !== want) problems.push(`make-og.mjs ${constName} is ${m[1]}, the pinned mark value is ${want}`);
+      const want = readToken(css, tokenName, 'dark');
+      if (!want) problems.push(`cannot read --${tokenName} from the dark block`);
+      else if (!m) problems.push(`make-og.mjs has no ${constName} literal to compare`);
+      else if (m[1].toLowerCase() !== want) problems.push(`make-og.mjs ${constName} is ${m[1]}, the header mark paints it with --${tokenName} (dark) ${want}`);
     }
   }
 

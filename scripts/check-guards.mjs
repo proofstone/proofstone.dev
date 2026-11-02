@@ -387,7 +387,9 @@ console.log('\nPALETTE — a colour that escapes the token block must fail, and 
   // MANIFESTO wave: the favicon carries the PINNED mark pair, not --accent —
   // see palette-guard.mjs MARK for why (ivory vanishes on a white tab bar).
   const FAVICON = '<svg><rect fill="#8a8884"/><path fill="#0b0b0c"/></svg>';
-  const OG = "const BG = '#101317';\nconst TEXT = '#e3e8ee';\nconst ACCENT = '#72bdff';\nconst MUTED = '#a0a9b2';\nconst MARK_BADGE = '#8a8884';\nconst MARK_INK = '#0b0b0c';";
+  // The OG card paints the mark the way the header does: badge = --accent (dark),
+  // glyph = --bg (dark) — in this fixture #72bdff on #101317.
+  const OG = "const BG = '#101317';\nconst TEXT = '#e3e8ee';\nconst ACCENT = '#72bdff';\nconst MUTED = '#a0a9b2';\nconst MARK_BADGE = '#72bdff';\nconst MARK_INK = '#101317';";
 
   const reject = (name, payload, fragment) => {
     const { problems } = inspectPalette(payload);
@@ -421,11 +423,18 @@ console.log('\nPALETTE — a colour that escapes the token block must fail, and 
   reject('favicon left on the old accent',
     { css: PALETTE_CSS, favicon: '<svg><rect fill="#9d3b1f"/><path fill="#f7f3ea"/></svg>' },
     'favicon.svg badge is not the pinned mark badge');
-  // The mark's OTHER copy: the OG generator's pinned constants must not drift
-  // from the favicon — that is the whole mirror after the MONO adaptation.
-  reject('OG mark constant drifted from the pinned pair',
-    { css: PALETTE_CSS, ogSource: OG.replace("const MARK_BADGE = '#8a8884'", "const MARK_BADGE = '#5b9dff'") },
-    'the pinned mark value is');
+  // The favicon must NOT follow the header: ivory on a white tab bar vanishes.
+  reject('favicon copying the header pair',
+    { css: PALETTE_CSS, favicon: '<svg><rect fill="#72bdff"/><path fill="#101317"/></svg>' },
+    'favicon.svg badge is not the pinned mark badge');
+  // The mark's OTHER copy: the OG card paints the mark with the header's pair,
+  // read from the dark tokens — the old pinned grey here is a drift now.
+  reject('OG mark left on the pinned grey',
+    { css: PALETTE_CSS, ogSource: OG.replace("const MARK_BADGE = '#72bdff'", "const MARK_BADGE = '#8a8884'") },
+    'the header mark paints it with --accent (dark)');
+  reject('OG mark glyph not the page colour',
+    { css: PALETTE_CSS, ogSource: OG.replace("const MARK_INK = '#101317'", "const MARK_INK = '#000000'") },
+    'the header mark paints it with --bg (dark)');
   reject('OG generator left on the old dark palette',
     { css: PALETTE_CSS, ogSource: "const BG = '#14110d';\nconst TEXT = '#ece5d6';\nconst ACCENT = '#e08b62';\nconst MUTED = '#a89d8a';" },
     'make-og.mjs BG is #14110d');
