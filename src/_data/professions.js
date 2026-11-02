@@ -124,7 +124,7 @@ export default [
     area: 'software-engineering',
     direction: 'systems-desktop'
   },
-  // ── Security ──────────────────────────────────────────────────────────────
+  // ── Cybersecurity (an area of its own since 2026-11-02, no directions yet) ─
   {
     slug: 'application-security-engineer',
     title: 'Application security engineer',
@@ -132,8 +132,7 @@ export default [
     stack: ['web', 'one backend language', 'security tooling'],
     requires: 'you already ship web applications',
     status: 'planned',
-    area: 'software-engineering',
-    direction: 'security'
+    area: 'cybersecurity'
   },
   // ── Infrastructure ────────────────────────────────────────────────────────
   {

@@ -85,7 +85,6 @@ export default {
       // A planned profession without a course path yet names its technologies.
       stackWord: 'stack:',
       moreWord: (n) => `+${n} more`,
-      directionsPending: 'named with the second map',
       noneYet: 'none yet — this card opens with the first map',
       open: 'open →',
       directionIntro: (desc) => `${desc} Pick a profession: each one is a map you walk node by node, and every card says, up front, what you need before you start.`,

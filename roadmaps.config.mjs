@@ -40,8 +40,8 @@ export const roadmaps = [
     milestones: 33,   // fallback only; real count is computed from the README at build
     // The shelf on /become/ (src/_data/areas.js): the site's classification of
     // the map, not a line from its README. A card without a shelf fails the build.
-    area: 'software-engineering',
-    direction: 'data-ai',
+    // AI is an area of its own since 2026-11-02, with no directions named yet.
+    area: 'ai',
     order: 1,
     status: 'live',                       // "live" | "teaser" | "review"
     star: true,
@@ -89,8 +89,8 @@ export const roadmaps = [
     // CryptoHack gives "a gentler ramp with the math named before you meet it".
     requires: 'you already write code; the math is introduced as you go',
     milestones: 18,
-    area: 'software-engineering',
-    direction: 'security',
+    // Cybersecurity is an area of its own since 2026-11-02, no directions yet.
+    area: 'cybersecurity',
     order: 3,
     status: 'live',
     star: true

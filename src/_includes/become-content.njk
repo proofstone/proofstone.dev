@@ -23,11 +23,22 @@
       {{ B.shelfChipHtml(a.best, a.tally) | safe }}
     </div>
     <p class="mcard__desc">{{ a.desc }}</p>
+    {#- Who is inside: the directions when the area names them; otherwise its
+        professions, listed directly; an empty area says so and promises nothing
+        but the first map. #}
+    {%- if a.directions.length %}
     <p class="mcard__who"><span class="mcard__who-k">{{ B.directionsWord }}:</span>
-      {%- if a.directions.length %}
-      {%- for d in a.directions %}{% if d.open %}<span>{{ d.title | lower }}</span>{% else %}<span class="mcard__who-none">{{ d.title | lower }}</span>{% endif %}{% if not loop.last %} · {% endif %}{% endfor %}
-      {%- else %}<span class="mcard__who-none">{{ B.directionsPending }}</span>{% endif %}</p>
-    <p class="mcard__meta mcard__meta--row"><span>{{ B.tallyHtml(a.tally, a.directions.length) | safe }}</span>{% if a.open %}<span class="mcard__go">{{ B.open }}</span>{% endif %}</p>
+      {%- for d in a.directions %}{% if d.open %}<span>{{ d.title | lower }}</span>{% else %}<span class="mcard__who-none">{{ d.title | lower }}</span>{% endif %}{% if not loop.last %} · {% endif %}{% endfor %}</p>
+    {%- elif a.open %}
+    <p class="mcard__who"><span class="mcard__who-k">{{ B.professionsWord }}:</span>
+      {%- for c in a.cards %}{% if loop.index <= 4 %}<span>{{ (c.r.title | replace(" Roadmap", "")) if c.r else c.p.title }}</span>{% if not loop.last and loop.index < 4 %} · {% endif %}{% endif %}{% endfor %}
+      {%- if a.cards.length > 4 %} · <span class="mcard__who-none">{{ B.moreWord(a.cards.length - 4) }}</span>{% endif %}</p>
+    {%- else %}
+    <p class="mcard__who"><span class="mcard__who-k">{{ B.professionsWord }}:</span> <span class="mcard__who-none">{{ B.noneYet }}</span></p>
+    {%- endif %}
+    {%- if a.open %}
+    <p class="mcard__meta mcard__meta--row"><span>{{ B.tallyHtml(a.tally, a.directions.length) | safe }}</span><span class="mcard__go">{{ B.open }}</span></p>
+    {%- endif %}
   {%- endset %}
   {%- if a.open %}
   <a class="mcard mcard--area" href="{{ T.paths.become }}{{ a.slug }}/">{{ inner | safe }}</a>

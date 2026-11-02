@@ -302,7 +302,12 @@ console.log('\nBECOME TREE — a card is a link only when a page is behind it, a
   const tree = {};
   for (const file of pages) {
     const rel = relative(site, file).replace(/\\/g, '/');
-    if (rel === 'become/index.html' || /^become\/[a-z0-9-]+\/(?:[a-z0-9-]+\/)?index\.html$/.test(rel)) tree[rel] = readFileSync(file, 'utf8');
+    if (rel === 'become/index.html' || /^become\/[a-z0-9-]+\/(?:[a-z0-9-]+\/)?index\.html$/.test(rel)) {
+      const html = readFileSync(file, 'utf8');
+      // A retired address under /become/ is a stub that forwards (REDIRECTS
+      // below proves it); it is not a floor of the tree.
+      if (!isRedirectStub(html)) tree[rel] = html;
+    }
   }
   for (const rel of Object.keys(tree).sort()) {
     const { linked, statics, problems } = inspectBecomeCards(tree[rel]);
@@ -395,7 +400,11 @@ const RETIRED = {
   'roadmaps/index.html': '/become/',
   'ru/index.html': '/',
   'ru/roadmaps/index.html': '/become/',
-  'ru/projects/index.html': '/projects/'
+  'ru/projects/index.html': '/projects/',
+  // 2026-11-02: Security and Data & AI left Software engineering for areas of
+  // their own; the direction addresses were live for nine days.
+  'become/software-engineering/security/index.html': '/become/cybersecurity/',
+  'become/software-engineering/data-ai/index.html': '/become/ai/'
 };
 console.log('\nREDIRECTS — every retired address forwards to a page the build produced');
 for (const [rel, to] of Object.entries(RETIRED)) {

@@ -232,7 +232,7 @@ console.log('\nSOCIAL CARDS');
 // check-build proves the stubs are built; this proves the origin serves them —
 // a deploy that dropped a stub turns an indexed URL into a 404.
 console.log('\nRETIRED ADDRESSES');
-for (const [from, to] of [['/roadmaps/', '/become/'], ['/ru/', '/'], ['/ru/roadmaps/', '/become/'], ['/ru/projects/', '/projects/']]) {
+for (const [from, to] of [['/roadmaps/', '/become/'], ['/ru/', '/'], ['/ru/roadmaps/', '/become/'], ['/ru/projects/', '/projects/'], ['/become/software-engineering/security/', '/become/cybersecurity/'], ['/become/software-engineering/data-ai/', '/become/ai/']]) {
   try {
     const { status, body } = await get(`${BASE}${from}`);
     const m = body.match(/<meta http-equiv="refresh" content="0; url=([^"]+)">/);
