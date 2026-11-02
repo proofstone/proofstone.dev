@@ -37,8 +37,14 @@ export default [
     slug: 'cybersecurity',
     title: 'Cybersecurity',
     desc: 'Attack, defend, prove: the systems people trust, tested by the people who break them.',
-    intro: 'Breaking things, to ship them right. Pick a profession: each one is a map you walk node by node, and every card says, up front, what you need before you start.',
-    directions: []
+    intro: 'Breaking things, to ship them right. Pick a direction, then a profession inside it: each one is a map you walk node by node. A direction opens when it has its first map.',
+    // Named 2026-11-02 with the first eight planned professions (owner's call).
+    directions: [
+      { slug: 'offensive', title: 'Offensive security', desc: 'Breaking in, on purpose and on paper: tests, exploits, the report that follows.' },
+      { slug: 'defensive', title: 'Defensive security', desc: 'Keeping them out, and finding out when they got in: hardening, monitoring, response.' },
+      { slug: 'application', title: 'Application security', desc: 'Security inside the code and the pipeline that ships it.' },
+      { slug: 'cryptography', title: 'Cryptography', desc: 'The math that keeps secrets, shipped without getting it wrong.' }
+    ]
   },
   {
     slug: 'data-science',

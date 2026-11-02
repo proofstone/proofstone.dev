@@ -185,7 +185,8 @@ export default [
     area: 'software-engineering',
     direction: 'systems-desktop'
   },
-  // ── Cybersecurity (an area of its own since 2026-11-02, no directions yet) ─
+  // ── Cybersecurity (an area of its own since 2026-11-02; filled out the same
+  //    day: eight planned, four directions named with them) ─────────────────
   {
     slug: 'application-security-engineer',
     title: 'Application security engineer',
@@ -193,7 +194,88 @@ export default [
     stack: ['web', 'one backend language', 'security tooling'],
     requires: 'you already ship web applications',
     status: 'planned',
-    area: 'cybersecurity'
+    area: 'cybersecurity',
+    direction: 'application'
+  },
+  {
+    slug: 'devsecops-engineer',
+    title: 'DevSecOps engineer',
+    desc: 'Security inside the pipeline: SAST and DAST, secrets, the supply chain.',
+    stack: ['CI', 'SAST / DAST', 'SBOM', 'signing'],
+    requires: 'you already run CI pipelines',
+    status: 'planned',
+    area: 'cybersecurity',
+    direction: 'application'
+  },
+  {
+    slug: 'penetration-tester',
+    title: 'Penetration tester',
+    desc: 'Breaking in on request — web, networks, infrastructure — and writing it up.',
+    stack: ['Kali', 'Burp Suite', 'nmap', 'Metasploit'],
+    requires: 'you already understand networks and one scripting language',
+    status: 'planned',
+    area: 'cybersecurity',
+    direction: 'offensive'
+  },
+  {
+    slug: 'vulnerability-researcher',
+    title: 'Vulnerability researcher',
+    desc: 'New holes nobody has found yet: fuzzing, exploits, CVEs.',
+    stack: ['C', 'fuzzers', 'debuggers'],
+    requires: 'you already read and write C',
+    status: 'planned',
+    area: 'cybersecurity',
+    direction: 'offensive'
+  },
+  {
+    slug: 'security-engineer',
+    title: 'Security engineer',
+    desc: 'The infrastructure defended: hardening, the network, identity, the SIEM.',
+    stack: ['Linux', 'networking', 'IAM', 'SIEM'],
+    requires: 'you already run services in production',
+    status: 'planned',
+    area: 'cybersecurity',
+    direction: 'defensive'
+  },
+  {
+    slug: 'cloud-security-engineer',
+    title: 'Cloud security engineer',
+    desc: 'The same defence for the cloud: identity, policies, configuration, posture.',
+    stack: ['AWS / GCP / Azure', 'IAM', 'policy as code'],
+    requires: 'you already run workloads in the cloud',
+    status: 'planned',
+    area: 'cybersecurity',
+    direction: 'defensive'
+  },
+  {
+    slug: 'soc-analyst',
+    title: 'SOC analyst',
+    desc: 'Watching and responding: logs, alerts, the first investigation.',
+    stack: ['SIEM', 'EDR', 'logs'],
+    requires: null,
+    status: 'planned',
+    area: 'cybersecurity',
+    direction: 'defensive'
+  },
+  {
+    slug: 'dfir-investigator',
+    title: 'DFIR investigator',
+    desc: 'After the incident: disks, memory, the chain of evidence, the root cause.',
+    stack: ['Autopsy', 'Volatility', 'OS internals'],
+    requires: 'you already know how an operating system works inside',
+    status: 'planned',
+    area: 'cybersecurity',
+    direction: 'defensive'
+  },
+  {
+    slug: 'malware-analyst',
+    title: 'Malware analyst',
+    desc: 'Taking malware apart: how it works, how to detect it.',
+    stack: ['Ghidra', 'IDA', 'x86', 'C'],
+    requires: 'you already write C and read assembly',
+    status: 'planned',
+    area: 'cybersecurity',
+    direction: 'defensive'
   },
   // ── Infrastructure ────────────────────────────────────────────────────────
   {

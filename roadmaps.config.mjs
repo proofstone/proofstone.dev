@@ -90,8 +90,10 @@ export const roadmaps = [
     // CryptoHack gives "a gentler ramp with the math named before you meet it".
     requires: 'you already write code; the math is introduced as you go',
     milestones: 18,
-    // Cybersecurity is an area of its own since 2026-11-02, no directions yet.
+    // Cybersecurity is an area of its own since 2026-11-02; Cryptography is
+    // its own direction.
     area: 'cybersecurity',
+    direction: 'cryptography',
     order: 3,
     status: 'live',
     star: true
