@@ -225,6 +225,13 @@ body {
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  /* The footer sits at the bottom of the window even on a short page (a
+     direction page with one card showed it floating mid-screen, 2026-11-02):
+     the body fills the viewport and main takes the slack. dvh follows the
+     mobile browser chrome; vh is the fallback. */
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex; flex-direction: column;
 }
 
 /* Prose headings are Sans 700; every heading the SITE writes about itself is
@@ -330,7 +337,7 @@ a:hover { text-decoration: underline; text-underline-offset: 3px; }
 }
 .theme-toggle:hover { color: var(--text); }
 
-main { padding: 2.2rem 2rem 3.5rem; scroll-margin-top: 6rem; }
+main { padding: 2.2rem 2rem 3.5rem; scroll-margin-top: 6rem; flex: 1 0 auto; }
 /* Focus lands here only from the skip link, and the viewport is already at the
    top — a full-page ring would be alarming, not informative. */
 main:focus { outline: none; }
