@@ -10,6 +10,7 @@ your afternoon here.
 | You want to change | Open the pull request in |
 |---|---|
 | a milestone, a resource, the wording of a roadmap, the data behind its map | that roadmap's repo — it has its own `CONTRIBUTING.md` and issue templates |
+| a profession card (an open shelf), a direction or an area on `/become/` | **here** — `src/_data/professions.js` and `src/_data/areas.js`; the README says how |
 | the site: templates, CSS, JS, build scripts, guards, docs | **here** |
 
 The roadmaps:
@@ -92,9 +93,10 @@ because the failure is invisible in the browser.
 under `proofstone:progress:<slug>:<M>`. Live readers have checkmarks under those
 keys; renaming or versioning them silently wipes someone's progress.
 
-**7. `noindex` stays as it is.** The site ships `noindex` until launch, driven by
-the `SITE_NOINDEX` repository variable. Launching is a deliberate, separate act —
-not a side effect of a pull request.
+**7. `noindex` is not touched.** The posture is driven by the `SITE_NOINDEX`
+repository variable: `false` in production since the 2026-07-28 launch, `true` by
+default locally, so a local build is never mistaken for the live one. Changing it
+is a deliberate, separate act — not a side effect of a pull request.
 
 ## Opening the pull request
 

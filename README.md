@@ -1,9 +1,10 @@
 # proofstone.dev
 
-**Live at [proofstone.dev](https://proofstone.dev)** *(noindex, pre-launch)*
+**Live at [proofstone.dev](https://proofstone.dev).**
 
-The umbrella site for the **proofstone** engineering roadmaps — roadmaps where every
-node is a milestone you can *prove* you passed (an artifact), not a keyword.
+The site of the **proofstone** community: engineering roadmaps where every node is a
+milestone you can *prove* you passed (an artifact), not a keyword — and a map of the
+professions those roadmaps lead to.
 
 **The roadmap repositories are the source of truth. This repo is the render layer.**
 Each roadmap's `README.md` is fetched at build time and rendered into a page. You
@@ -12,6 +13,23 @@ site rebuilds itself.
 
 Static site: [Eleventy](https://www.11ty.dev/) → GitHub Pages. No backend, no CMS,
 no tracking, no cookies.
+
+## What is on the site
+
+- `/` — the manifesto, and six doors; two are open today (`/become/`, `/projects/`),
+  the rest stay shut until they have content.
+- `/become/` — professions as maps, on three floors of the same card:
+  **areas** (`/become/<area>/`) → **directions** (`/become/<area>/<direction>/`) →
+  **professions**. A profession with a live roadmap links to its page. A planned
+  one is a card without a link — an *open shelf*: the owner or a contributor brings
+  the map, and the card becomes a link the day the map is live. Every card says, up
+  front, what you need before you start.
+- `/<roadmap-slug>/` — a roadmap rendered from its repository's README, with its map.
+- `/projects/` — build-your-own labs.
+
+Honest navigation is the one rule every floor shares: nothing links to a page that
+does not exist yet, and a shelf (an area or a direction) with nothing on it gets no
+page. `npm run build` asserts both.
 
 ## Run locally
 
@@ -29,7 +47,7 @@ npm run dev:offline
 Build for production into `_site/`:
 
 ```
-npm run build        # SITE_NOINDEX defaults to "true" (pre-launch)
+npm run build        # SITE_NOINDEX defaults to "true" locally; production sets it to "false"
 ```
 
 ## Connect a new roadmap (target: a few minutes)
@@ -58,6 +76,42 @@ npm run build        # SITE_NOINDEX defaults to "true" (pre-launch)
    `og-manifest.json`. Skipping this ships a page whose `og:image` 404s, and the
    build refuses to pass without a card for every registered roadmap.
 6. Commit and push — the site build fetches and renders it.
+
+## Add a profession (an open shelf)
+
+A profession that has no roadmap yet is still worth a card: it tells a reader the
+profession exists here, and tells a contributor where a map is wanted. Add one entry
+to [`src/_data/professions.js`](src/_data/professions.js):
+
+```js
+{
+  slug: 'kernel-engineer',              // the future page's address
+  title: 'Kernel engineer',
+  desc: 'One sentence: what this profession builds.',
+  stack: ['C', 'Rust', 'Linux kernel'],  // or `path: [...]` — the courses, in order
+  requires: 'you already write C',       // the entry condition; null = from zero
+  status: 'planned',
+  area: 'software-engineering',          // a slug from src/_data/areas.js
+  direction: 'systems-desktop'           // required when the area names directions
+}
+```
+
+What the build enforces: the shelf must exist (an unknown `area` or `direction`
+fails the build), a planned card is never a link, and the numbers on every floor
+are computed — nothing is typed into a template. A profession lives on exactly one
+shelf: if it pulls two ways, it is two professions.
+
+When the roadmap exists, the profession moves from this file to
+`roadmaps.config.mjs` (step 1 above) and the card opens.
+
+## Add a direction or an area
+
+The shelves are declared in [`src/_data/areas.js`](src/_data/areas.js), in display
+order. A direction may be declared before its first map: it shows as a card that
+says "no map yet" and opens with its first profession. An area that has not named
+its directions shows its professions directly; name them when there are enough maps
+to split. Retiring an address (a direction that moves) keeps a forwarding stub —
+see `src/become-retired-*.njk` and the REDIRECTS assertion.
 
 ## How content stays in sync
 
@@ -117,14 +171,23 @@ of the index by setting `SITE_NOINDEX` back to `true` and re-running the workflo
 
 ```
 roadmaps.config.mjs       # roadmap registry (single source of truth for the site)
+src/_data/areas.js        # the shelves of /become/: areas and their directions, in display order
+src/_data/professions.js  # professions without a map yet — the open shelves
+src/_data/becomeTree.js   # builds the /become/ tree from the three sources; a card without a shelf fails the build
 eleventy.config.mjs       # markdown render: GitHub-compatible anchors, link rewrite,
-                          #   milestone/criterion tagging, §-section outline
+                          #   milestone/criterion tagging, §-section outline; structured data
 scripts/fetch-content.mjs # fetch-at-build: README + assets per live roadmap → .content/
 scripts/content-guard.mjs # border checks applied to fetched content (shape, markup)
 scripts/star-guard.mjs    # how a flagship milestone is allowed to render
+scripts/a11y-guard.mjs    # accessibility and layout-stability rules over every built page
+scripts/palette-guard.mjs # one source of colour, and the files that must mirror it
+scripts/map-type-guard.mjs # the type floor inside the SVG maps
+scripts/become-guard.mjs  # the /become/ tree: a card is a link only when a page is behind it
+scripts/escape-guard.mjs  # text is escaped exactly once
 scripts/check-build.mjs   # post-build assertions over _site (runs inside `npm run build`)
-scripts/check-guards.mjs  # proves the border guards still reject what they must
+scripts/check-guards.mjs  # proves every guard still rejects what it must
 scripts/check-links.mjs   # external link check (advisory, never blocks a deploy)
+scripts/verify-live.mjs   # asserts what production actually serves after a deploy
 scripts/make-og.mjs       # dev-only: render the 1200×630 social cards + og-manifest.json
 scripts/screenshots.mjs   # dev-only visual QA (both themes + mobile)
 scripts/make-icons.mjs    # dev-only: rasterise the SVG mark into PNG icon fallbacks
@@ -140,13 +203,25 @@ not part of the production build).
 
 ## Checks
 
-`npm run build` runs the deterministic, offline assertions itself, so they also
-guard the autonomous rebuilds fired by roadmap repos: in-page anchors resolve, no
-duplicate ids, internal links exist, every map section is clickable, the home page
-really shows a milestone, no private repo leaks, and the noindex posture matches
-`SITE_NOINDEX`. `npm run check:guards` proves the content border checks still
-reject bad payloads; `npm run check:links` probes external links and is advisory
-by design — third-party rate limits must never block a content deploy.
+`npm run build` ends in `scripts/check-build.mjs`: deterministic, offline assertions
+over `_site`, so they also guard the autonomous rebuilds fired by roadmap repos.
+Today they are: in-page anchors resolve · no duplicate ids · internal links exist ·
+every map section is clickable · print redefines every map token · the map ships
+inline only · each map declares how it paints · flagship stamps replace the emoji
+and lose nothing · the home states the manifesto and opens only real doors · the
+`/become/` tree opens only real doors and every floor is reachable · text is
+escaped exactly once · JSON-LD is valid and correctly branched · the sitemap is
+well-formed · every retired address forwards to a built page · accessibility
+(named landmarks, no silent tab stops, reachable scroll regions) · no label under
+the type floor · one source of colour · no private repo is linked · the noindex
+posture matches `SITE_NOINDEX`.
+
+`npm run check:guards` proves each guard still rejects the payloads it exists for,
+with a healthy payload that must still pass. `npm run check:links` probes external
+links and is advisory by design — third-party rate limits must never block a
+content deploy. `npm run verify:live` asserts what production actually serves
+after a deploy: the posture, the retired addresses, the social cards, the
+stylesheet's markers.
 
 ## License
 
