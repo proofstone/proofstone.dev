@@ -174,6 +174,87 @@ export default [
     area: 'software-engineering',
     direction: 'mobile'
   },
+  // ── Games (filled out 2026-11-02, owner's pick: all eight) ────────────────
+  {
+    slug: 'gameplay-programmer',
+    title: 'Gameplay programmer',
+    desc: 'Mechanics, controls, the part of the game the player feels in their hands.',
+    stack: ['C++ · Unreal', 'C# · Unity'],
+    requires: null,
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'games'
+  },
+  {
+    slug: 'game-engine-programmer',
+    title: 'Game engine programmer',
+    desc: 'The engine itself: rendering, physics, memory, the tools on top.',
+    stack: ['C++', 'graphics APIs', 'math'],
+    requires: 'you already write C++',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'games'
+  },
+  {
+    slug: 'graphics-programmer',
+    title: 'Graphics programmer',
+    desc: 'Rendering: shaders, lighting, the pipeline behind every frame.',
+    stack: ['C++', 'HLSL / GLSL', 'Vulkan / DirectX'],
+    requires: 'you already write C++; the math is required',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'games'
+  },
+  {
+    slug: 'game-tools-programmer',
+    title: 'Game tools programmer',
+    desc: 'Editors and pipelines for the team: levels, assets, builds.',
+    stack: ['C++ / C#', 'Python', 'the engine’s UI'],
+    requires: 'you already write code',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'games'
+  },
+  {
+    slug: 'game-network-programmer',
+    title: 'Game network programmer',
+    desc: 'Multiplayer: synchronisation, prediction, the servers that run a match.',
+    stack: ['C++', 'UDP', 'server logic'],
+    requires: 'you already write C++ and understand networks',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'games'
+  },
+  {
+    slug: 'technical-artist',
+    title: 'Technical artist',
+    desc: 'The bridge between art and code: shaders, rigs, assets that run fast.',
+    stack: ['an engine', 'shaders', 'DCC tools'],
+    requires: 'you already work in an engine or a 3D tool',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'games'
+  },
+  {
+    slug: 'game-audio-programmer',
+    title: 'Game audio programmer',
+    desc: 'Sound in the game: audio engines, spatial sound, the integration.',
+    stack: ['C++', 'Wwise / FMOD'],
+    requires: 'you already write C++',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'games'
+  },
+  {
+    slug: 'game-ai-programmer',
+    title: 'Game AI programmer',
+    desc: 'How enemies and NPCs behave: behaviour trees, navigation, decisions.',
+    stack: ['C++', 'behaviour trees', 'navmesh'],
+    requires: 'you already write C++',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'games'
+  },
   // ── Systems & desktop ─────────────────────────────────────────────────────
   {
     slug: 'browser-engine-engineer',
