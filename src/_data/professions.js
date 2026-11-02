@@ -113,6 +113,67 @@ export default [
     area: 'software-engineering',
     direction: 'web'
   },
+  // ── Mobile (filled out 2026-11-02, owner's pick: all six) ─────────────────
+  {
+    slug: 'ios-developer',
+    title: 'iOS developer',
+    desc: 'Apps for the iPhone and iPad — and on to the watch and the headset.',
+    stack: ['Swift', 'SwiftUI', 'UIKit'],
+    requires: null,
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'mobile'
+  },
+  {
+    slug: 'android-developer',
+    title: 'Android developer',
+    desc: 'Apps for Android phones, tablets and watches.',
+    stack: ['Kotlin', 'Jetpack Compose'],
+    requires: null,
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'mobile'
+  },
+  {
+    slug: 'cross-platform-developer',
+    title: 'Cross-platform developer',
+    desc: 'One codebase, both platforms.',
+    stack: ['Flutter', 'React Native', 'Kotlin Multiplatform'],
+    requires: null,
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'mobile'
+  },
+  {
+    slug: 'mobile-qa-automation-engineer',
+    title: 'Mobile QA automation engineer',
+    desc: 'Tests that run themselves, on emulators and on real phones.',
+    stack: ['Maestro', 'Detox', 'Appium'],
+    requires: 'you already write code',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'mobile'
+  },
+  {
+    slug: 'mobile-release-engineer',
+    title: 'Mobile release engineer',
+    desc: 'Builds, signing, the stores, and the pipeline that ships every version.',
+    stack: ['Fastlane', 'Xcode Cloud', 'GitHub Actions', 'Play Console'],
+    requires: 'you already ship an app',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'mobile'
+  },
+  {
+    slug: 'mobile-ar-developer',
+    title: 'Mobile AR developer',
+    desc: 'Augmented reality on the phone in your hand.',
+    stack: ['ARKit', 'ARCore', 'Unity'],
+    requires: 'you already build mobile apps',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'mobile'
+  },
   // ── Systems & desktop ─────────────────────────────────────────────────────
   {
     slug: 'browser-engine-engineer',
