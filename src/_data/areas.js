@@ -44,8 +44,13 @@ export default [
     slug: 'data-science',
     title: 'Data science & big data',
     desc: 'Data at any size: collecting it, moving it, making it answer questions.',
-    intro: 'Data at any size. Pick a profession: each one is a map you walk node by node, and every card says, up front, what you need before you start.',
-    directions: []
+    intro: 'Data at any size. Pick a direction, then a profession inside it: each one is a map you walk node by node. A direction opens when it has its first map.',
+    // Named 2026-11-02 with the first eight professions (owner's call).
+    directions: [
+      { slug: 'analytics', title: 'Analytics', desc: 'Questions answered from data: reports, dashboards, the models behind them.' },
+      { slug: 'engineering', title: 'Data engineering', desc: 'The pipes data flows through: collection, storage, pipelines — and the databases themselves.' },
+      { slug: 'science', title: 'Data science', desc: 'Experiments and models on data: statistics, forecasts, A/B tests.' }
+    ]
   },
   {
     slug: 'ai',

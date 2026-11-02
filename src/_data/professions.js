@@ -205,5 +205,87 @@ export default [
     status: 'planned',
     area: 'software-engineering',
     direction: 'infrastructure'
+  },
+  // ── Data science & big data (filled out 2026-11-02, owner's pick: all eight,
+  //    three directions named with them) ──────────────────────────────────────
+  {
+    slug: 'data-analyst',
+    title: 'Data analyst',
+    desc: 'The business asks, the data answers: queries, reports, dashboards.',
+    stack: ['SQL', 'Python', 'Excel', 'a BI tool'],
+    requires: null,
+    status: 'planned',
+    area: 'data-science',
+    direction: 'analytics'
+  },
+  {
+    slug: 'bi-developer',
+    title: 'BI developer',
+    desc: 'Dashboards and data marts as a product people open every morning.',
+    stack: ['Power BI', 'Tableau', 'Looker', 'SQL'],
+    requires: null,
+    status: 'planned',
+    area: 'data-science',
+    direction: 'analytics'
+  },
+  {
+    slug: 'analytics-engineer',
+    title: 'Analytics engineer',
+    desc: 'The layer between the engineer and the analyst: data models in the warehouse, with tests on the data.',
+    stack: ['SQL', 'dbt', 'a warehouse'],
+    requires: 'you already write SQL',
+    status: 'planned',
+    area: 'data-science',
+    direction: 'analytics'
+  },
+  {
+    slug: 'data-engineer',
+    title: 'Data engineer',
+    desc: 'The pipes data flows through: collection, cleaning, storage, orchestration.',
+    stack: ['SQL', 'Python', 'Airflow', 'dbt', 'Spark'],
+    requires: 'you already write code',
+    status: 'planned',
+    area: 'data-science',
+    direction: 'engineering'
+  },
+  {
+    slug: 'big-data-engineer',
+    title: 'Big data engineer',
+    desc: 'The same pipes at cluster scale: distributed compute and storage.',
+    stack: ['Spark', 'Kafka', 'Hadoop', 'Flink'],
+    requires: 'you already build data pipelines',
+    status: 'planned',
+    area: 'data-science',
+    direction: 'engineering'
+  },
+  {
+    slug: 'database-engineer',
+    title: 'Database engineer',
+    desc: 'The databases themselves: schemas, performance, backups, replication.',
+    stack: ['PostgreSQL', 'MySQL', 'indexes', 'replication'],
+    requires: 'you already write SQL',
+    status: 'planned',
+    area: 'data-science',
+    direction: 'engineering'
+  },
+  {
+    slug: 'data-architect',
+    title: 'Data architect',
+    desc: 'The whole data platform on one drawing: models, flows, storage, who may read what.',
+    stack: ['warehouses', 'data modelling', 'governance'],
+    requires: 'you already run data pipelines in production',
+    status: 'planned',
+    area: 'data-science',
+    direction: 'engineering'
+  },
+  {
+    slug: 'data-scientist',
+    title: 'Data scientist',
+    desc: 'Experiments and models on data: statistics, forecasts, A/B tests.',
+    stack: ['Python', 'pandas', 'scikit-learn', 'statistics'],
+    requires: 'you already write code; the math comes along the way',
+    status: 'planned',
+    area: 'data-science',
+    direction: 'science'
   }
 ];
