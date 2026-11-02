@@ -369,6 +369,87 @@ export default [
     area: 'software-engineering',
     direction: 'infrastructure'
   },
+  // Infrastructure, filled out 2026-11-02 (owner's pick: all eight).
+  {
+    slug: 'devops-engineer',
+    title: 'DevOps engineer',
+    desc: 'The road from code to production: CI/CD, containers, environments.',
+    stack: ['Linux', 'Docker', 'CI/CD', 'a cloud'],
+    requires: null,
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'infrastructure'
+  },
+  {
+    slug: 'site-reliability-engineer',
+    title: 'Site reliability engineer',
+    desc: 'Keeping it up at night: SLOs, incidents, automation, load.',
+    stack: ['Linux', 'Kubernetes', 'observability', 'one language'],
+    requires: 'you already run services in production',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'infrastructure'
+  },
+  {
+    slug: 'cloud-engineer',
+    title: 'Cloud engineer',
+    desc: 'Infrastructure in the cloud, as code: networks, compute, storage, and the bill.',
+    stack: ['AWS / GCP / Azure', 'Terraform'],
+    requires: 'you already run Linux and understand networks',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'infrastructure'
+  },
+  {
+    slug: 'platform-engineer',
+    title: 'Platform engineer',
+    desc: 'The internal platform other teams build on: templates, portals, golden paths.',
+    stack: ['Kubernetes', 'Terraform', 'Backstage', 'Go'],
+    requires: 'you already run Kubernetes in production',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'infrastructure'
+  },
+  {
+    slug: 'systems-administrator',
+    title: 'Systems administrator',
+    desc: 'Servers and the fleet of machines: installs, updates, access, backups.',
+    stack: ['Linux / Windows Server', 'Active Directory', 'shell'],
+    requires: null,
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'infrastructure'
+  },
+  {
+    slug: 'network-engineer',
+    title: 'Network engineer',
+    desc: 'The network: routing, switching, VPNs, DNS, load balancing.',
+    stack: ['TCP/IP', 'BGP', 'Cisco / Juniper', 'Linux networking'],
+    requires: null,
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'infrastructure'
+  },
+  {
+    slug: 'observability-engineer',
+    title: 'Observability engineer',
+    desc: 'Seeing the system: metrics, logs, traces, alerts, and what storing them costs.',
+    stack: ['Prometheus', 'Grafana', 'OpenTelemetry', 'logs'],
+    requires: 'you already run services in production',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'infrastructure'
+  },
+  {
+    slug: 'kubernetes-engineer',
+    title: 'Kubernetes engineer',
+    desc: 'Clusters as a product: operators, cluster networking, upgrades.',
+    stack: ['Kubernetes', 'Go', 'Helm', 'CNI'],
+    requires: 'you already run containers in production',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'infrastructure'
+  },
   // ── Data science & big data (filled out 2026-11-02, owner's pick: all eight,
   //    three directions named with them) ──────────────────────────────────────
   {
