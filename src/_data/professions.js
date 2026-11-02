@@ -266,6 +266,87 @@ export default [
     area: 'software-engineering',
     direction: 'systems-desktop'
   },
+  // Systems & desktop, filled out 2026-11-02 (owner's pick: all eight).
+  {
+    slug: 'systems-programmer',
+    title: 'Systems programmer',
+    desc: 'Low-level code: services, daemons, memory, performance.',
+    stack: ['C', 'C++', 'Rust', 'Linux'],
+    requires: 'you already write code',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'systems-desktop'
+  },
+  {
+    slug: 'desktop-application-developer',
+    title: 'Desktop application developer',
+    desc: 'Applications for Windows, macOS and Linux.',
+    stack: ['C# · .NET', 'Qt', 'Swift', 'Electron / Tauri'],
+    requires: null,
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'systems-desktop'
+  },
+  {
+    slug: 'operating-systems-engineer',
+    title: 'Operating systems engineer',
+    desc: 'The kernel and what surrounds it: the scheduler, memory, drivers.',
+    stack: ['C', 'Rust', 'Linux kernel'],
+    requires: 'you already write C',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'systems-desktop'
+  },
+  {
+    slug: 'compiler-engineer',
+    title: 'Compiler engineer',
+    desc: 'Languages and their compilers: parsers, optimisations, code generation.',
+    stack: ['C++', 'Rust', 'LLVM'],
+    requires: 'you already write C++ or Rust',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'systems-desktop'
+  },
+  {
+    slug: 'database-internals-engineer',
+    title: 'Database internals engineer',
+    desc: 'The database engine: storage, indexes, query execution, transactions.',
+    stack: ['C++', 'Rust', 'algorithms and data structures'],
+    requires: 'you already write C++ or Rust',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'systems-desktop'
+  },
+  {
+    slug: 'performance-engineer',
+    title: 'Performance engineer',
+    desc: 'Profiling and speeding up: caches, SIMD, allocations, measurements.',
+    stack: ['C++', 'perf', 'flamegraphs', 'benchmarks'],
+    requires: 'you already write C++ or Rust',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'systems-desktop'
+  },
+  {
+    slug: 'runtime-vm-engineer',
+    title: 'Runtime / VM engineer',
+    desc: 'Virtual machines and garbage collectors: the JVM, V8, WebAssembly.',
+    stack: ['C++', 'JIT', 'GC'],
+    requires: 'you already write C++',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'systems-desktop'
+  },
+  {
+    slug: 'driver-developer',
+    title: 'Driver developer',
+    desc: 'Device drivers for the operating system.',
+    stack: ['C', 'Windows WDK / Linux kernel'],
+    requires: 'you already write C',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'systems-desktop'
+  },
   // ── Cybersecurity (an area of its own since 2026-11-02; filled out the same
   //    day: eight planned, four directions named with them) ─────────────────
   {
