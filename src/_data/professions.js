@@ -347,6 +347,88 @@ export default [
     area: 'software-engineering',
     direction: 'systems-desktop'
   },
+  // Embedded, filled out 2026-11-02 (owner's pick: all seven; the FPGA engineer
+  // went to Hardware & electronics by the "what you build" rule).
+  {
+    slug: 'embedded-software-engineer',
+    title: 'Embedded software engineer',
+    desc: 'Firmware for microcontrollers: peripherals, interrupts, power.',
+    stack: ['C', 'C++', 'ARM Cortex-M', 'RTOS'],
+    requires: 'you already write C',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'embedded'
+  },
+  {
+    slug: 'firmware-engineer',
+    title: 'Firmware engineer',
+    desc: 'The bottom of the device stack: bootloaders, updates, memory and buses.',
+    stack: ['C', 'bootloaders', 'flash', 'I²C / SPI / UART'],
+    requires: 'you already write C and read a datasheet',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'embedded'
+  },
+  {
+    slug: 'embedded-linux-engineer',
+    title: 'Embedded Linux engineer',
+    desc: 'Linux on the device: Yocto, the kernel for the board, drivers, the image.',
+    stack: ['C', 'Yocto', 'Buildroot', 'device tree'],
+    requires: 'you already run Linux and write C',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'embedded'
+  },
+  {
+    slug: 'iot-engineer',
+    title: 'IoT engineer',
+    desc: 'The device, its link and its cloud: protocols, security, updates over the air.',
+    stack: ['C / MicroPython', 'MQTT', 'BLE', 'LoRa'],
+    requires: 'you already write code',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'embedded'
+  },
+  {
+    slug: 'automotive-software-engineer',
+    title: 'Automotive software engineer',
+    desc: 'Software in the car: AUTOSAR, functional safety, the CAN bus.',
+    stack: ['C', 'AUTOSAR', 'CAN', 'ISO 26262'],
+    requires: 'you already write embedded C',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'embedded'
+  },
+  {
+    slug: 'robotics-perception-engineer',
+    title: 'Robotics perception engineer',
+    desc: 'The machine sees: cameras, lidar, SLAM, sensor fusion.',
+    stack: ['C++', 'ROS 2', 'OpenCV', 'PCL'],
+    requires: 'you already write C++',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'embedded'
+  },
+  {
+    slug: 'control-systems-engineer',
+    title: 'Control systems engineer',
+    desc: 'The machine moves: controllers, kinematics, motion planning.',
+    stack: ['C++', 'Python', 'ROS 2', 'control theory'],
+    requires: 'you already write code; the math is required',
+    status: 'planned',
+    area: 'software-engineering',
+    direction: 'embedded'
+  },
+  // ── Hardware & electronics (second card 2026-11-02; no directions named yet) ─
+  {
+    slug: 'fpga-digital-design-engineer',
+    title: 'FPGA / digital design engineer',
+    desc: 'Logic on the chip: Verilog, VHDL, timing.',
+    stack: ['Verilog / VHDL', 'Vivado / Quartus'],
+    requires: 'you already understand digital logic',
+    status: 'planned',
+    area: 'hardware-electronics'
+  },
   // ── Cybersecurity (an area of its own since 2026-11-02; filled out the same
   //    day: eight planned, four directions named with them) ─────────────────
   {
