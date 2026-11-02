@@ -9,7 +9,8 @@ pageType: section
 pageKey: becomePage
 lang: en
 eleventyComputed:
-  title: "{{ dir.title }} — {{ dir.areaTitle }} — proofstone"
-  description: "{{ dir.desc }}"
+  # `safe`: see become-area.njk — the layout escapes the string once more.
+  title: "{{ dir.title | safe }} — {{ dir.areaTitle | safe }} — proofstone"
+  description: "{{ dir.desc | safe }}"
 ---
 {% include "become-direction-content.njk" %}

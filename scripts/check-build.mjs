@@ -21,6 +21,7 @@ import { inspectFlagships } from './star-guard.mjs';
 import { inspectPalette, inspectFonts, OG_MIRRORED } from './palette-guard.mjs';
 import { inspectMapType, readingColumnPx, EXEMPT } from './map-type-guard.mjs';
 import { inspectBecomeCards, inspectBecomeReach } from './become-guard.mjs';
+import { inspectDoubleEscape } from './escape-guard.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const site = join(root, '_site');
@@ -317,6 +318,23 @@ console.log('\nBECOME TREE — a card is a link only when a page is behind it, a
   const reach = inspectBecomeReach(tree);
   if (reach.problems.length) fail(`become tree: ${reach.problems[0]}`, reach.problems.slice(1).join('; ') || 'see title');
   else pass('become tree', `${Object.keys(tree).length - 1} floor page(s) below /become/, every one reachable and non-empty`);
+}
+
+// ── 4″. Text is escaped exactly once ─────────────────────────────────────────
+// A computed front-matter string (the area and direction page titles) is
+// rendered with autoescape on and then escaped again by the layout; "&" came
+// out as "&amp;amp;" in the <title> for nine days. The rule lives in
+// scripts/escape-guard.mjs so check-guards can prove it fires.
+console.log('\nESCAPING — no page may carry a double-escaped entity');
+{
+  let clean = 0;
+  for (const file of pages) {
+    const rel = relative(site, file).replace(/\\/g, '/');
+    const { problems } = inspectDoubleEscape(readFileSync(file, 'utf8'));
+    if (problems.length) fail(`${rel}: ${problems[0]}`, 'see title');
+    else clean++;
+  }
+  if (clean === pages.length) pass(`${clean} page(s)`, 'every entity escaped once');
 }
 
 // ── 4a. Structured data ──────────────────────────────────────────────────────

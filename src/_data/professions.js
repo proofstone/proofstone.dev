@@ -287,5 +287,77 @@ export default [
     status: 'planned',
     area: 'data-science',
     direction: 'science'
+  },
+  // ── Artificial intelligence & machine learning (filled out 2026-11-02:
+  //    seven planned, three directions named with them; AI Safety is live) ──
+  {
+    slug: 'machine-learning-engineer',
+    title: 'Machine learning engineer',
+    desc: 'Models in production: trained, deployed, monitored.',
+    stack: ['Python', 'PyTorch', 'scikit-learn'],
+    requires: 'you already write code',
+    status: 'planned',
+    area: 'ai',
+    direction: 'applied'
+  },
+  {
+    slug: 'ai-engineer',
+    title: 'AI engineer',
+    desc: 'Products built on models that already exist: RAG, agents, prompts, evals.',
+    stack: ['Python / TypeScript', 'LLM APIs', 'vector databases'],
+    requires: 'you already write code',
+    status: 'planned',
+    area: 'ai',
+    direction: 'applied'
+  },
+  {
+    slug: 'mlops-engineer',
+    title: 'MLOps engineer',
+    desc: 'Training and release pipelines, feature stores, model monitoring.',
+    stack: ['Python', 'MLflow', 'Kubernetes', 'Airflow'],
+    requires: 'you already ship ML models or run services',
+    status: 'planned',
+    area: 'ai',
+    direction: 'applied'
+  },
+  {
+    slug: 'computer-vision-engineer',
+    title: 'Computer vision engineer',
+    desc: 'Machines that see: detection, segmentation, video.',
+    stack: ['PyTorch', 'OpenCV'],
+    requires: 'you already write Python',
+    status: 'planned',
+    area: 'ai',
+    direction: 'applied'
+  },
+  {
+    slug: 'nlp-engineer',
+    title: 'NLP engineer',
+    desc: 'Text and speech: classification, extraction, translation, recognition.',
+    stack: ['PyTorch', 'transformers'],
+    requires: 'you already write Python',
+    status: 'planned',
+    area: 'ai',
+    direction: 'applied'
+  },
+  {
+    slug: 'deep-learning-researcher',
+    title: 'Deep learning researcher',
+    desc: 'New models and architectures: experiments, papers, the math behind them.',
+    stack: ['PyTorch', 'JAX', 'math'],
+    requires: 'you already train models; the math is required',
+    status: 'planned',
+    area: 'ai',
+    direction: 'research'
+  },
+  {
+    slug: 'reinforcement-learning-engineer',
+    title: 'Reinforcement learning engineer',
+    desc: 'Agents in environments: games, robots, optimisation.',
+    stack: ['Gym', 'PyTorch'],
+    requires: 'you already train models',
+    status: 'planned',
+    area: 'ai',
+    direction: 'research'
   }
 ];

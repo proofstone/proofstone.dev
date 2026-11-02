@@ -40,8 +40,9 @@ export const roadmaps = [
     milestones: 33,   // fallback only; real count is computed from the README at build
     // The shelf on /become/ (src/_data/areas.js): the site's classification of
     // the map, not a line from its README. A card without a shelf fails the build.
-    // AI is an area of its own since 2026-11-02, with no directions named yet.
+    // AI is an area of its own since 2026-11-02; Safety is its own direction.
     area: 'ai',
+    direction: 'safety',
     order: 1,
     status: 'live',                       // "live" | "teaser" | "review"
     star: true,

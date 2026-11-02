@@ -17,6 +17,7 @@ import { inspectFlagships } from './star-guard.mjs';
 import { inspectPalette, inspectFonts } from './palette-guard.mjs';
 import { inspectMapType, readingColumnPx, EXEMPT } from './map-type-guard.mjs';
 import { inspectBecomeCards, inspectBecomeReach } from './become-guard.mjs';
+import { inspectDoubleEscape } from './escape-guard.mjs';
 import { roadmaps } from '../roadmaps.config.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -550,6 +551,19 @@ console.log('\nBECOME TREE — a card that lies about what is behind it must be 
   const emptyDir = inspectBecomeReach({ ...pages, 'become/x/web/index.html': '<p>nothing here</p>' });
   if (!emptyDir.problems.some((p) => p.includes('holds no profession card'))) bad('a direction page with no card', emptyDir.problems.join('; ') || 'accepted');
   else ok('a direction page with no card', emptyDir.problems[0]);
+}
+
+console.log('\nESCAPING — a page escaped twice must be refused');
+{
+  const once = inspectDoubleEscape('<title>Hardware &amp; electronics</title><p>a &lt; b &amp;&amp; c &quot;d&quot;</p>');
+  if (once.problems.length) bad('a page escaped once', `false positive: ${once.problems.join('; ')}`);
+  else ok('a page escaped once');
+  const twice = inspectDoubleEscape('<title>Hardware &amp;amp; electronics</title>');
+  if (!twice.problems.length) bad('a title escaped twice', 'guard accepted &amp;amp;');
+  else ok('a title escaped twice', twice.problems[0]);
+  const quote = inspectDoubleEscape('<p>&amp;quot;quoted&amp;quot; and &amp;lt;tag&amp;gt;</p>');
+  if (!quote.problems.length) bad('quotes and brackets escaped twice', 'guard accepted them');
+  else ok('quotes and brackets escaped twice', quote.problems[0]);
 }
 
 console.log('\nREAL CONTENT — the live READMEs must pass exactly as they are');

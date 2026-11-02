@@ -9,7 +9,9 @@ pageType: section
 pageKey: becomePage
 lang: en
 eleventyComputed:
-  title: "{{ area.title }} — proofstone"
-  description: "{{ area.desc }}"
+  # `safe`: a computed string is rendered with autoescape on, and the layout
+  # escapes it again — "&" became "&amp;amp;" in the <title> (2026-11-02).
+  title: "{{ area.title | safe }} — proofstone"
+  description: "{{ area.desc | safe }}"
 ---
 {% include "become-area-content.njk" %}

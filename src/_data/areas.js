@@ -53,11 +53,18 @@ export default [
     ]
   },
   {
+    // The slug stays short (/become/ai/ is live); the title says the whole
+    // thing (owner's call, 2026-11-02).
     slug: 'ai',
-    title: 'AI',
-    desc: 'Models and the systems around them: training, evaluating, keeping them safe.',
-    intro: 'Models and the systems around them. Pick a profession: each one is a map you walk node by node, and every card says, up front, what you need before you start.',
-    directions: []
+    title: 'Artificial intelligence & machine learning',
+    desc: 'Models and the systems around them: training, serving, evaluating, keeping them safe.',
+    intro: 'Models and the systems around them. Pick a direction, then a profession inside it: each one is a map you walk node by node. A direction opens when it has its first map.',
+    // Named 2026-11-02 with the first seven planned professions (owner's call).
+    directions: [
+      { slug: 'applied', title: 'Applied AI', desc: 'Models in products: trained, served, evaluated, watched.' },
+      { slug: 'research', title: 'Research', desc: 'New models and architectures: experiments, papers, the math behind them.' },
+      { slug: 'safety', title: 'Safety', desc: 'Evals, red-teaming, guardrails: models that stay within the lines.' }
+    ]
   },
   {
     slug: 'hardware-electronics',
